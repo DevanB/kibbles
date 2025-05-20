@@ -10,7 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_20_185628) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_20_200038) do
+  create_table "game_collections", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "game_collections_games", force: :cascade do |t|
+    t.integer "game_id", null: false
+    t.integer "game_collection_id", null: false
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_collection_id"], name: "index_game_collections_games_on_game_collection_id"
+    t.index ["game_id"], name: "index_game_collections_games_on_game_id"
+  end
+
   create_table "game_journal_entries", force: :cascade do |t|
     t.integer "game_id", null: false
     t.text "text"
@@ -26,5 +42,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_20_185628) do
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "game_collections_games", "game_collections"
+  add_foreign_key "game_collections_games", "games"
   add_foreign_key "game_journal_entries", "games"
 end

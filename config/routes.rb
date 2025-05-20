@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :game_collections
   resources :game_journal_entries
   resources :games
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

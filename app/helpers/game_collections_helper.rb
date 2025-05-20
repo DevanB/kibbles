@@ -1,0 +1,2 @@
+module GameCollectionsHelper
+end

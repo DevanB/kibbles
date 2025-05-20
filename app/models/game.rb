@@ -1,4 +1,6 @@
 class Game < ApplicationRecord
+  has_many :game_collections_games, dependent: :destroy
+  has_many :game_collections, through: :game_collections_games
   has_many :game_journal_entries, dependent: :destroy
 
   enum :status, {
