@@ -1,6 +1,6 @@
 export interface GameType {
   id: number
-  title: string
+  name: string
   status: number
 }
 

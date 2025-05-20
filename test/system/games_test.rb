@@ -15,7 +15,7 @@ class GamesTest < ApplicationSystemTestCase
     click_on "New game"
 
     fill_in "Status", with: @game.status
-    fill_in "Title", with: @game.title
+    fill_in "Name", with: @game.name
     click_on "Create Game"
 
     assert_text "Game was successfully created"
@@ -27,7 +27,7 @@ class GamesTest < ApplicationSystemTestCase
     click_on "Edit this game", match: :first
 
     fill_in "Status", with: @game.status
-    fill_in "Title", with: @game.title
+    fill_in "Name", with: @game.name
     click_on "Update Game"
 
     assert_text "Game was successfully updated"

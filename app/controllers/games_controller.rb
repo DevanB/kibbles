@@ -67,12 +67,12 @@ class GamesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def game_params
-      params.require(:game).permit(:title, :status)
+      params.require(:game).permit(:name, :status)
     end
 
     def serialize_game(game)
       game.as_json(only: [
-        :id, :title, :status
+        :id, :name, :status
       ])
     end
 end

@@ -13,7 +13,7 @@ interface FormProps {
 
 export default function Form({ game, onSubmit, submitText }: FormProps) {
   const form = useForm<GameFormType>({
-    title: game.title,
+    name: game.name,
     status: game.status,
   })
   const { data, setData, errors, processing } = form
@@ -26,18 +26,18 @@ export default function Form({ game, onSubmit, submitText }: FormProps) {
   return (
     <form onSubmit={handleSubmit} className="contents">
       <div className="my-5">
-        <label htmlFor="title">Title</label>
+        <label htmlFor="name">Name</label>
         <input
           type="text"
-          name="title"
-          id="title"
-          value={data.title}
+          name="name"
+          id="name"
+          value={data.name}
           className="block shadow rounded-md border border-gray-400 outline-none px-3 py-2 mt-2 w-full"
-          onChange={(e) => setData('title', e.target.value)}
+          onChange={(e) => setData('name', e.target.value)}
         />
-        {errors.title && (
+        {errors.name && (
           <div className="text-red-500 px-3 py-2 font-medium">
-            {errors.title}
+            {errors.name}
           </div>
         )}
       </div>

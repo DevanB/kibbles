@@ -10,6 +10,6 @@ class Game < ApplicationRecord
     abandoned: 3
   }
 
-  validates :title, presence: true
+  validates :name, presence: true
   validates :status, presence: true
 end
