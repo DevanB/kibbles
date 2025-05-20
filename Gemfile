@@ -59,3 +59,6 @@ end
 gem "inertia_rails", "~> 3.8"
 
 gem "vite_rails", "~> 3.0"
+
+# Brings Rails named routes to javascript
+gem "js-routes"
