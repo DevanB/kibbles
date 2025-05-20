@@ -10,16 +10,10 @@ type ResolvedComponent = {
   default: ReactNode & { layout?: (page: ReactNode) => ReactNode }
 }
 
-createInertiaApp({
-  // Set default page title
-  // see https://inertia-rails.dev/guide/title-and-meta
-  //
-  // title: title => title ? `${title} - App` : 'App',
+const appName = (import.meta.env.VITE_APP_NAME ?? "Kibbles") as string
 
-  // Disable progress bar
-  //
-  // see https://inertia-rails.dev/guide/progress-indicators
-  // progress: false,
+createInertiaApp({
+  title: title => title ? `${title} :: ${appName}` : appName,
 
   resolve: (name) => {
     const pages = import.meta.glob<ResolvedComponent>('../pages/**/*.tsx', {
