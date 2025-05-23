@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react'
 import Form from './Form'
 import { GameType } from './types'
+import { Button } from '@/components/ui/button'
 
 interface EditProps {
   game: GameType
@@ -23,18 +24,11 @@ export default function Edit({ game }: EditProps) {
           submitText="Update Game"
         />
 
-        <Link
-          href={`/games/${game.id}`}
-          className="ml-2 rounded-lg py-3 px-5 bg-gray-100 inline-block font-medium"
-        >
-          Show this game
-        </Link>
-        <Link
-          href="/games"
-          className="ml-2 rounded-lg py-3 px-5 bg-gray-100 inline-block font-medium"
-        >
-          Back to games
-        </Link>
+        <Button asChild variant="outline" className="ml-2">
+          <Link href={`/games/${game.id}`}>
+            Cancel
+          </Link>
+        </Button>
       </div>
     </>
   )

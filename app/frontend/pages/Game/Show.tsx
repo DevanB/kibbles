@@ -1,53 +1,82 @@
 import { Head, Link } from '@inertiajs/react'
-import Game from './Game'
 import { GameType } from './types'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { ChevronDownIcon } from 'lucide-react'
+import { format } from 'date-fns'
+import { GameStatusBadge } from '@/components/GameStatusBadge'
 
 interface ShowProps {
   game: GameType
-  flash: { notice?: string }
 }
 
-export default function Show({ game, flash }: ShowProps) {
+export default function Show({ game }: ShowProps) {
   return (
     <>
-      <Head title={`Game #${game.id}`} />
+      <Head title={game.name} />
 
-      <div className="mx-auto md:w-2/3 w-full px-8 pt-8">
-        <div className="mx-auto">
-          {flash.notice && (
-            <p className="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-lg inline-block">
-              {flash.notice}
-            </p>
-          )}
-
-          <h1 className="font-bold text-4xl">Game #{game.id}</h1>
-
-          <Game game={game} />
-
-          <Link
-            href={`/games/${game.id}/edit`}
-            className="mt-2 rounded-lg py-3 px-5 bg-gray-100 inline-block font-medium"
-          >
-            Edit this game
-          </Link>
-          <Link
-            href="/games"
-            className="ml-2 rounded-lg py-3 px-5 bg-gray-100 inline-block font-medium"
-          >
-            Back to games
-          </Link>
-          <div className="inline-block ml-2">
-            <Link
-              href={`/games/${game.id}`}
-              as="button"
-              method="delete"
-              className="mt-2 rounded-lg py-3 px-5 bg-gray-100 font-medium"
-            >
-              Destroy this game
-            </Link>
+      <div className="space-y-6">
+        <div className="bg-card p-6 rounded-lg">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col space-y-2">
+              <div className="flex space-x-4 items-center">
+                <h2 className="text-2xl font-bold">{game.name}</h2>
+                <GameStatusBadge status={game.status} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Added on {format(new Date(game.created_at), "MMMM d, yyyy")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex mt-4">
+                <div className="flex items-center">
+                  <Button asChild variant="outline" className={'rounded-r-none'}>
+                    <Link href={`/games/${game.id}/edit`}>
+                      Edit
+                    </Link>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className='rounded-l-none border-l-0 px-2 cursor-pointer'>
+                        <ChevronDownIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem>
+                        <Link
+                          className="cursor-pointer text-red-600"
+                          href={`/games/${game.id}`}
+                          as="button"
+                          method="delete"
+                        >
+                          Delete Game
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <div className="bg-card p-6 rounded-lg">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold">Journal Entries</h3>
+              <Button size="sm" variant="secondary">Add Entry</Button>
+            </div>
+            <div className="bg-muted p-6 rounded-lg text-center">
+              <p className="text-muted-foreground">No journal entries yet.</p>
+            </div>
+            {/* {isAddingEntry ? ( */}
+            {/*   <AddJournalEntry onAddEntry={handleAddEntry} onCancel={() => setIsAddingEntry(false)} /> */}
+            {/* ) : ( */}
+            {/*   <JournalEntryList entries={game.journalEntries} onSelectEntry={onSelectEntry} isMobileView={isMobileView} /> */}
+            {/* )} */}
+          </div>
+        </div>
+      </div >
     </>
   )
 }

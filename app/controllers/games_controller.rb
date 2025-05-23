@@ -72,7 +72,7 @@ class GamesController < ApplicationController
 
     def serialize_game(game)
       game.as_json(only: [
-        :id, :name, :status
+        :id, :name, :status, :created_at
       ])
     end
 end
