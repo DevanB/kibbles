@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Partial durable proof for dashboard: guest gate (base URL, default http://localhost:8000) + login→dashboard Feature redirect.
+# There is no dedicated Dashboard Feature/Browser test file — this documents verified-via-redirect.
+# Usage: .cursor/skills/verify-kibbles/bin/prove-dashboard
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+cd "$ROOT"
+
+RUN_ID="${RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
+ART="artifacts/verify-kibbles/${RUN_ID}"
+mkdir -p "$ART"
+BASE="${VERIFY_BASE_URL:-http://localhost:8000}"
+DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
+
+{
+  echo "=== prove-dashboard run_id=${RUN_ID} ==="
+  echo "artifacts=$ART"
+  echo "base=$BASE"
+  echo "cwd=$ROOT"
+  echo "note=no dedicated Dashboard Feature/Browser file; guest gate + SessionController redirect"
+} | tee "$ART/dashboard-summary.txt"
+
+set +e
+"$DOCTOR" "$BASE" 2>&1 | tee "$ART/dashboard-doctor.log"
+DOCTOR_RC=${PIPESTATUS[0]}
+set -e
+
+# Guest gate on $BASE
+set +e
+curl -sS -D "$ART/dashboard-guest.headers" -o /dev/null "$BASE/dashboard"
+GUEST_RC=$?
+set -e
+GUEST_CODE="$(rg -i '^HTTP/' "$ART/dashboard-guest.headers" | head -1 | awk '{print $2}')"
+GUEST_LOC="$(rg -i '^Location:' "$ART/dashboard-guest.headers" | head -1 | awk '{print $2}' | tr -d '\r')"
+{
+  echo "guest_curl_rc=$GUEST_RC"
+  echo "guest_http=$GUEST_CODE"
+  echo "guest_location=$GUEST_LOC"
+} | tee "$ART/dashboard-guest.txt"
+
+GUEST_OK=1
+if [[ "$GUEST_CODE" != "302" ]] || ! echo "$GUEST_LOC" | rg -q 'login'; then
+  GUEST_OK=0
+  echo "FAIL: expected 302 to login for guest /dashboard" | tee -a "$ART/dashboard-guest.txt"
+fi
+
+# Auth redirect via existing Feature test
+set +e
+php artisan test --compact --filter="may create a session$" tests/Feature/Controllers/SessionControllerTest.php 2>&1 | tee "$ART/dashboard-session-redirect.log"
+REDIRECT_RC=${PIPESTATUS[0]}
+set -e
+
+{
+  echo "doctor_rc=$DOCTOR_RC"
+  echo "guest_ok=$GUEST_OK"
+  echo "session_redirect_rc=$REDIRECT_RC"
+  echo "verified=guest-302-login + Feature login redirect to dashboard (verified-via-redirect)"
+  echo "not_covered=authenticated GET /dashboard assertSee Dashboard / assertInertia dashboard"
+  ls -la "$ART" || true
+} | tee -a "$ART/dashboard-summary.txt"
+
+if [[ "$DOCTOR_RC" -ne 0 || "$GUEST_OK" -ne 1 || "$REDIRECT_RC" -ne 0 ]]; then
+  echo "=== prove-dashboard FAILED (evidence kept at $ART) ==="
+  exit 1
+fi
+
+echo "=== prove-dashboard OK (partial / verified-via-redirect) ==="
+exit 0

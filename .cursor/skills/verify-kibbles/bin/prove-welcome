@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# End-to-end proof: doctor + Welcome Browser test + durable artifacts.
+# Usage: .cursor/skills/verify-kibbles/bin/prove-welcome
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+cd "$ROOT"
+
+RUN_ID="${RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
+ART="artifacts/verify-kibbles/${RUN_ID}"
+mkdir -p "$ART/screenshots"
+BASE="${VERIFY_BASE_URL:-http://localhost:8000}"
+DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
+
+{
+  echo "=== prove-welcome run_id=${RUN_ID} ==="
+  echo "artifacts=$ART"
+  echo "base=$BASE"
+  echo "cwd=$ROOT"
+} | tee "$ART/summary.txt"
+
+set +e
+"$DOCTOR" "$BASE" 2>&1 | tee "$ART/doctor.log"
+DOCTOR_RC=${PIPESTATUS[0]}
+set -e
+
+curl -sS "$BASE/" -o "$ART/welcome.html" || true
+curl -sS -o /dev/null -w "%{http_code}" "$BASE/" > "$ART/welcome.http_code" || echo "000" > "$ART/welcome.http_code"
+
+{
+  echo "http_code=$(cat "$ART/welcome.http_code")"
+  # Inertia may not SSR page copy; assert shell markers instead
+  rg -o '"component":"welcome"|<title>Laravel</title>|name":"Laravel"' "$ART/welcome.html" 2>/dev/null | sort -u || true
+} | tee "$ART/welcome.copy.txt"
+
+# Drive mapped welcome feature via existing Browser test
+set +e
+php artisan test --compact tests/Browser/WelcomeTest.php 2>&1 | tee "$ART/welcome-browser-test.log"
+TEST_RC=${PIPESTATUS[0]}
+set -e
+
+if [[ -d tests/Browser/Screenshots ]]; then
+  cp -f tests/Browser/Screenshots/*.png "$ART/screenshots/" 2>/dev/null || true
+fi
+
+# Extra durable screenshot using the same Pest Browser harness (not a parallel Playwright CLI)
+PROOF_DIR="tests/Browser/_verify_tmp"
+mkdir -p "$PROOF_DIR"
+cat > "$PROOF_DIR/WelcomeProofTest.php" << 'PHP'
+<?php
+
+declare(strict_types=1);
+
+it('captures welcome proof screenshot', function (): void {
+    $page = visit('/');
+
+    $page->assertSee('Laravel')
+        ->assertSee("Let's get started")
+        ->screenshot(true, 'welcome-proof');
+});
+PHP
+
+set +e
+php artisan test --compact "$PROOF_DIR/WelcomeProofTest.php" 2>&1 | tee -a "$ART/welcome-browser-test.log"
+PROOF_RC=${PIPESTATUS[0]}
+set -e
+
+if [[ -f tests/Browser/Screenshots/welcome-proof.png ]]; then
+  cp -f tests/Browser/Screenshots/welcome-proof.png "$ART/screenshots/"
+fi
+
+# Cleanup: remove only the temporary proof test dir we created. Do not delete evidence.
+rm -rf "$PROOF_DIR"
+
+{
+  echo "doctor_rc=$DOCTOR_RC"
+  echo "welcome_test_rc=$TEST_RC"
+  echo "proof_screenshot_rc=$PROOF_RC"
+  echo "artifacts=$ART"
+  ls -la "$ART" || true
+  ls -la "$ART/screenshots" || true
+} | tee -a "$ART/summary.txt"
+
+if [[ "$DOCTOR_RC" -ne 0 || "$TEST_RC" -ne 0 ]]; then
+  echo "=== prove-welcome FAILED (evidence kept at $ART) ==="
+  exit 1
+fi
+
+echo "=== prove-welcome OK ==="
+exit 0

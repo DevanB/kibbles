@@ -1,0 +1,33 @@
+=== prove-dashboard run_id=maintain-20261001-205812 ===
+artifacts=artifacts/verify-kibbles/maintain-20261001-205812
+base=http://kibbles.test
+cwd=/Users/devanbeitel/Developer/kibbles
+note=no dedicated Dashboard Feature/Browser file; guest gate + SessionController redirect
+doctor_rc=0
+guest_ok=1
+session_redirect_rc=0
+verified=guest-302-login + Feature login redirect to dashboard (verified-via-redirect)
+not_covered=authenticated GET /dashboard assertSee Dashboard / assertInertia dashboard
+total 192
+drwxr-xr-x@ 22 devanbeitel  staff    704 Oct  1 20:59 .
+drwxr-xr-x@  5 devanbeitel  staff    160 Oct  1 20:58 ..
+-rw-r--r--@  1 devanbeitel  staff    585 Oct  1 20:59 dashboard-doctor.log
+-rw-r--r--@  1 devanbeitel  staff   1169 Oct  1 20:59 dashboard-guest.headers
+-rw-r--r--@  1 devanbeitel  staff     72 Oct  1 20:59 dashboard-guest.txt
+-rw-r--r--@  1 devanbeitel  staff     88 Oct  1 20:59 dashboard-session-redirect.log
+-rw-r--r--@  1 devanbeitel  staff    491 Oct  1 20:59 dashboard-summary.txt
+-rw-r--r--@  1 devanbeitel  staff    522 Oct  1 20:58 dashboard-tests.log
+-rw-r--r--@  1 devanbeitel  staff    585 Oct  1 20:58 doctor-initial.log
+-rw-r--r--@  1 devanbeitel  staff    585 Oct  1 20:58 doctor.log
+-rw-r--r--@  1 devanbeitel  staff    321 Oct  1 20:58 login-tests.log
+-rw-r--r--@  1 devanbeitel  staff   1894 Oct  1 20:59 post-edit-prove.log
+-rw-r--r--@  1 devanbeitel  staff    502 Oct  1 20:58 profile-tests.log
+-rw-r--r--@  1 devanbeitel  staff   2178 Oct  1 20:58 prove-welcome-console.log
+-rw-r--r--@  1 devanbeitel  staff    207 Oct  1 20:58 register-tests.log
+drwxr-xr-x@  3 devanbeitel  staff     96 Oct  1 20:58 screenshots
+-rw-r--r--@  1 devanbeitel  staff   1249 Oct  1 20:58 summary.txt
+-rw-r--r--@  1 devanbeitel  staff    244 Oct  1 20:58 welcome-browser-test.log
+-rw-r--r--@  1 devanbeitel  staff     54 Oct  1 20:58 welcome-curl.txt
+-rw-r--r--@  1 devanbeitel  staff     75 Oct  1 20:58 welcome.copy.txt
+-rw-r--r--@  1 devanbeitel  staff  20763 Oct  1 20:58 welcome.html
+-rw-r--r--@  1 devanbeitel  staff      3 Oct  1 20:58 welcome.http_code

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Doctor for kibbles verification skill.
+# Usage: .cursor/skills/verify-kibbles/bin/doctor [base_url]
+# Default base: http://localhost:8000 (composer dev). Pass another URL to override.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+cd "$ROOT"
+
+BASE="${1:-http://localhost:8000}"
+FAIL=0
+
+echo "=== verify-kibbles doctor ==="
+echo "cwd=$ROOT"
+echo "url_under_test=$BASE"
+
+UP_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/up" || echo "000")"
+HOME_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/" || echo "000")"
+echo "up:${UP_CODE}"
+echo "home:${HOME_CODE}"
+
+if [[ -f public/hot ]]; then
+  echo "vite:hot ($(tr -d '\n' < public/hot))"
+elif [[ -f public/build/manifest.json ]]; then
+  echo "vite:manifest ($(wc -c < public/build/manifest.json | tr -d ' ') bytes)"
+else
+  echo "vite:MISSING (start composer dev, or run: bun run build)"
+  FAIL=1
+fi
+
+if [[ "$UP_CODE" != "200" ]]; then
+  echo "FAIL: /up expected 200, got ${UP_CODE}"
+  FAIL=1
+fi
+
+if [[ "$HOME_CODE" != "200" ]]; then
+  echo "WARN: / expected 200 once Vite is up, got ${HOME_CODE}"
+  FAIL=1
+fi
+
+if command -v php >/dev/null 2>&1; then
+  php artisan about --only=environment,drivers 2>/dev/null | head -40 || echo "(php artisan about skipped)"
+fi
+
+if [[ "$FAIL" -ne 0 ]]; then
+  echo "=== doctor FAILED ==="
+  exit 1
+fi
+
+echo "=== doctor OK ==="
+exit 0

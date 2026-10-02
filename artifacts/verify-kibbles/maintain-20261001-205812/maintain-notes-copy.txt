@@ -1,0 +1,42 @@
+# kibbles maintain-verification notes
+# run: maintain-20261001-205812 (CT / America/Chicago)
+# machine: eab1f9f8-f967-4e5d-810d-c1a1ad3b534d
+# project: /Users/devanbeitel/Developer/kibbles
+# base: http://kibbles.test (Herd)
+
+## Doctor
+- Initial doctor OK: up:200 home:200 manifest:ok
+- APP_URL in about still localhost:8000 (passkey RP mismatch known; password flows OK)
+
+## Features driven
+1. welcome — prove-welcome OK (WelcomeTest + proof screenshot + curl 200 / component welcome)
+2. login — SessionControllerTest 12/12; LayoutTest "renders auth pages" 1/1
+3. register — UserControllerTest 14/14 (includes register + delete account Feature cases)
+4. dashboard — guest curl /dashboard → 302 Location login; SessionController "may create a session" redirect dashboard; LayoutTest full 6/6 (app layout via settings). NO dedicated Dashboard Feature/Browser test file. Verified-via-redirect + guest gate + adjacent layout.
+5. profile — UserProfileControllerTest 9/9; LayoutTest settings/toast/delete 3/3; UserController destroy filters 4/4
+
+## Confirmed drift (to fix under .cursor/skills/verify-kibbles only)
+- welcome.md: Register gated by canRegister prop; page also has optional Laracasts / Deploy now links (marketing, not auth)
+- dashboard.md: state clearly there is NO dedicated tests/Browser or Feature dashboard file; live proof = guest 302 + login/register Feature redirect to dashboard; LayoutTest covers shared app shell from settings; assertSee('Dashboard') is a pattern to add, not existing coverage
+- profile-settings.md: account delete is UserController@destroy (route user.destroy), Feature in UserControllerTest; Browser delete in LayoutTest
+- register.md: LayoutTest only nav smoke (login→Sign up sees Create an account), not full Browser submit
+
+## Product gaps (NOT fixed — out of skill edit scope)
+- No dedicated Feature/Browser test that GETs /dashboard authenticated and assertSee('Dashboard') / assertInertia dashboard
+- Passkey RP host mismatch Herd kibbles.test vs APP_URL localhost:8000
+- Welcome Inertia SSR may not embed full page copy in HTML (prove-welcome asserts shell markers)
+
+## Artifacts
+artifacts/verify-kibbles/maintain-20261001-205812/
+
+## Git
+NO_GIT — ship local-only; no PR
+
+## Post-edit re-drive
+- doctor OK again
+- prove-dashboard OK (guest 302 + session redirect)
+- Skill files updated under .cursor/skills/verify-kibbles/ only
+- Teardown: no disposable PIDs/tmp sqlite created; Herd left running; artifacts kept
+
+## Outcome
+changed (skill drift fixed + prove-dashboard added; all feature drives green)

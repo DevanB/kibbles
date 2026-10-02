@@ -1,0 +1,189 @@
+---
+name: verify-kibbles
+description: "Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving welcome/login/register/dashboard/profile, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
+---
+
+# Verify kibbles
+
+Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
+
+Keep `APP_URL=http://localhost:8000` so passkeys match this host. Do not rewrite `.env`.
+
+## Launch
+
+### Preferred: `composer dev`
+
+From the project root, in a terminal you leave running (foreground TUI — this skill must not start or background it):
+
+```bash
+cd /Users/devanbeitel/Developer/kibbles
+composer dev
+```
+
+That runs `php artisan dev`: `php artisan serve` (default `http://localhost:8000`), `queue:listen`, `pail`, and `bun run dev` (Vite).
+
+Ready when both are true:
+
+1. `http://localhost:8000/up` returns **200**
+2. Vite is up: `public/hot` exists (dev server), or `public/build/manifest.json` exists if you built assets instead
+
+One-time if tools are missing:
+
+```bash
+cd /Users/devanbeitel/Developer/kibbles
+bun install
+bunx playwright install   # once, if Pest Browser complains browsers are missing/outdated
+```
+
+`bun run build` is optional while `composer dev` is serving Vite. Use a production build when you are not running the Vite dev server (isolated serve below).
+
+Optional alternate: Laravel Herd at `http://kibbles.test` if the folder is parked — pass that URL explicitly; it is not the default.
+
+### Isolated: disposable `artisan serve` + sqlite
+
+When you must not touch the project DB or port 8000 (and you are not using the `composer dev` process):
+
+```bash
+cd /Users/devanbeitel/Developer/kibbles
+bun run build   # isolated serve has no Vite HMR unless you start it yourself
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+PORT=8$(printf '%03d' $((RANDOM % 1000)))   # e.g. 8123–8999
+DB_FILE="/tmp/kibbles-verify-${RUN_ID}.sqlite"
+touch "$DB_FILE"
+# Record the PID you start — cleanup kills only this PID
+APP_URL="http://127.0.0.1:${PORT}" \
+  DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
+  php artisan serve --host=127.0.0.1 --port="$PORT" &
+echo $! > "/tmp/kibbles-verify-${RUN_ID}.pid"
+echo "$PORT" > "/tmp/kibbles-verify-${RUN_ID}.port"
+echo "$DB_FILE" > "/tmp/kibbles-verify-${RUN_ID}.db"
+APP_URL="http://127.0.0.1:${PORT}" DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
+  php artisan migrate --force --no-interaction
+```
+
+Match `APP_URL` to the serve URL **for that process only** (inline env, not `.env`). Do **not** rewrite committed `.env`. Leave the project `APP_URL` at `http://localhost:8000`.
+
+### Passkey / APP_URL mismatch (known)
+
+`.env` should stay `APP_URL=http://localhost:8000`. Fortify passkeys set:
+
+- `relying_party_id` ← host of `config('app.url')`
+- `allowed_origins` ← `[config('app.url')]`
+
+With `composer dev` and a browser on `http://localhost:8000`, origin and RP ID match — **no mismatch**.
+
+**Passkey register/assert can fail only if you browse a different host** (e.g. Herd `http://kibbles.test`) while `APP_URL` is `http://localhost:8000`. Password login and most UI still work on either host once assets load. Prefer Pest Browser (it boots its own server with matching `APP_URL`) for passkey flows. Never commit `APP_URL` or secret changes to chase another host.
+
+## Doctor
+
+Run from the project root (or via the helper). Default base is `http://localhost:8000`:
+
+```bash
+cd /Users/devanbeitel/Developer/kibbles
+.cursor/skills/verify-kibbles/bin/doctor
+# equivalent: .cursor/skills/verify-kibbles/bin/doctor http://localhost:8000
+```
+
+Manual equivalent:
+
+```bash
+BASE="${1:-http://localhost:8000}"
+curl -sS -o /dev/null -w "up:%{http_code}\n" "$BASE/up"          # expect 200
+curl -sS -o /dev/null -w "home:%{http_code}\n" "$BASE/"           # expect 200 once Vite is up
+if [[ -f public/hot ]]; then echo "vite:hot"; elif [[ -f public/build/manifest.json ]]; then echo "vite:manifest"; else echo "vite:MISSING"; fi
+php artisan about --only=environment,drivers 2>/dev/null | head -40
+echo "url_under_test=$BASE"
+```
+
+Fail doctor if `/up` ≠ 200, `/` ≠ 200, or Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing). Home 500 almost always means Vite is not running and there is no production build.
+
+## Drive
+
+Prefer Pest over inventing selectors from scratch.
+
+### Browser suite (Playwright under Pest)
+
+```bash
+php artisan test --compact tests/Browser/WelcomeTest.php
+php artisan test --compact tests/Browser/LayoutTest.php
+php artisan test --compact --testsuite=Browser
+```
+
+Pest Browser starts its own app server; it does not require `composer dev` or Herd. After `bun install`, if Browser tests fail with Playwright outdated / just-installed errors, run `bunx playwright install` (or `bunx playwright install chromium`) so browser binaries match the pinned `playwright` package. Browsers land under `~/Library/Caches/ms-playwright`.
+
+**`@name` → `data-test`:** Pest `click('@login-button')` targets `data-test="login-button"`. Real attrs in this app:
+
+| data-test | Where |
+|-----------|--------|
+| `login-button` | `/login` submit |
+| `register-user-button` | `/register` submit |
+| `update-profile-button` | `/settings/profile` |
+| `update-password-button` | `/settings/password` |
+| `reset-password-button` | reset-password form |
+| `email-password-reset-link-button` | forgot-password |
+| `confirm-password-button` | password confirm |
+| `delete-user-button` / `confirm-delete-user-button` | profile delete dialog |
+| `logout-button` | user menu |
+| `sidebar-menu-button` | nav user trigger |
+
+Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder`). Default factory password is `password`.
+
+### Feature / controller tests
+
+```bash
+php artisan test --compact tests/Feature/Controllers/SessionControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.php
+php artisan test --compact tests/Feature/BootstrapTest.php
+```
+
+### Ad-hoc smoke (`composer dev`)
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/
+curl -sS http://localhost:8000/ | rg -o "Let's get started|Laravel has an incredibly rich ecosystem|Log in|Register" | head
+curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login
+```
+
+Feature map: `.cursor/skills/verify-kibbles/features/` (welcome, login, register, dashboard, profile-settings).
+
+## Evidence
+
+- Pest failure / explicit `$page->screenshot('name')` → `tests/Browser/Screenshots/` (directory is wiped at the **start** of the next Browser suite boot).
+- Durable proof runs: copy into a named directory you create:
+
+```bash
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+ART="artifacts/verify-kibbles/${RUN_ID}"
+mkdir -p "$ART"
+# doctor log, test stdout, HTML dumps, and any Screenshots/*.png copies go here
+```
+
+Proof standards: real user path, action + resulting state, and side effects when claiming mutations. Evidence under `artifacts/verify-kibbles/` must **survive cleanup**.
+
+## Cleanup
+
+- Do **not** stop a `composer dev` the user started — it is their foreground TUI, not a PID this skill owns.
+- Kill **only** PIDs you recorded for an isolated serve (e.g. contents of `/tmp/kibbles-verify-*.pid`). Never `pkill php` / kill-by-name.
+- Remove disposable sqlite files and `/tmp/kibbles-verify-*` markers you created.
+- Never delete `artifacts/verify-kibbles/` or other evidence.
+- Do not commit, do not modify `.env` secrets, do not delete user data in the project sqlite.
+- Herd, if it happens to be running, is not this skill's server — leave it alone.
+
+```bash
+# Example when you started an isolated serve:
+PID_FILE=/tmp/kibbles-verify-${RUN_ID}.pid
+DB_FILE=$(cat /tmp/kibbles-verify-${RUN_ID}.db)
+if [[ -f "$PID_FILE" ]]; then kill "$(cat "$PID_FILE")" 2>/dev/null || true; rm -f "$PID_FILE"; fi
+rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID}.db
+```
+
+## Helpers
+
+| Helper | Invocation |
+|--------|------------|
+| Doctor | `.cursor/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) |
+| Prove welcome | `.cursor/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
+| Prove dashboard | `.cursor/skills/verify-kibbles/bin/prove-dashboard` — doctor + guest `/dashboard` 302→login + SessionController login→dashboard redirect (partial; no dedicated Dashboard test file) |
+
+Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`).

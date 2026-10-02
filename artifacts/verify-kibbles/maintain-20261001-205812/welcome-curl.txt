@@ -1,0 +1,3 @@
+home:200
+<title>Laravel</title>
+"component":"welcome"
