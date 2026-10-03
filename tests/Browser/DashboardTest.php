@@ -18,3 +18,21 @@ it('renders the dashboard for a verified user', function (): void {
         ->assertSee('Log out')
         ->assertNoJavaScriptErrors();
 });
+
+it('logs out from the dashboard user menu', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    $page = visit(route('dashboard'));
+
+    $page->click('@sidebar-menu-button')
+        ->click('@logout-button')
+        ->assertPathIs('/')
+        ->assertSee('Log in')
+        ->assertNoJavaScriptErrors();
+
+    $page->navigate(route('dashboard'))
+        ->assertPathIs('/login')
+        ->assertNoJavaScriptErrors();
+});

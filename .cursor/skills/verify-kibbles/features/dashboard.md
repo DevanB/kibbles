@@ -12,6 +12,7 @@ Dedicated tests:
 | Verified render | same file — `User::factory()->withoutTwoFactor()->create()` + `actingAs` → **200** + `assertInertia` component `dashboard` |
 | Unverified gate | same file — `unverified()` → `assertRedirectToRoute('verification.notice')` (`User` implements `MustVerifyEmail`; `verified` middleware) |
 | Authenticated UI | `tests/Browser/DashboardTest.php` — `actingAs` + `visit(route('dashboard'))` → `assertSee('Dashboard')`, open `@sidebar-menu-button`, `assertSee('Log out')`, `assertNoJavaScriptErrors()` |
+| Logout UI | same Browser file — `@sidebar-menu-button` then `click('@logout-button')` → `assertPathIs('/')` + `assertSee('Log in')`, then `navigate(route('dashboard'))` → `assertPathIs('/login')` (guest). HTTP logout stays `SessionControllerTest` `may destroy a session` (`POST logout` → `/` + `assertGuest()`) |
 
 Adjacent (still true, not the dashboard proof):
 
@@ -40,9 +41,9 @@ Preconditions:
 - **Guest denied (Feature) →** `php artisan test --compact --filter="redirects guests to login" tests/Feature/Controllers/DashboardTest.php`
 - **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard`
 - **Unverified (Feature) →** `php artisan test --compact --filter="redirects unverified users" tests/Feature/Controllers/DashboardTest.php` → `verification.notice`
-- **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, `assertNoJavaScriptErrors()`
+- **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, logout click lands on `/` then dashboard redirects to `/login`, `assertNoJavaScriptErrors()`
 - **Durable proof →** `.cursor/skills/verify-kibbles/bin/prove-dashboard` (runs the two files above; doctor against `http://localhost:8000` is logged and does not fail the proof if `composer dev` is down)
-- **Logout →** open user menu `@sidebar-menu-button` → `click('@logout-button')` → guest on home/login (menu visibility is covered; full logout click is not a dedicated test yet)
+- **Logout →** open user menu `@sidebar-menu-button` → `click('@logout-button')` → `assertPathIs('/')` (welcome shows **Log in**). Revisit `dashboard` → `assertPathIs('/login')` proves the browser session is a guest. Feature `SessionControllerTest` `may destroy a session` is the HTTP `assertGuest()` proof
 
 ## Gotchas
 
