@@ -11,7 +11,7 @@ final class GamePolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->exists;
     }
 
     public function view(User $user, Game $game): bool
@@ -21,7 +21,7 @@ final class GamePolicy
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->exists;
     }
 
     public function update(User $user, Game $game): bool
