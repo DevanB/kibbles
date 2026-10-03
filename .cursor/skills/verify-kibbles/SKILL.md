@@ -184,6 +184,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 |--------|------------|
 | Doctor | `.cursor/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) |
 | Prove welcome | `.cursor/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
-| Prove dashboard | `.cursor/skills/verify-kibbles/bin/prove-dashboard` — doctor + guest `/dashboard` 302→login + SessionController login→dashboard redirect (partial; no dedicated Dashboard test file) |
+| Prove dashboard | `.cursor/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`).

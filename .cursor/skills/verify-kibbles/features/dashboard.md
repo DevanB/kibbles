@@ -1,45 +1,52 @@
 # Dashboard
 
-Authenticated home at `/dashboard` (route `dashboard`, Inertia `dashboard`). Behind `auth` + `verified` middleware.
+Authenticated home at `/dashboard` (route `dashboard`, Inertia `dashboard`). Behind `auth` + `verified` middleware. Closure in `routes/web.php` renders `resources/js/pages/dashboard.tsx` inside `AppLayout` (sidebar link + breadcrumb title `Dashboard`).
 
-## Coverage reality (live-confirmed)
+## Coverage reality
 
-There is **no** dedicated `tests/Browser/*Dashboard*` or `tests/Feature/*Dashboard*` file. Existing coverage is adjacent:
+Dedicated tests:
 
 | Proof | How |
 |-------|-----|
-| Guest gate | `curl -I http://localhost:8000/dashboard` → **302** `Location: …/login` |
-| Auth landing | `SessionControllerTest` / `UserControllerTest` success paths `assertRedirectToRoute('dashboard')` |
-| App shell | `LayoutTest` starts on settings (same authenticated app layout), not dashboard heading |
+| Guest gate | `tests/Feature/Controllers/DashboardTest.php` — guest `GET dashboard` → `assertRedirectToRoute('login')` |
+| Verified render | same file — `User::factory()->withoutTwoFactor()->create()` + `actingAs` → **200** + `assertInertia` component `dashboard` |
+| Unverified gate | same file — `unverified()` → `assertRedirectToRoute('verification.notice')` (`User` implements `MustVerifyEmail`; `verified` middleware) |
+| Authenticated UI | `tests/Browser/DashboardTest.php` — `actingAs` + `visit(route('dashboard'))` → `assertSee('Dashboard')`, open `@sidebar-menu-button`, `assertSee('Log out')`, `assertNoJavaScriptErrors()` |
 
-Authenticated **UI** `assertSee('Dashboard')` / Feature `get(route('dashboard'))` + Inertia `dashboard` are **patterns to add** in product tests — not present today. Do not invent product tests from this skill; prefer helper smoke below.
+Adjacent (still true, not the dashboard proof):
+
+- `SessionControllerTest` / `UserControllerTest` success paths `assertRedirectToRoute('dashboard')`
+- `LayoutTest` starts on settings (same app layout), not the dashboard page
 
 ## Sub-features
 
-- Dashboard heading / app layout shell
-- Entry to settings via sidebar / user menu (`data-test="sidebar-menu-button"`, `logout-button`)
+- Dashboard heading / app layout shell (breadcrumb + sidebar title `Dashboard`)
+- Entry to the user menu (`data-test="sidebar-menu-button"`) and logout item (`data-test="logout-button"`, label `Log out`)
 - Post-login / post-register landing target
 
 ## How to get to it (user POV)
 
-Log in or register, then land on `/dashboard`, or open `/dashboard` while authenticated and verified. Guests are sent to login.
+Log in or register as a verified user, then land on `/dashboard`, or open `/dashboard` while authenticated and verified. Guests are sent to `/login`. Authenticated users with `email_verified_at` null are sent to the email verification notice (`verification.notice`).
 
 ## Driving it with Pest Browser / Feature tests
 
 Preconditions:
 
-- `User::factory()->withoutTwoFactor()->create()` and `actingAs($user)` (ensure verified if middleware requires it)
-- Vite build for Browser visits
+- `User::factory()->withoutTwoFactor()->create()` and `actingAs($user)` (factory is verified by default)
+- Unverified: `User::factory()->unverified()->withoutTwoFactor()->create()`
+- Pest Browser starts its own server — `composer dev` is not required to run these tests
+- Playwright browsers installed (`bunx playwright install chromium` if Pest says they are missing)
 
-- **Guest denied →** `curl -sS -o /dev/null -w "%{http_code}\n" -I http://localhost:8000/dashboard` → **302** to login
-- **Auth redirect (Feature, existing) →** `php artisan test --compact --filter="may create a session$" tests/Feature/Controllers/SessionControllerTest.php` → **`assertRedirectToRoute('dashboard')`** (verified-via-redirect)
-- **Durable partial proof →** `.cursor/skills/verify-kibbles/bin/prove-dashboard` → guest gate + login redirect log under artifacts
-- **Authenticated render (Feature pattern to add) →** `$this->actingAs($user)->get(route('dashboard'))` → **200** + Inertia `dashboard`
-- **Browser after login (pattern to add) →** `actingAs`, `visit(route('dashboard'))` → **`assertSee('Dashboard')`** + `assertNoJavaScriptErrors()`
-- **Logout →** open user menu `@sidebar-menu-button` → `click('@logout-button')` → **guest on home/login**
+- **Guest denied (Feature) →** `php artisan test --compact --filter="redirects guests to login" tests/Feature/Controllers/DashboardTest.php`
+- **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard`
+- **Unverified (Feature) →** `php artisan test --compact --filter="redirects unverified users" tests/Feature/Controllers/DashboardTest.php` → `verification.notice`
+- **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, `assertNoJavaScriptErrors()`
+- **Durable proof →** `.cursor/skills/verify-kibbles/bin/prove-dashboard` (runs the two files above; doctor against `http://localhost:8000` is logged and does not fail the proof if `composer dev` is down)
+- **Logout →** open user menu `@sidebar-menu-button` → `click('@logout-button')` → guest on home/login (menu visibility is covered; full logout click is not a dedicated test yet)
 
 ## Gotchas
 
-- Middleware `verified` — unverified users may not reach dashboard; factories should match the app’s verification expectations
-- Layout/settings Browser tests start from profile, not dashboard, but use the same app layout (adjacent shell only)
-- Prefer existing Feature redirect assertions + guest curl over inventing a new E2E harness or product test files outside this skill
+- `verified` middleware is real: unverified users never see the dashboard Inertia page
+- Visible "Dashboard" copy is the sidebar nav item and the breadcrumb, not a page `<h1>` (the page body is placeholder cards; `<Head title="Dashboard" />` is the document title)
+- Default URL for doctor/ad-hoc curls stays `http://localhost:8000` via `composer dev`. Do not change `.env` / `APP_URL`
+- Passkey RP mismatch only if the browser host differs from `APP_URL`

@@ -38,7 +38,7 @@ Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature 
 
 ## Coverage notes (maintain pass)
 
-- **Dashboard:** no dedicated Feature/Browser dashboard file — guest 302 on the base URL + login/register Feature redirects; see [dashboard.md](./dashboard.md) and `bin/prove-dashboard`.
+- **Dashboard:** `tests/Feature/Controllers/DashboardTest.php` (guest → login, verified → Inertia `dashboard`, unverified → `verification.notice`) and `tests/Browser/DashboardTest.php` (`assertSee('Dashboard')` + user menu Log out). See [dashboard.md](./dashboard.md) and `bin/prove-dashboard`.
 - **Welcome Register:** gated by `canRegister`; Laracasts/Deploy links are optional marketing.
 - **Profile delete:** `UserController@destroy` (`user.destroy`); Feature in `UserControllerTest`.
 - **Register Browser:** LayoutTest is nav smoke only (login → Sign up).
