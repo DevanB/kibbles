@@ -7,7 +7,8 @@ namespace App\Http\Controllers;
 use App\Actions\CreateGame;
 use App\Actions\DeleteGame;
 use App\Actions\UpdateGame;
-use App\Http\Requests\StoreGameRequest;
+use App\Http\Requests\CreateGameRequest;
+use App\Http\Requests\DeleteGameRequest;
 use App\Http\Requests\UpdateGameRequest;
 use App\Models\Game;
 use App\Models\User;
@@ -24,7 +25,7 @@ final readonly class GameController
         Gate::authorize('viewAny', Game::class);
 
         return Inertia::render('games/index', [
-            'games' => $user->games()->latest()->get(),
+            'games' => $user->games()->latest()->get(['id', 'title']),
         ]);
     }
 
@@ -35,31 +36,30 @@ final readonly class GameController
         return Inertia::render('games/create');
     }
 
-    public function store(StoreGameRequest $request, #[CurrentUser] User $user, CreateGame $action): RedirectResponse
-    {
-        $action->handle($user, $request->string('title')->value());
+    public function store(
+        CreateGameRequest $request,
+        #[CurrentUser] User $owner,
+        CreateGame $action,
+    ): RedirectResponse {
+        $game = $action->handle($owner, $request->string('title')->value());
 
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => __('Game created.'),
         ]);
 
-        return to_route('games.index');
-    }
-
-    public function show(Game $game): RedirectResponse
-    {
-        Gate::authorize('view', $game);
-
         return to_route('games.edit', $game);
     }
 
     public function edit(Game $game): Response
     {
-        Gate::authorize('update', $game);
+        Gate::authorize('view', $game);
 
         return Inertia::render('games/edit', [
-            'game' => $game,
+            'game' => [
+                'id' => $game->id,
+                'title' => $game->title,
+            ],
         ]);
     }
 
@@ -72,12 +72,12 @@ final readonly class GameController
             'message' => __('Game updated.'),
         ]);
 
-        return to_route('games.index');
+        return to_route('games.edit', $game);
     }
 
-    public function destroy(Game $game, DeleteGame $action): RedirectResponse
+    public function destroy(DeleteGameRequest $request, Game $game, DeleteGame $action): RedirectResponse
     {
-        Gate::authorize('delete', $game);
+        $request->validated();
 
         $action->handle($game);
 

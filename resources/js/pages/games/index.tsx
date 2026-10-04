@@ -1,9 +1,10 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { create, destroy, edit, index } from '@/routes/games';
+import { create, edit, index } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,7 +64,11 @@ export default function Index({ games }: { games: Game[] }) {
                                         <Link href={edit(game)}>Edit</Link>
                                     </Button>
 
-                                    <Form {...destroy.form(game)}>
+                                    <Form
+                                        {...GameController.destroy.form(
+                                            game.id,
+                                        )}
+                                    >
                                         {({ processing }) => (
                                             <Button
                                                 type="submit"

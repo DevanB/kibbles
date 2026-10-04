@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Http\Requests\StoreGameRequest;
+use App\Http\Requests\CreateGameRequest;
 use App\Models\User;
 
 it('authorizes an authenticated user to create a game', function (): void {
     $user = User::factory()->create();
 
-    $request = StoreGameRequest::create('/games', 'POST');
+    $request = CreateGameRequest::create('/games', 'POST');
     $request->setUserResolver(fn () => $user);
     $request->setContainer(app());
 
@@ -16,7 +16,7 @@ it('authorizes an authenticated user to create a game', function (): void {
 });
 
 it('denies guests from creating a game', function (): void {
-    $request = StoreGameRequest::create('/games', 'POST');
+    $request = CreateGameRequest::create('/games', 'POST');
     $request->setUserResolver(fn (): null => null);
     $request->setContainer(app());
 

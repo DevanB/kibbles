@@ -24,8 +24,8 @@ final class UpdateGameRequest extends FormRequest
      */
     public function rules(): array
     {
-        $user = $this->user();
-        assert($user instanceof User);
+        $owner = $this->user();
+        assert($owner instanceof User);
 
         $game = $this->route('game');
         assert($game instanceof Game);
@@ -35,8 +35,8 @@ final class UpdateGameRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique(Game::class)
-                    ->where('user_id', $user->id)
+                Rule::unique(Game::class, 'title')
+                    ->where('user_id', $owner->id)
                     ->ignore($game),
             ],
         ];
