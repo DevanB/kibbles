@@ -1,9 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
+import { ModalLink } from '@inertiaui/modal-react';
 import { ChevronRight, Plus } from 'lucide-react';
+import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { create, index, show } from '@/routes/games';
+import { cn } from '@/lib/utils';
+import { index, show } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,10 +30,13 @@ export default function Index({ games }: { games: Game[] }) {
 
                     {games.length > 0 && (
                         <Button asChild data-test="create-game-button">
-                            <Link href={create()}>
+                            <ModalLink
+                                href={GameController.create.url()}
+                                navigate
+                            >
                                 <Plus />
-                                Add game
-                            </Link>
+                                Add Game
+                            </ModalLink>
                         </Button>
                     )}
                 </div>
@@ -41,13 +47,14 @@ export default function Index({ games }: { games: Game[] }) {
                         <p className="mt-1 text-sm text-muted-foreground">
                             Add your first game to start your catalog.
                         </p>
-                        <Button
-                            asChild
-                            className="mt-4"
+                        <ModalLink
+                            href={GameController.create.url()}
+                            navigate
+                            className={cn(buttonVariants(), 'mt-4')}
                             data-test="create-game-button"
                         >
-                            <Link href={create()}>Add game</Link>
-                        </Button>
+                            Add Game
+                        </ModalLink>
                     </div>
                 ) : (
                     <ul className="divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">

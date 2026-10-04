@@ -22,7 +22,7 @@ export default function Edit({ game }: { game: Game }) {
                 href: show(game),
             },
             {
-                title: 'Edit game',
+                title: 'Edit Game',
                 href: '#',
             },
         ],
@@ -34,7 +34,7 @@ export default function Edit({ game }: { game: Game }) {
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <Heading
-                    title="Edit game"
+                    title="Edit Game"
                     description="Update this game in your personal catalog"
                 />
 
@@ -65,7 +65,7 @@ export default function Edit({ game }: { game: Game }) {
                                     data-test="save-game-button"
                                 >
                                     {processing && <Spinner />}
-                                    Save changes
+                                    Save Changes
                                 </Button>
                                 <Button variant="ghost" asChild>
                                     <Link href={show(game)}>Cancel</Link>
@@ -78,7 +78,7 @@ export default function Edit({ game }: { game: Game }) {
                 <div className="max-w-xl space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
                     <Heading
                         variant="small"
-                        title="Delete game"
+                        title="Delete Game"
                         description="Permanently remove this game from your catalog"
                     />
 
@@ -90,7 +90,7 @@ export default function Edit({ game }: { game: Game }) {
                                 disabled={processing}
                                 data-test="delete-game-button"
                             >
-                                Delete game
+                                Delete Game
                             </Button>
                         )}
                     </Form>

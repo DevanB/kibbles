@@ -77,14 +77,21 @@ export default function Show({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem variant="destructive" asChild>
-                                    <button
-                                        type="submit"
-                                        form="delete-game-form"
-                                        data-test="delete-game-button"
-                                    >
-                                        Delete
-                                    </button>
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    data-test="delete-game-button"
+                                    onSelect={() => {
+                                        const form =
+                                            document.getElementById(
+                                                'delete-game-form',
+                                            );
+
+                                        if (form instanceof HTMLFormElement) {
+                                            form.requestSubmit();
+                                        }
+                                    }}
+                                >
+                                    Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -110,7 +117,7 @@ export default function Show({
 
                 <section className="flex flex-1 flex-col space-y-4">
                     <div className="flex items-center justify-between gap-4">
-                        <Heading variant="small" title="Journal" />
+                        <Heading variant="small" title="Journal Entries" />
 
                         {journalEntries.length > 0 && (
                             <ModalLink

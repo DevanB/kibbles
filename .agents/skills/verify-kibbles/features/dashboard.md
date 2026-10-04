@@ -1,6 +1,6 @@
 # Dashboard
 
-Authenticated home at `/dashboard` (route `dashboard`, Inertia `dashboard`). Behind `auth` + `verified` middleware. Closure in `routes/web.php` renders `resources/js/pages/dashboard.tsx` inside `AppLayout` (sidebar link + breadcrumb title `Dashboard`). `/` redirects here (see [home.md](./home.md)).
+Authenticated home at `/dashboard` (route `dashboard`, `DashboardController`, Inertia `dashboard`). Behind `auth` + `verified` middleware. `DashboardController` passes `recentJournalEntries` (newest-first, owner-only, limit 8) to `resources/js/pages/dashboard.tsx` inside `AppLayout` (sidebar link + breadcrumb title `Dashboard`). `/` redirects here (see [home.md](./home.md)).
 
 ## Coverage reality
 
@@ -9,7 +9,8 @@ Dedicated tests:
 | Proof | How |
 |-------|-----|
 | Guest gate | `tests/Feature/Controllers/DashboardTest.php` — guest `GET dashboard` → `assertRedirectToRoute('login')` |
-| Verified render | same file — `User::factory()->withoutTwoFactor()->create()` + `actingAs` → **200** + `assertInertia` component `dashboard` |
+| Verified render | same file — `User::factory()->withoutTwoFactor()->create()` + `actingAs` → **200** + `assertInertia` component `dashboard` + empty `recentJournalEntries` |
+| Recent journal isolation | same file — owner-only newest-first list; other users’ entries omitted; capped at 8 |
 | Unverified gate | same file — `unverified()` → `assertRedirectToRoute('verification.notice')` |
 | Authenticated UI | `tests/Browser/DashboardTest.php` — `actingAs` + `visit(route('dashboard'))` → `assertSee('Dashboard')`, open `@sidebar-menu-button`, `assertSee('Log out')` |
 | Logout UI | same Browser file — `@sidebar-menu-button` then `click('@logout-button')` → **`assertPathIs('/login')`** (home redirect chain). HTTP logout stays `SessionControllerTest` `may destroy a session` (`POST logout` → `/` + `assertGuest()`) |
@@ -24,9 +25,12 @@ Adjacent (still true, not the dashboard proof):
 ## Sub-features
 
 - Dashboard heading / app layout shell (breadcrumb + sidebar title `Dashboard`)
+- **Recent Journal Entries**: newest journal rows across the current user’s games (`game.title` + date + body preview). Row opens the journal show modal. Empty copy + **Games** / **Add Game**
 - Entry to the user menu (`data-test="sidebar-menu-button"`) and logout item (`data-test="logout-button"`, label `Log out`)
 - Post-login / post-register landing target
 - Nav sibling **Games**
+- Sidebar brand **Kibbles** (no Repository / Documentation footer links)
+- Document title `{page} :: Kibbles`
 
 ## How to get to it (user POV)
 
@@ -42,7 +46,8 @@ Preconditions:
 - Playwright browsers installed (`bunx playwright install chromium` if Pest says they are missing)
 
 - **Guest denied (Feature) →** `php artisan test --compact --filter="redirects guests to login" tests/Feature/Controllers/DashboardTest.php`
-- **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard`
+- **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard` + empty `recentJournalEntries`
+- **Recent journal isolation (Feature) →** `php artisan test --compact --filter="lists only the authenticated user journal entries" tests/Feature/Controllers/DashboardTest.php`
 - **Unverified (Feature) →** `php artisan test --compact --filter="redirects unverified users" tests/Feature/Controllers/DashboardTest.php` → `verification.notice`
 - **Unverified notice UI (Browser) →** `php artisan test --compact tests/Browser/EmailVerificationTest.php` → unverified `actingAs` + `visit(dashboard)` → **path `/verify-email`**, sees `Verify email` / `Resend verification email` / `Log out`
 - **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, logout click lands on **`/login`**, `assertNoJavaScriptErrors()`
@@ -52,7 +57,7 @@ Preconditions:
 ## Gotchas
 
 - `verified` middleware is real: unverified users never see the dashboard Inertia page
-- Visible "Dashboard" copy is the sidebar nav item and the breadcrumb, not a page `<h1>` (the page body is placeholder cards; `<Head title="Dashboard" />` is the document title)
+- Visible "Dashboard" copy is the sidebar nav item, breadcrumb, and page heading. `<Head title="Dashboard" />` becomes **Dashboard :: Kibbles**
 - Browser logout no longer asserts path `/` — guests following `/` immediately land on `/login`
 - Default URL for doctor/ad-hoc curls stays `http://localhost:8000` via `composer dev`. Do not change `.env` / `APP_URL`
 - Passkey RP mismatch only if the browser host differs from `APP_URL`

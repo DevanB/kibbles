@@ -23,7 +23,7 @@ export default function Show({
 }) {
     return (
         <Modal>
-            <Head title={`Journal — ${game.title}`} />
+            <Head title="Journal Entries" />
 
             <div
                 className="space-y-4"

@@ -30,7 +30,7 @@ it('renders settings pages inside the app and settings layouts', function (): vo
 
     $page = visit(route('user-profile.edit'));
 
-    $page->assertSee(config('app.name'))
+    $page->assertSee('Kibbles')
         ->assertSee('Settings')
         ->assertSee('Profile information')
         ->assertNoJavaScriptErrors();

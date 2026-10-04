@@ -12,6 +12,12 @@ it('renders the dashboard for a verified user', function (): void {
     $page = visit(route('dashboard'));
 
     $page->assertSee('Dashboard')
+        ->assertSee('Kibbles')
+        ->assertSee('Recent Journal Entries')
+        ->assertSee('No journal entries yet')
+        ->assertSee('Add Game')
+        ->assertDontSee('Repository')
+        ->assertDontSee('Documentation')
         ->assertNoJavaScriptErrors();
 
     $page->click('@sidebar-menu-button')

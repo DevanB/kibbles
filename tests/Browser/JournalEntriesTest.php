@@ -17,6 +17,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertDontSee('Journal entries will live here.')
         ->assertDontSee('Up next')
         ->assertSee('No journal entries yet')
+        ->assertSee('Journal Entries')
         ->assertSee('Write what happened the last time you played.')
         ->assertNoJavaScriptErrors();
 

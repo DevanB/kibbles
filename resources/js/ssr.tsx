@@ -17,13 +17,11 @@ putConfig(
     'bg-background text-foreground rounded-xl border border-border shadow-lg',
 );
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-
 createServer((page) =>
     createInertiaApp({
         page,
         render: ReactDOMServer.renderToString,
-        title: (title) => (title ? `${title} - ${appName}` : appName),
+        title: (title) => (title ? `${title} :: Kibbles` : 'Kibbles'),
         resolve: (name) =>
             resolvePageComponent(
                 `./pages/${name}.tsx`,

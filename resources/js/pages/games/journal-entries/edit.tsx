@@ -17,7 +17,7 @@ export default function Edit({
 }) {
     return (
         <Modal>
-            <Head title={`Edit journal entry — ${game.title}`} />
+            <Head title="Edit Entry" />
 
             <div className="space-y-4">
                 <h2 className="text-lg font-semibold tracking-tight">
@@ -55,7 +55,7 @@ export default function Edit({
                                 data-test={`save-journal-entry-button-${journalEntry.id}`}
                             >
                                 {processing && <Spinner />}
-                                Save entry
+                                Save Entry
                             </Button>
                         </>
                     )}

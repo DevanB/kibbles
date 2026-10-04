@@ -11,7 +11,7 @@ import type { Game } from '@/types';
 export default function Create({ game }: { game: Game }) {
     return (
         <Modal>
-            <Head title={`Add journal entry — ${game.title}`} />
+            <Head title="Create Entry" />
 
             <div className="space-y-4">
                 <h2 className="text-lg font-semibold tracking-tight">
@@ -45,7 +45,7 @@ export default function Create({ game }: { game: Game }) {
                                 data-test="add-journal-entry-button"
                             >
                                 {processing && <Spinner />}
-                                Add entry
+                                Add Entry
                             </Button>
                         </>
                     )}

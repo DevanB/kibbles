@@ -14,7 +14,7 @@ it('may create, update, and delete a game', function (): void {
 
     $page->assertSee('Games')
         ->assertSee('No games yet')
-        ->assertSee('Add game')
+        ->assertSee('Add Game')
         ->assertNoJavaScriptErrors();
 
     $page->click('@create-game-button')
@@ -30,7 +30,7 @@ it('may create, update, and delete a game', function (): void {
 
     $page->assertPathIs('/games/'.$game->id)
         ->click('@edit-game-button')
-        ->assertSee('Edit game')
+        ->assertSee('Edit Game')
         ->assertValue('title', 'Catan')
         ->assertPathIs('/games/'.$game->id.'/edit')
         ->assertNoJavaScriptErrors();
