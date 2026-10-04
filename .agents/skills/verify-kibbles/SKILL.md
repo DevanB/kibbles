@@ -91,7 +91,7 @@ With `composer dev` and a browser on `http://localhost:8000`, origin and RP ID m
 
 **Passkey register/assert can fail only if you browse a different host** (e.g. Herd `http://kibbles.test`) while `APP_URL` is `http://localhost:8000`. Password login and most UI still work on either host once assets load. Prefer Pest Browser (it boots its own server with matching `APP_URL`) for passkey flows. Never commit `APP_URL` or secret changes to chase another host.
 
-Doctor (and `bin/check-passkey-host`) compares the browse URL host to `config('app.url')` and `config('fortify.passkeys.relying_party_id')`. Matching hosts print `passkey:host_ok`. A mismatch **fails loudly** — do not treat that browse URL as a working passkey path. Feature coverage for the config contract: `tests/Feature/Controllers/UserPasskeyControllerTest.php` (`binds passkey relying party`, `does not treat a foreign browse host`).
+Doctor (and `bin/check-passkey-host`) compares the browse URL host to `config('app.url')` and `config('fortify.passkeys.relying_party_id')`. Matching hosts print `passkey:host_ok`. A mismatch **fails loudly** — do not treat that browse URL as a working passkey path.
 
 ## Doctor
 
@@ -158,7 +158,6 @@ php artisan test --compact tests/Feature/Controllers/SessionControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.php
 php artisan test --compact tests/Feature/Controllers/AppearanceTest.php
-php artisan test --compact tests/Feature/Controllers/UserPasskeyControllerTest.php
 php artisan test --compact tests/Feature/BootstrapTest.php
 ```
 

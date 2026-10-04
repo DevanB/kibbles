@@ -45,4 +45,4 @@ Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature 
 - **Login Browser submit:** `tests/Browser/SessionTest.php` (success → `/dashboard`; invalid password stays `/login` with `auth.failed`; 2FA recovery code → `/dashboard`).
 - **Appearance GET:** `tests/Feature/Controllers/AppearanceTest.php` (guest → login, verified → Inertia `appearance/update`, unverified → `verification.notice`).
 - **Verify-email notice UI:** `tests/Browser/EmailVerificationTest.php` (unverified dashboard visit).
-- **Passkey host:** `bin/check-passkey-host` + Feature `UserPasskeyControllerTest` RP/origin assertions. Mismatched browse host is a hard fail.
+- **Passkey host:** `bin/check-passkey-host` (doctor). Matching browse host → `passkey:host_ok`. Mismatched browse host is a hard fail.
