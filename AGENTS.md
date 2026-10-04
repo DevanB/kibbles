@@ -6,7 +6,7 @@ Before claiming done on user-facing UI, auth, routing, Inertia pages, or feature
 
 ```bash
 .agents/skills/verify-kibbles/bin/doctor
-.agents/skills/verify-kibbles/bin/prove-welcome
+.agents/skills/verify-kibbles/bin/prove-home
 .agents/skills/verify-kibbles/bin/prove-dashboard
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
 ```
