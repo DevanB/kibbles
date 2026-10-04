@@ -8,8 +8,10 @@ use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\Contracts\PasskeyUser;
@@ -28,6 +30,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read CarbonInterface|null $two_factor_confirmed_at
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
+ * @property-read Collection<int, Game> $games
  */
 #[Hidden([
     'password',
@@ -63,5 +66,13 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return HasMany<Game, $this>
+     */
+    public function games(): HasMany
+    {
+        return $this->hasMany(Game::class);
     }
 }
