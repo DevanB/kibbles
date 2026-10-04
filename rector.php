@@ -6,6 +6,8 @@ use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\CodingStyle\Rector\ClassMethod\MakeInheritedMethodVisibilitySameAsParentRector;
 use Rector\Config\RectorConfig;
 use Rector\Php85\Rector\Property\AddOverrideAttributeToOverriddenPropertiesRector;
+use RectorLaravel\Rector\ClassMethod\MakeModelAttributesAndScopesProtectedRector;
+use RectorLaravel\Rector\ClassMethod\ScopeNamedClassMethodToScopeAttributedClassMethodRector;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
@@ -41,6 +43,12 @@ return RectorConfig::configure()
     ->withSkip([
         MakeInheritedMethodVisibilitySameAsParentRector::class,
         AddOverrideAttributeToOverriddenPropertiesRector::class,
+        MakeModelAttributesAndScopesProtectedRector::class => [
+            __DIR__.'/app/Models/JournalEntry.php',
+        ],
+        ScopeNamedClassMethodToScopeAttributedClassMethodRector::class => [
+            __DIR__.'/app/Models/JournalEntry.php',
+        ],
     ])
     ->withPreparedSets(
         deadCode: true,

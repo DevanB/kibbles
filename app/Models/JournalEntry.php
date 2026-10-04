@@ -62,6 +62,6 @@ final class JournalEntry extends Model
      */
     public function scopeNewestFirst(Builder $query): Builder
     {
-        return $query->orderByDesc('created_at')->orderByDesc('id');
+        return $query->latest()->orderByDesc('id');
     }
 }
