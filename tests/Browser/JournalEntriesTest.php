@@ -36,6 +36,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
     $page->click('@journal-entry-'.$entry->id)
         ->assertSee('Settled on the ore port.')
         ->click('@edit-journal-entry-button-'.$entry->id)
+        ->assertSee('Edit Entry')
         ->fill('#edit-'.$entry->id.'-body', 'Settled on the brick port.')
         ->click('@save-journal-entry-button-'.$entry->id)
         ->assertSee('Journal entry updated.')

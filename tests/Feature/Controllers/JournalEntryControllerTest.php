@@ -69,6 +69,30 @@ it('renders the create modal for the owner', function (): void {
                 ->where('title', $game->title)));
 });
 
+it('renders the edit modal for the owner', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $entry = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Settled on the ore port.',
+    ]);
+
+    $this->actingAs($user)
+        ->withHeaders(['X-InertiaUI-Modal' => '1'])
+        ->get(route('games.journal-entries.edit', [$game, $entry]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/journal-entries/edit')
+            ->has('game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', $game->title))
+            ->has('journalEntry', fn ($props) => $props
+                ->where('id', $entry->id)
+                ->where('body', 'Settled on the ore port.')
+                ->missing('next')
+                ->has('createdAt')
+                ->has('updatedAt')));
+});
+
 it('renders the show modal for the owner', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
@@ -135,6 +159,10 @@ it('forbids another user from creating or viewing journal entry modals', functio
     $this->actingAs($intruder)
         ->get(route('games.journal-entries.show', [$game, $entry]))
         ->assertForbidden();
+
+    $this->actingAs($intruder)
+        ->get(route('games.journal-entries.edit', [$game, $entry]))
+        ->assertForbidden();
 });
 
 it('forbids another user from storing a journal entry', function (): void {
@@ -189,6 +217,10 @@ it('returns 404 when an entry is addressed under a different owned game', functi
 
     $this->actingAs($user)
         ->get(route('games.journal-entries.show', [$otherGame, $entry]))
+        ->assertNotFound();
+
+    $this->actingAs($user)
+        ->get(route('games.journal-entries.edit', [$otherGame, $entry]))
         ->assertNotFound();
 
     $this->actingAs($user)
