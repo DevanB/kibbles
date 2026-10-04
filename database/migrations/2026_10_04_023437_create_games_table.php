@@ -14,9 +14,10 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('title');
+            $table->string('title_normalized')->storedAs('LOWER(title)');
             $table->timestamps();
 
-            $table->unique(['user_id', 'title']);
+            $table->unique(['user_id', 'title_normalized']);
         });
     }
 
