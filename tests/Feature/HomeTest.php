@@ -8,10 +8,8 @@ it('redirects guests to the dashboard then login', function (): void {
     $this->get(route('home'))
         ->assertRedirectToRoute('dashboard');
 
-    $this->followingRedirects()
-        ->get(route('home'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('session/create'));
+    $this->get(route('dashboard'))
+        ->assertRedirectToRoute('login');
 });
 
 it('redirects verified users to the dashboard', function (): void {
@@ -22,8 +20,7 @@ it('redirects verified users to the dashboard', function (): void {
         ->assertRedirectToRoute('dashboard');
 
     $this->actingAs($user)
-        ->followingRedirects()
-        ->get(route('home'))
+        ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('dashboard'));
 });
