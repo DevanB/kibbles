@@ -18,7 +18,7 @@ From welcome click **Register** (only if `canRegister`), from login click **Sign
 Preconditions:
 
 - Guest session
-- Registration enabled via app routes `register` / `register.store` (`UserController`). Fortify `Features::registration()` is not enabled; do not treat that comment as “register is off.”
+- Registration enabled (`REGISTRATION_ENABLED=true` or `Feature::define(Registration::class, true)`). Signup routes stay registered; the Pennant flag is the kill switch. Fortify `Features::registration()` is not enabled; do not treat that comment as “register is off.”
 
 - **User opens register →** `php artisan test --compact --filter="renders registration page" tests/Feature/Controllers/UserControllerTest.php` → **Inertia `user/create`** with password rules
 - **User submits valid form →** `php artisan test --compact --filter="may register a new user" tests/Feature/Controllers/UserControllerTest.php` → **redirect `dashboard`**, user persisted, authenticated
