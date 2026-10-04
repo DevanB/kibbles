@@ -1,0 +1,58 @@
+# Production stack for kibbles on the UGREEN NAS.
+# Cloudflare already routes https://kibbles.devanb.us to http://app:8080.
+#
+# Deploy:
+#   1. Copy .env.production.example to .env next to this file.
+#   2. Set APP_KEY (php artisan key:generate --show) and CLOUDFLARE_TUNNEL_TOKEN.
+#   3. CLOUDFLARE_TUNNEL_TOKEN is supplied at deploy time and must not be committed.
+#   4. docker compose up -d --build
+name: kibbles
+
+x-laravel: &laravel
+  build:
+    context: .
+    dockerfile: Dockerfile
+  env_file:
+    - .env
+  volumes:
+    - sqlite:/app/database/data
+    - storage:/app/storage
+  restart: unless-stopped
+  init: true
+
+services:
+  app:
+    <<: *laravel
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/up') === false ? 1 : 0);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  queue:
+    <<: *laravel
+    command: php artisan queue:work --sleep=1 --tries=3 --timeout=60 --max-time=3600
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    stop_grace_period: 30s
+
+  # Official tunnel sidecar. Token comes from .env at deploy time, not from git.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN must be set at deploy time and must not be committed.}
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqlite:
+  storage:
