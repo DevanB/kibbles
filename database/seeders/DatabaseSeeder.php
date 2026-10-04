@@ -10,6 +10,12 @@ final class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('Skipping demo seed in production.');
+
+            return;
+        }
+
         $this->call([
             DemoSeeder::class,
         ]);
