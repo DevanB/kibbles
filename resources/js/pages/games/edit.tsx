@@ -1,4 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
-import { destroy, index, update } from '@/routes/games';
+import { index } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,7 +33,7 @@ export default function Edit({ game }: { game: Game }) {
                 />
 
                 <Form
-                    {...update.form(game)}
+                    {...GameController.update.form(game.id)}
                     className="max-w-xl space-y-6"
                     disableWhileProcessing
                     options={{ preserveScroll: true }}
@@ -75,7 +76,7 @@ export default function Edit({ game }: { game: Game }) {
                         description="Permanently remove this game from your catalog"
                     />
 
-                    <Form {...destroy.form(game)}>
+                    <Form {...GameController.destroy.form(game.id)}>
                         {({ processing }) => (
                             <Button
                                 type="submit"

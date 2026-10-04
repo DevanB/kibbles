@@ -1,4 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
-import { index, store } from '@/routes/games';
+import { index } from '@/routes/games';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,7 +33,7 @@ export default function Create() {
                 />
 
                 <Form
-                    {...store.form()}
+                    {...GameController.store.form()}
                     className="max-w-xl space-y-6"
                     disableWhileProcessing
                 >

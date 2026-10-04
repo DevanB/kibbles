@@ -21,23 +21,23 @@ it('may create, update, and delete a game', function (): void {
         ->fill('title', 'Catan')
         ->click('@save-game-button')
         ->assertSee('Game created.')
-        ->assertSee('Catan')
+        ->assertSee('Edit game')
+        ->assertValue('title', 'Catan')
         ->assertNoJavaScriptErrors();
 
     $game = Game::query()->whereBelongsTo($user)->first();
 
     expect($game)->not->toBeNull();
 
-    $page->click('Edit')
-        ->assertSee('Edit game')
+    $page->assertPathIs('/games/'.$game->id.'/edit')
         ->fill('title', 'Ticket to Ride')
         ->click('@save-game-button')
         ->assertSee('Game updated.')
-        ->assertSee('Ticket to Ride')
+        ->assertValue('title', 'Ticket to Ride')
+        ->assertPathIs('/games/'.$game->id.'/edit')
         ->assertNoJavaScriptErrors();
 
-    $page->click('Edit')
-        ->click('@delete-game-button')
+    $page->click('@delete-game-button')
         ->assertSee('Game deleted.')
         ->assertSee('No games yet')
         ->assertNoJavaScriptErrors();
