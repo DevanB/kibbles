@@ -25,7 +25,7 @@ void createInertiaApp({
             import.meta.glob<ComponentType>('./pages/**/*.tsx'),
         ),
     setup({ el, App, props }) {
-        initFromPageProps(props);
+        initFromPageProps(props as never);
         const root = createRoot(el);
 
         root.render(
