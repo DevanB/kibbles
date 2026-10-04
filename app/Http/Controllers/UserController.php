@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateUser;
 use App\Actions\DeleteUser;
+use App\Features\Registration;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\DeleteUserRequest;
 use App\Models\User;
@@ -20,6 +21,8 @@ final readonly class UserController
 {
     public function create(): Response
     {
+        abort_unless(Registration::enabled(), 403);
+
         return Inertia::render('user/create', [
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]);

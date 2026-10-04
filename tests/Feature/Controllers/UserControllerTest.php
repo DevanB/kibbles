@@ -2,11 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Features\Registration;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Pennant\Feature;
+
+beforeEach(function (): void {
+    Feature::define(Registration::class, true);
+});
 
 it('renders registration page', function (): void {
     $response = $this->fromRoute('home')
@@ -198,6 +204,30 @@ it('requires correct password to delete account', function (): void {
         ->assertSessionHasErrors('password');
 
     expect($user->fresh())->not->toBeNull();
+});
+
+it('forbids the registration page when the feature is inactive', function (): void {
+    Feature::define(Registration::class, false);
+
+    $this->fromRoute('home')
+        ->get(route('register'))
+        ->assertForbidden();
+});
+
+it('does not create a user when the feature is inactive', function (): void {
+    Feature::define(Registration::class, false);
+
+    $this->fromRoute('register')
+        ->post(route('register.store'), [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password1234',
+            'password_confirmation' => 'password1234',
+        ])
+        ->assertForbidden();
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
 });
 
 it('redirects authenticated users away from registration', function (): void {
