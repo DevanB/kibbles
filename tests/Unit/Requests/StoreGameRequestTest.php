@@ -17,7 +17,7 @@ it('authorizes an authenticated user to create a game', function (): void {
 
 it('denies guests from creating a game', function (): void {
     $request = StoreGameRequest::create('/games', 'POST');
-    $request->setUserResolver(fn () => null);
+    $request->setUserResolver(fn (): null => null);
     $request->setContainer(app());
 
     expect($request->authorize())->toBeFalse();

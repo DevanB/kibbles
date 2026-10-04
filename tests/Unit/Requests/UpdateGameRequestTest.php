@@ -32,7 +32,7 @@ it('denies guests from updating a game', function (): void {
     $game = Game::factory()->create();
 
     $request = updateGameRequestWithRoute($game);
-    $request->setUserResolver(fn () => null);
+    $request->setUserResolver(fn (): null => null);
 
     expect($request->authorize())->toBeFalse();
 });
