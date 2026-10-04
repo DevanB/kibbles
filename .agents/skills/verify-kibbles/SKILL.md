@@ -1,11 +1,11 @@
 ---
 name: verify-kibbles
-description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving welcome/login/register/dashboard/profile, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
+description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving home/login/register/dashboard/games/settings, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + guest / 302 + /login 200 + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
 ---
 
 # Verify kibbles
 
-Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
+Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys + Pennant registration + user-owned Games. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
 
 ## Required before claiming done
 
@@ -18,13 +18,16 @@ How to invoke:
 ```bash
 # from the project root
 .agents/skills/verify-kibbles/bin/doctor
-.agents/skills/verify-kibbles/bin/prove-welcome
+.agents/skills/verify-kibbles/bin/prove-home
 .agents/skills/verify-kibbles/bin/prove-dashboard
+.agents/skills/verify-kibbles/bin/prove-games
 # or the mapped Pest files this skill names, e.g.:
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
 ```
 
 Keep `APP_URL=http://localhost:8000` so passkeys match this host. Do not rewrite `.env`.
+
+There is **no welcome page**. `/` (route `home`) redirects to `/dashboard`. Guests then land on `/login`.
 
 ## Launch
 
@@ -108,14 +111,15 @@ Manual equivalent:
 ```bash
 BASE="${1:-http://localhost:8000}"
 curl -sS -o /dev/null -w "up:%{http_code}\n" "$BASE/up"          # expect 200
-curl -sS -o /dev/null -w "home:%{http_code}\n" "$BASE/"           # expect 200 once Vite is up
+curl -sS -o /dev/null -w "home:%{http_code}\n" "$BASE/"           # expect 302 (redirect to /dashboard)
+curl -sS -o /dev/null -w "login:%{http_code}\n" "$BASE/login"     # expect 200 once Vite is up
 if [[ -f public/hot ]]; then echo "vite:hot"; elif [[ -f public/build/manifest.json ]]; then echo "vite:manifest"; else echo "vite:MISSING"; fi
 php artisan about --only=environment,drivers 2>/dev/null | head -40
 echo "url_under_test=$BASE"
 .agents/skills/verify-kibbles/bin/check-passkey-host "$BASE"   # passkey:host_ok, or FAIL on browse ≠ APP_URL / RP
 ```
 
-Fail doctor if `/up` ≠ 200, `/` ≠ 200, Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing), or the passkey host check fails. Home 500 almost always means Vite is not running and there is no production build. A passkey host mismatch means WebAuthn will fail on that browse URL.
+Fail doctor if `/up` ≠ 200, guest `/` ≠ 302, `/login` ≠ 200, Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing), or the passkey host check fails. Login 500 almost always means Vite is not running and there is no production build. Do **not** expect `/` to be 200 — it is a redirect. A passkey host mismatch means WebAuthn will fail on that browse URL.
 
 ## Drive
 
@@ -125,6 +129,8 @@ Prefer Pest over inventing selectors from scratch.
 
 ```bash
 php artisan test --compact tests/Browser/HomeTest.php
+php artisan test --compact tests/Browser/DashboardTest.php
+php artisan test --compact tests/Browser/GamesTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -148,8 +154,15 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `delete-user-button` / `confirm-delete-user-button` | profile delete dialog |
 | `logout-button` | user menu |
 | `sidebar-menu-button` | nav user trigger |
+| `create-game-button` | `/games` add |
+| `save-game-button` | games create/edit save |
+| `delete-game-button` | games edit delete |
+| `delete-game-button-{id}` | games index row delete |
+| `game-title-{id}` | games index title link |
 
-Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder`). Default factory password is `password`.
+Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder`). Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
+
+Public registration defaults **off** (`REGISTRATION_ENABLED=false`). Tests that need signup: `Feature::define(\App\Features\Registration::class, true)`.
 
 ### Feature / controller tests
 
@@ -157,6 +170,13 @@ Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder
 php artisan test --compact tests/Feature/Controllers/SessionControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.php
+php artisan test --compact tests/Feature/Controllers/DashboardTest.php
+php artisan test --compact tests/Feature/Controllers/GameControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
+php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserEmailVerificationTest.php
+php artisan test --compact tests/Feature/Controllers/UserEmailVerificationNotificationControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserTwoFactorAuthenticationControllerTest.php
 php artisan test --compact tests/Feature/Controllers/AppearanceTest.php
 php artisan test --compact tests/Feature/BootstrapTest.php
 ```
@@ -164,12 +184,12 @@ php artisan test --compact tests/Feature/BootstrapTest.php
 ### Ad-hoc smoke (`composer dev`)
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/
-curl -sS http://localhost:8000/ | rg -o "Let's get started|Laravel has an incredibly rich ecosystem|Log in|Register" | head
-curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login
+curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/          # 302
+curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
+curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (welcome, login, register, dashboard, profile-settings).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -208,7 +228,8 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 |--------|------------|
 | Doctor | `.agents/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) — includes `check-passkey-host` |
 | Passkey host | `.agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]` — exit 0 + `passkey:host_ok` when browse host equals APP_URL / RP; exit 1 on mismatch |
-| Prove welcome | `.agents/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
-| Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
+| Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
+| Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
+| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `tests/Feature/Controllers/GameControllerTest.php` + `tests/Browser/GamesTest.php`. Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it.

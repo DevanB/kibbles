@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Durable proof for the dashboard: Pest Feature + Browser tests.
+# Durable proof for / (home redirect): Pest Browser HomeTest.
 # Pest boots its own server — composer dev is not required.
 # Doctor against VERIFY_BASE_URL (default http://localhost:8000) is recorded;
 # a down composer-dev server does not fail this proof.
-# Usage: .agents/skills/verify-kibbles/bin/prove-dashboard
+# Usage: .agents/skills/verify-kibbles/bin/prove-home
 # Do not pipe `php artisan test` through tee — Playwright run-server inherits the pipe.
 set -euo pipefail
 
@@ -17,44 +17,41 @@ BASE="${VERIFY_BASE_URL:-http://localhost:8000}"
 DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
 
 {
-  echo "=== prove-dashboard run_id=${RUN_ID} ==="
+  echo "=== prove-home run_id=${RUN_ID} ==="
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature DashboardTest + Browser DashboardTest; doctor is informational"
-} | tee "$ART/dashboard-summary.txt"
+  echo "note=Browser HomeTest (guest / → /login, verified / → /dashboard); doctor is informational"
+} | tee "$ART/home-summary.txt"
 
 set +e
-"$DOCTOR" "$BASE" 2>&1 | tee "$ART/dashboard-doctor.log"
+"$DOCTOR" "$BASE" 2>&1 | tee "$ART/home-doctor.log"
 DOCTOR_RC=${PIPESTATUS[0]}
 set -e
 
 set +e
-php artisan test --compact \
-  tests/Feature/Controllers/DashboardTest.php \
-  tests/Browser/DashboardTest.php \
-  > "$ART/dashboard-tests.log" 2>&1
+php artisan test --compact tests/Browser/HomeTest.php \
+  > "$ART/home-tests.log" 2>&1
 TEST_RC=$?
 set -e
-cat "$ART/dashboard-tests.log"
+cat "$ART/home-tests.log"
 
 {
   echo "doctor_rc=$DOCTOR_RC"
   echo "doctor_required=0"
   echo "tests_rc=$TEST_RC"
-  echo "feature=tests/Feature/Controllers/DashboardTest.php"
-  echo "browser=tests/Browser/DashboardTest.php"
-  echo "verified=guest→login, verified Inertia dashboard, unverified→verification.notice, browser assertSee Dashboard + Log out, logout click → /login"
+  echo "browser=tests/Browser/HomeTest.php"
+  echo "verified=guest / → /login + Log in; verified / → /dashboard + Dashboard"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi
   ls -la "$ART" || true
-} | tee -a "$ART/dashboard-summary.txt"
+} | tee -a "$ART/home-summary.txt"
 
 if [[ "$TEST_RC" -ne 0 ]]; then
-  echo "=== prove-dashboard FAILED (evidence kept at $ART) ==="
+  echo "=== prove-home FAILED (evidence kept at $ART) ==="
   exit 1
 fi
 
-echo "=== prove-dashboard OK ==="
+echo "=== prove-home OK ==="
 exit 0
