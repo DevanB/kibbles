@@ -8,9 +8,6 @@ use App\Models\Game;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
-/**
- * Local review login:  devan@localhost.test / password
- */
 final class DemoSeeder extends Seeder
 {
     private const string EMAIL = 'devan@localhost.test';
