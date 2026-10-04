@@ -1,3 +1,18 @@
+# Agent gates (kibbles)
+
+## Verify before done
+
+Before claiming done on user-facing UI, auth, routing, Inertia pages, or feature work, you **must** run the project verify skill at `.agents/skills/verify-kibbles` (live path — `.cursor/skills` is a symlink). Read `SKILL.md`, then run its doctor / prove helpers or the Pest Feature + Browser files it names. Do not skip this because CI exists.
+
+```bash
+.agents/skills/verify-kibbles/bin/doctor
+.agents/skills/verify-kibbles/bin/prove-welcome
+.agents/skills/verify-kibbles/bin/prove-dashboard
+php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
+```
+
+If Pest Browser errors about missing or outdated browsers: `bunx playwright install`. CI (`.github/workflows/tests.yml`) runs `composer test` on PRs and fails on red; that is the merge gate, not a substitute for a local verify run. Always-applied Cursor rule: `.cursor/rules/verify-kibbles.mdc`.
+
 <laravel-boost-guidelines>
 === .ai/app.actions rules ===
 
@@ -148,6 +163,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - When test coverage applies, run the affected tests and ensure they pass.
 - Test the changed behavior and its important failure modes, but do not add tests beyond them.
 - Read the `testing-best-practices` skill before writing tests.
+- UI / auth / feature work is not done until `.agents/skills/verify-kibbles` has been run (skill, prove helpers, or its documented Pest Feature + Browser suite). See the "Verify before done" gate at the top of this file.
 
 === inertia-laravel/core rules ===
 

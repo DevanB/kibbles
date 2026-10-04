@@ -1,11 +1,28 @@
 ---
 name: verify-kibbles
-description: "Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving welcome/login/register/dashboard/profile, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
+description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving welcome/login/register/dashboard/profile, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
 ---
 
 # Verify kibbles
 
 Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
+
+## Required before claiming done
+
+This skill is a **required gate**, not optional flavor. If you changed UI, auth, routing, Inertia pages, or user-visible behavior, run this skill (or its prove helpers / the Pest Feature + Browser files below) before saying the work is done. Live path is `.agents/skills/verify-kibbles` (`.cursor/skills` is a symlink).
+
+CI (`.github/workflows/tests.yml`) runs `composer test` on every PR and fails on red. That is the merge gate. It does not replace a local verify run.
+
+How to invoke:
+
+```bash
+# from the project root
+.agents/skills/verify-kibbles/bin/doctor
+.agents/skills/verify-kibbles/bin/prove-welcome
+.agents/skills/verify-kibbles/bin/prove-dashboard
+# or the mapped Pest files this skill names, e.g.:
+php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
+```
 
 Keep `APP_URL=http://localhost:8000` so passkeys match this host. Do not rewrite `.env`.
 

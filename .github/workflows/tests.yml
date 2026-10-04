@@ -1,3 +1,11 @@
+# Merge gate for PRs and pushes to master.
+# `composer test` = lint + types + type coverage + Pest (Unit, Feature, Browser).
+# Pest Browser needs Playwright browsers under ~/.cache/ms-playwright.
+# One-time / cache miss: bunx playwright install --with-deps
+# Cache hit: bunx playwright install-deps
+# Agents shipping UI/auth/feature work must also run the local verify-kibbles
+# skill (.agents/skills/verify-kibbles) before claiming done — this workflow
+# is the merge gate, not a substitute for that local run.
 name: tests
 
 on:
