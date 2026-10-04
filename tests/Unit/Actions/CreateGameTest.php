@@ -28,9 +28,9 @@ it('maps a unique constraint violation to a title validation error', function ()
     try {
         $action->handle($user, 'catan');
         $this->fail('Expected a validation exception for a unique title conflict.');
-    } catch (ValidationException $exception) {
-        expect($exception->status)->toBe(422)
-            ->and($exception->errors())->toBe([
+    } catch (ValidationException $validationException) {
+        expect($validationException->status)->toBe(422)
+            ->and($validationException->errors())->toBe([
                 'title' => ['You already have a game with this title.'],
             ]);
     }
