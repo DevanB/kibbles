@@ -5,7 +5,10 @@
 #   1. Copy .env.production.example to .env next to this file.
 #   2. Set APP_KEY (php artisan key:generate --show) and CLOUDFLARE_TUNNEL_TOKEN.
 #   3. CLOUDFLARE_TUNNEL_TOKEN is supplied at deploy time and must not be committed.
-#   4. docker compose up -d --build
+#   4. When updating an existing NAS .env, add new keys from .env.production.example
+#      (including REGISTRATION_ENABLED=false) without overwriting APP_KEY or
+#      CLOUDFLARE_TUNNEL_TOKEN.
+#   5. docker compose up -d --build
 name: kibbles
 
 x-laravel: &laravel

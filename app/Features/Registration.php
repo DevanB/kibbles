@@ -13,7 +13,7 @@ final class Registration
         return Feature::globally()->active(self::class);
     }
 
-    public function resolve(mixed $scope): bool
+    public function resolve(): bool
     {
         return (bool) config('features.registration');
     }
