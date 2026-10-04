@@ -11,7 +11,7 @@ Guest registration at `/register` (route `register`, Inertia `user/create`). Cre
 
 ## How to get to it (user POV)
 
-From welcome click **Register** (only if `canRegister`), from login click **Sign up**, or open `/register` as a guest.
+From login click **Sign up** (only if `canRegister`), or open `/register` as a guest.
 
 ## Driving it with Pest Browser / Feature tests
 

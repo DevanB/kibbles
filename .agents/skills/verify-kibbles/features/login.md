@@ -12,7 +12,7 @@ Guest session create page at `/login` (route `login`, Inertia `session/create`).
 
 ## How to get to it (user POV)
 
-From welcome, click **Log in**, or open `/login` while logged out. Authenticated users are redirected away from guest routes.
+Open `/login` while logged out, or visit `/` as a guest (redirects toward login). Authenticated users are redirected away from guest routes.
 
 ## Driving it with Pest Browser / Feature tests
 
@@ -22,7 +22,7 @@ Preconditions:
 - For Browser layout checks: Vite build done; Playwright browsers installed
 - Auth users for success paths: `User::factory()->withoutTwoFactor()->create([...])`
 
-- **User opens login →** `php artisan test --compact --filter="renders login page" tests/Feature/Controllers/SessionControllerTest.php` → **Inertia `session/create`**, `canResetPassword`/`canRegister` true
+- **User opens login →** `php artisan test --compact --filter="renders login page" tests/Feature/Controllers/SessionControllerTest.php` → **Inertia `session/create`**, `canResetPassword` true, `canRegister` false unless `Feature::define(Registration::class, true)`
 - **User opens login in browser →** `php artisan test --compact --filter="renders auth pages" tests/Browser/LayoutTest.php` → **sees** `Log in to your account`, `Enter your email and password below to log in`, `Sign in with a passkey`; click **Sign up** → **sees** `Create an account`
 - **User submits valid password →** Feature `may create a session` (same file) → **redirect `dashboard`**, authenticated
 - **Ad-hoc submit (Browser style) →** `visit(route('login'))` → `fill` email/password → `click('@login-button')` → **path `/dashboard`** (prefer adding/extending Pest rather than a one-off Playwright script)
