@@ -28,7 +28,7 @@ it('logs out from the dashboard user menu', function (): void {
 
     $page->click('@sidebar-menu-button')
         ->click('@logout-button')
-        ->assertPathIs('/')
+        ->assertPathIs('/login')
         ->assertSee('Log in')
         ->assertNoJavaScriptErrors();
 
