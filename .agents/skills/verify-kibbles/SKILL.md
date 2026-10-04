@@ -74,6 +74,8 @@ With `composer dev` and a browser on `http://localhost:8000`, origin and RP ID m
 
 **Passkey register/assert can fail only if you browse a different host** (e.g. Herd `http://kibbles.test`) while `APP_URL` is `http://localhost:8000`. Password login and most UI still work on either host once assets load. Prefer Pest Browser (it boots its own server with matching `APP_URL`) for passkey flows. Never commit `APP_URL` or secret changes to chase another host.
 
+Doctor (and `bin/check-passkey-host`) compares the browse URL host to `config('app.url')` and `config('fortify.passkeys.relying_party_id')`. Matching hosts print `passkey:host_ok`. A mismatch **fails loudly** — do not treat that browse URL as a working passkey path. Feature coverage for the config contract: `tests/Feature/Controllers/UserPasskeyControllerTest.php` (`binds passkey relying party`, `does not treat a foreign browse host`).
+
 ## Doctor
 
 Run from the project root (or via the helper). Default base is `http://localhost:8000`:
@@ -93,9 +95,10 @@ curl -sS -o /dev/null -w "home:%{http_code}\n" "$BASE/"           # expect 200 o
 if [[ -f public/hot ]]; then echo "vite:hot"; elif [[ -f public/build/manifest.json ]]; then echo "vite:manifest"; else echo "vite:MISSING"; fi
 php artisan about --only=environment,drivers 2>/dev/null | head -40
 echo "url_under_test=$BASE"
+.agents/skills/verify-kibbles/bin/check-passkey-host "$BASE"   # passkey:host_ok, or FAIL on browse ≠ APP_URL / RP
 ```
 
-Fail doctor if `/up` ≠ 200, `/` ≠ 200, or Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing). Home 500 almost always means Vite is not running and there is no production build.
+Fail doctor if `/up` ≠ 200, `/` ≠ 200, Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing), or the passkey host check fails. Home 500 almost always means Vite is not running and there is no production build. A passkey host mismatch means WebAuthn will fail on that browse URL.
 
 ## Drive
 
@@ -104,8 +107,11 @@ Prefer Pest over inventing selectors from scratch.
 ### Browser suite (Playwright under Pest)
 
 ```bash
-php artisan test --compact tests/Browser/WelcomeTest.php
+php artisan test --compact tests/Browser/HomeTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
+php artisan test --compact tests/Browser/SessionTest.php
+php artisan test --compact tests/Browser/RegistrationTest.php
+php artisan test --compact tests/Browser/EmailVerificationTest.php
 php artisan test --compact --testsuite=Browser
 ```
 
@@ -134,6 +140,8 @@ Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder
 php artisan test --compact tests/Feature/Controllers/SessionControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.php
+php artisan test --compact tests/Feature/Controllers/AppearanceTest.php
+php artisan test --compact tests/Feature/Controllers/UserPasskeyControllerTest.php
 php artisan test --compact tests/Feature/BootstrapTest.php
 ```
 
@@ -182,7 +190,8 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 
 | Helper | Invocation |
 |--------|------------|
-| Doctor | `.agents/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) |
+| Doctor | `.agents/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) — includes `check-passkey-host` |
+| Passkey host | `.agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]` — exit 0 + `passkey:host_ok` when browse host equals APP_URL / RP; exit 1 on mismatch |
 | Prove welcome | `.agents/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 

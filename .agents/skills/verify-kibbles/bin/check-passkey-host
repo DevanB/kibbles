@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Compare the browse URL host to APP_URL / Fortify passkey RP.
+# Usage: .agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]
+# Default browse URL: http://localhost:8000
+# Exit 0 when hosts match (passkeys can work). Exit 1 on mismatch or if config cannot be read.
+# A mismatch is a real WebAuthn failure — do not treat Herd/other hosts as working while APP_URL differs.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+cd "$ROOT"
+
+BROWSE="${1:-http://localhost:8000}"
+
+if ! command -v php >/dev/null 2>&1; then
+  echo "FAIL: php is required for the passkey host check"
+  exit 1
+fi
+
+if [[ ! -f vendor/autoload.php ]]; then
+  echo "FAIL: vendor/autoload.php missing — cannot read Fortify passkey config"
+  exit 1
+fi
+
+BROWSE_HOST="$(php -r 'echo parse_url($argv[1] ?? "", PHP_URL_HOST) ?: "";' -- "$BROWSE")"
+if [[ -z "$BROWSE_HOST" ]]; then
+  echo "FAIL: could not parse host from browse URL: ${BROWSE}"
+  exit 1
+fi
+
+CONFIG_JSON="$(php -r '
+require "vendor/autoload.php";
+$app = require "bootstrap/app.php";
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+echo json_encode([
+    "app_url" => config("app.url"),
+    "rp_id" => config("fortify.passkeys.relying_party_id"),
+    "origins" => config("fortify.passkeys.allowed_origins"),
+], JSON_UNESCAPED_SLASHES);
+')"
+
+APP_URL="$(php -r 'echo json_decode($argv[1] ?? "", true)["app_url"] ?? "";' -- "$CONFIG_JSON")"
+RP_ID="$(php -r 'echo json_decode($argv[1] ?? "", true)["rp_id"] ?? "";' -- "$CONFIG_JSON")"
+ORIGINS="$(php -r 'echo json_encode(json_decode($argv[1] ?? "", true)["origins"] ?? [], JSON_UNESCAPED_SLASHES);' -- "$CONFIG_JSON")"
+APP_HOST="$(php -r 'echo parse_url($argv[1] ?? "", PHP_URL_HOST) ?: "";' -- "$APP_URL")"
+
+echo "passkey:browse_url=${BROWSE}"
+echo "passkey:browse_host=${BROWSE_HOST}"
+echo "passkey:app_url=${APP_URL}"
+echo "passkey:app_host=${APP_HOST}"
+echo "passkey:rp_id=${RP_ID}"
+echo "passkey:allowed_origins=${ORIGINS}"
+
+if [[ -z "$APP_HOST" || -z "$RP_ID" ]]; then
+  echo "FAIL: APP_URL host or fortify.passkeys.relying_party_id is empty"
+  exit 1
+fi
+
+if [[ "$BROWSE_HOST" != "$APP_HOST" || "$BROWSE_HOST" != "$RP_ID" ]]; then
+  echo "FAIL: passkey host mismatch — browse host '${BROWSE_HOST}' is not APP_URL host '${APP_HOST}' / relying_party_id '${RP_ID}'."
+  echo "Passkeys will not work on this browse URL. Use a host that matches APP_URL (composer dev: http://localhost:8000), or Pest Browser (it boots with a matching APP_URL)."
+  exit 1
+fi
+
+echo "passkey:host_ok"
+exit 0
