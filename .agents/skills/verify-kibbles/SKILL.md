@@ -16,7 +16,7 @@ Keep `APP_URL=http://localhost:8000` so passkeys match this host. Do not rewrite
 From the project root, in a terminal you leave running (foreground TUI — this skill must not start or background it):
 
 ```bash
-cd /Users/devanbeitel/Developer/kibbles
+# from the project root
 composer dev
 ```
 
@@ -30,7 +30,7 @@ Ready when both are true:
 One-time if tools are missing:
 
 ```bash
-cd /Users/devanbeitel/Developer/kibbles
+# from the project root
 bun install
 bunx playwright install   # once, if Pest Browser complains browsers are missing/outdated
 ```
@@ -44,7 +44,7 @@ Optional alternate: Laravel Herd at `http://kibbles.test` if the folder is parke
 When you must not touch the project DB or port 8000 (and you are not using the `composer dev` process):
 
 ```bash
-cd /Users/devanbeitel/Developer/kibbles
+# from the project root
 bun run build   # isolated serve has no Vite HMR unless you start it yourself
 RUN_ID=$(date +%Y%m%d-%H%M%S)
 PORT=8$(printf '%03d' $((RANDOM % 1000)))   # e.g. 8123–8999
@@ -79,9 +79,9 @@ With `composer dev` and a browser on `http://localhost:8000`, origin and RP ID m
 Run from the project root (or via the helper). Default base is `http://localhost:8000`:
 
 ```bash
-cd /Users/devanbeitel/Developer/kibbles
-.cursor/skills/verify-kibbles/bin/doctor
-# equivalent: .cursor/skills/verify-kibbles/bin/doctor http://localhost:8000
+# from the project root
+.agents/skills/verify-kibbles/bin/doctor
+# equivalent: .agents/skills/verify-kibbles/bin/doctor http://localhost:8000
 ```
 
 Manual equivalent:
@@ -109,7 +109,7 @@ php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact --testsuite=Browser
 ```
 
-Pest Browser starts its own app server; it does not require `composer dev` or Herd. After `bun install`, if Browser tests fail with Playwright outdated / just-installed errors, run `bunx playwright install` (or `bunx playwright install chromium`) so browser binaries match the pinned `playwright` package. Browsers land under `~/Library/Caches/ms-playwright`.
+Pest Browser starts its own app server; it does not require `composer dev` or Herd. After `bun install`, if Browser tests fail with Playwright outdated / just-installed errors, run `bunx playwright install` (or `bunx playwright install chromium`) so browser binaries match the pinned `playwright` package. Browsers land under `~/Library/Caches/ms-playwright` (macOS) or `~/.cache/ms-playwright` (Linux).
 
 **`@name` → `data-test`:** Pest `click('@login-button')` targets `data-test="login-button"`. Real attrs in this app:
 
@@ -145,7 +145,7 @@ curl -sS http://localhost:8000/ | rg -o "Let's get started|Laravel has an incred
 curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login
 ```
 
-Feature map: `.cursor/skills/verify-kibbles/features/` (welcome, login, register, dashboard, profile-settings).
+Feature map: `.agents/skills/verify-kibbles/features/` (welcome, login, register, dashboard, profile-settings).
 
 ## Evidence
 
@@ -182,8 +182,8 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 
 | Helper | Invocation |
 |--------|------------|
-| Doctor | `.cursor/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) |
-| Prove welcome | `.cursor/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
-| Prove dashboard | `.cursor/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
+| Doctor | `.agents/skills/verify-kibbles/bin/doctor [base_url]` (default `http://localhost:8000`) |
+| Prove welcome | `.agents/skills/verify-kibbles/bin/prove-welcome` — doctor + Welcome Browser test + durable artifacts |
+| Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 
-Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`).
+Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it.

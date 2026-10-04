@@ -4,10 +4,10 @@ Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature 
 
 ## Baseline preconditions
 
-1. `cd /Users/devanbeitel/Developer/kibbles`
+1. From the project root
 2. `vendor/` present; `bun install` if `node_modules` missing
 3. Preferred stack: `composer dev` (serve + queue + pail + Vite) at `http://localhost:8000`. Ready when `/up` is 200 and Vite is up (`public/hot`, or `public/build/manifest.json` if you built instead). Do not start `composer dev` from a skill — it is a foreground TUI.
-4. Doctor green: `.cursor/skills/verify-kibbles/bin/doctor` (default `http://localhost:8000`) → `/up` and `/` are 200
+4. Doctor green: `.agents/skills/verify-kibbles/bin/doctor` (default `http://localhost:8000`) → `/up` and `/` are 200
 5. If Pest Browser errors about Playwright outdated/missing browsers: `bunx playwright install`
 6. Ad-hoc curls use `http://localhost:8000`; Pest Browser boots its own server. Optional alternate: Herd `http://kibbles.test` only if you pass that URL explicitly.
 7. Auth fixtures: `User::factory()->withoutTwoFactor()->create()` — seeder is empty

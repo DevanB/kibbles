@@ -22,7 +22,7 @@ Preconditions:
 
 - **User opens home →** `php artisan test --compact tests/Browser/WelcomeTest.php` → **passes** `assertSee('Laravel')` on `visit('/')`
 - **User opens home (smoke) →** `curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/` → **`200`**; shell markers include `"component":"welcome"` / `<title>Laravel</title>` (full SSR copy may be absent — prove-welcome asserts shell markers)
-- **Durable proof →** `.cursor/skills/verify-kibbles/bin/prove-welcome` → **artifacts under `artifacts/verify-kibbles/<run_id>/`** including doctor log + browser test log + optional `screenshots/welcome-proof.png`
+- **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-welcome` → **artifacts under `artifacts/verify-kibbles/<run_id>/`** including doctor log + browser test log + optional `screenshots/welcome-proof.png`
 
 ## Gotchas
 

@@ -7,7 +7,7 @@ Authenticated profile edit at `/settings/profile` (route `user-profile.edit`, In
 - Update name/email via `data-test="update-profile-button"` (“Save”) → toast `Profile updated.`
 - Delete account: `@delete-user-button` → password → `@confirm-delete-user-button` → home, user gone
   - Server path: **`UserController@destroy`** via route **`user.destroy`** (`DELETE user`) — Feature coverage lives in `UserControllerTest` (not `UserProfileControllerTest`)
-- Settings nav to Appearance, Password, Passkeys, Two-factor (sibling pages)
+- Settings nav to Profile, Password, Two-Factor Auth, Passkeys, Appearance (sibling pages)
 
 ## How to get to it (user POV)
 

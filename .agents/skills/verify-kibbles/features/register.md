@@ -18,7 +18,7 @@ From welcome click **Register** (only if `canRegister`), from login click **Sign
 Preconditions:
 
 - Guest session
-- Registration enabled (`canRegister` / Fortify features as shipped)
+- Registration enabled via app routes `register` / `register.store` (`UserController`). Fortify `Features::registration()` is not enabled; do not treat that comment as “register is off.”
 
 - **User opens register →** `php artisan test --compact --filter="renders registration page" tests/Feature/Controllers/UserControllerTest.php` → **Inertia `user/create`** with password rules
 - **User submits valid form →** `php artisan test --compact --filter="may register a new user" tests/Feature/Controllers/UserControllerTest.php` → **redirect `dashboard`**, user persisted, authenticated

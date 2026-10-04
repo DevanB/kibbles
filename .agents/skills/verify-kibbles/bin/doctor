@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Doctor for kibbles verification skill.
-# Usage: .cursor/skills/verify-kibbles/bin/doctor [base_url]
+# Usage: .agents/skills/verify-kibbles/bin/doctor [base_url]
 # Default base: http://localhost:8000 (composer dev). Pass another URL to override.
 set -euo pipefail
 
