@@ -1,5 +1,9 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { ModalStackProvider, initFromPageProps, putConfig } from '@inertiaui/modal-react';
+import {
+    ModalStackProvider,
+    initFromPageProps,
+    putConfig,
+} from '@inertiaui/modal-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { ComponentType } from 'react';
 import { StrictMode } from 'react';

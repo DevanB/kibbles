@@ -16,7 +16,8 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
     $page->assertSee('Catan')
         ->assertDontSee('Journal entries will live here.')
         ->assertDontSee('Up next')
-        ->assertSee('No journal entries yet.')
+        ->assertSee('No journal entries yet')
+        ->assertSee('Write what happened the last time you played.')
         ->assertNoJavaScriptErrors();
 
     $page->click('@create-journal-entry-button')
@@ -25,7 +26,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->click('@add-journal-entry-button')
         ->assertSee('Journal entry added.')
         ->assertDontSee('Settled on the ore port.')
-        ->assertDontSee('No journal entries yet.')
+        ->assertDontSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 
     $entry = $game->journalEntries()->first();
@@ -47,7 +48,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->click('@delete-journal-entry-button-'.$entry->id)
         ->assertSee('Journal entry deleted.')
         ->assertDontSee('Settled on the brick port.')
-        ->assertSee('No journal entries yet.')
+        ->assertSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 
     expect($entry->fresh())->toBeNull();

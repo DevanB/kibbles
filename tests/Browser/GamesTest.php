@@ -42,7 +42,8 @@ it('may create, update, and delete a game', function (): void {
         ->assertPathIs('/games/'.$game->id)
         ->assertNoJavaScriptErrors();
 
-    $page->click('@delete-game-button')
+    $page->click('@game-actions-button')
+        ->click('@delete-game-button')
         ->assertSee('Game deleted.')
         ->assertSee('No games yet')
         ->assertNoJavaScriptErrors();

@@ -1,6 +1,10 @@
 import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
-import { ModalStackProvider, initFromPageProps, putConfig } from '@inertiaui/modal-react';
+import {
+    ModalStackProvider,
+    initFromPageProps,
+    putConfig,
+} from '@inertiaui/modal-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { ComponentType } from 'react';
 import ReactDOMServer from 'react-dom/server';
