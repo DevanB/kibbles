@@ -29,6 +29,8 @@ Keep `APP_URL=http://localhost:8000` so passkeys match this host. Do not rewrite
 
 There is **no welcome page**. `/` (route `home`) redirects to `/dashboard`. Guests then land on `/login`.
 
+**Live path:** `.agents/skills/verify-kibbles` only. `.cursor/skills` and `.claude/skills` are repo-level symlinks to `.agents/skills` (not separate copies). Do not edit or delete a second tree at those paths — that is this tree. Helpers and feature-map paths below always use `.agents/skills/verify-kibbles`.
+
 ## Launch
 
 ### Preferred: `composer dev`

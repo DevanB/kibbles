@@ -2,6 +2,8 @@
 
 Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature tests; keep durable proof under `artifacts/verify-kibbles/<run_id>/`.
 
+Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.claude/skills` symlink to `.agents/skills` — they are not a second map.
+
 ## Baseline preconditions
 
 1. From the project root
