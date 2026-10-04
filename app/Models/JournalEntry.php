@@ -5,34 +5,30 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonInterface;
-use Database\Factories\GameFactory;
+use Database\Factories\JournalEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read string $id
- * @property-read string $user_id
- * @property-read string $title
+ * @property-read string $game_id
+ * @property-read string $body
+ * @property-read string|null $next
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
- * @property-read User $user
- * @property-read Collection<int, JournalEntry> $journalEntries
+ * @property-read Game $game
  */
 #[Fillable([
-    'title',
+    'body',
+    'next',
 ])]
-#[Hidden([
-    'title_normalized',
-])]
-final class Game extends Model
+final class JournalEntry extends Model
 {
-    /** @use HasFactory<GameFactory> */
+    /** @use HasFactory<JournalEntryFactory> */
     use HasFactory;
 
     use HasUuids;
@@ -44,26 +40,28 @@ final class Game extends Model
     {
         return [
             'id' => 'string',
-            'user_id' => 'string',
-            'title' => 'string',
+            'game_id' => 'string',
+            'body' => 'string',
+            'next' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Game, $this>
      */
-    public function user(): BelongsTo
+    public function game(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Game::class);
     }
 
     /**
-     * @return HasMany<JournalEntry, $this>
+     * @param  Builder<JournalEntry>  $query
+     * @return Builder<JournalEntry>
      */
-    public function journalEntries(): HasMany
+    public function scopeNewestFirst(Builder $query): Builder
     {
-        return $this->hasMany(JournalEntry::class);
+        return $query->orderByDesc('created_at')->orderByDesc('id');
     }
 }
