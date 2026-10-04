@@ -2,7 +2,6 @@
     "agents": [
         "claude_code",
         "cursor",
-        "junie",
         "amp",
         "codex",
         "gemini",
