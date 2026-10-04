@@ -2,10 +2,7 @@
     "agents": [
         "claude_code",
         "cursor",
-        "amp",
         "codex",
-        "gemini",
-        "copilot",
         "opencode"
     ],
     "cloud": true,
