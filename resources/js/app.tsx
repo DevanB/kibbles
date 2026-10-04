@@ -1,5 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { putConfig, renderApp } from '@inertiaui/modal-react';
+import { ModalStackProvider, initFromPageProps, putConfig } from '@inertiaui/modal-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { ComponentType } from 'react';
 import { StrictMode } from 'react';
@@ -25,14 +25,17 @@ void createInertiaApp({
             import.meta.glob<ComponentType>('./pages/**/*.tsx'),
         ),
     setup({ el, App, props }) {
+        initFromPageProps(props);
         const root = createRoot(el);
 
         root.render(
             <StrictMode>
-                <TooltipProvider delayDuration={0}>
-                    {renderApp(App as never, props as never)}
-                    <Toaster />
-                </TooltipProvider>
+                <ModalStackProvider>
+                    <TooltipProvider delayDuration={0}>
+                        <App {...props} />
+                        <Toaster />
+                    </TooltipProvider>
+                </ModalStackProvider>
             </StrictMode>,
         );
     },
