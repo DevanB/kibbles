@@ -26,7 +26,7 @@ createServer((page) =>
                 import.meta.glob<ComponentType>('./pages/**/*.tsx'),
             ),
         setup: ({ App, props }) => {
-            initFromPageProps(props);
+            initFromPageProps(props as never);
 
             return (
                 <ModalStackProvider>
