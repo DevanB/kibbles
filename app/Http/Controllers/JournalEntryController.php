@@ -57,6 +57,16 @@ final readonly class JournalEntryController
         ])->baseRoute('games.show', $game);
     }
 
+    public function edit(Game $game, JournalEntry $journalEntry, ListJournalEntries $list): Modal
+    {
+        Gate::authorize('update', $journalEntry);
+
+        return Inertia::modal('games/journal-entries/edit', [
+            'game' => $this->toWireGame($game),
+            'journalEntry' => $list->toWire($journalEntry),
+        ])->baseRoute('games.show', $game);
+    }
+
     public function update(
         UpdateJournalEntryRequest $request,
         Game $game,

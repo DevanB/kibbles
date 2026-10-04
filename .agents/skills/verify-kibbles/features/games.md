@@ -2,13 +2,13 @@
 
 Authenticated, verified catalog at `/games` (full resource, including `show`). Inertia pages `games/index`, `games/create`, `games/show`, `games/edit` inside `AppLayout`. Sidebar + header nav include **Games** next to Dashboard.
 
-**Show is the hub.** Create and update redirect to `games.show`. Edit is title-only. Index title and disclosure go to show. Journal create/view are route-backed inertia-modal pages.
+**Show is the hub.** Create and update redirect to `games.show`. Edit is title-only. Index title and disclosure go to show. Journal create/view/edit are route-backed inertia-modal pages.
 
 ## Sub-features
 
 - Index lists only the current user's games as `{id, title}`; empty copy **No games yet** / **Add game**. The header **Add game** button is hidden when the list is empty — only the empty-state CTA is shown.
 - Create via `data-test="create-game-button"` → title → `data-test="save-game-button"` → toast **Game created.** → **show** (`/games/{id}`)
-- Show renders `{id, title}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and a full-width dated journal list. **Create Entry** opens the create modal (header when entries exist; empty-state card when they do not); a row opens the show modal (edit/delete live there)
+- Show renders `{id, title}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and a full-width dated journal list. **Create Entry** opens the create modal (header when entries exist; empty-state card when they do not); a row opens the read-only show modal (Edit opens the edit modal; Delete stays on show)
 - Edit via `data-test="edit-game-button"` on show → title → `data-test="save-game-button"` → toast **Game updated.** → **show**
 - Delete on show (Browser happy path) via `data-test="game-actions-button"` then `data-test="delete-game-button"` → **Game deleted.** → index. Index has no edit/delete.
 - Unique title per owner (case-insensitive); guests and unverified users are gated like dashboard
@@ -25,8 +25,8 @@ Preconditions:
 - Playwright browsers installed for the Browser file
 
 - **CRUD in browser →** `php artisan test --compact tests/Browser/GamesTest.php` → create **Catan** (lands on show), **Edit** → rename to **Ticket to Ride** (back to show), delete from show; toasts + `assertNoJavaScriptErrors()`
-- **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal edit/delete; `assertDontSee('Journal entries will live here.')` and no **Up next**
-- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal create/show/store/update/destroy, newest-first list, cascade delete
+- **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal → edit modal, delete; `assertDontSee('Journal entries will live here.')` and no **Up next**
+- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal create/show/edit/store/update/destroy, newest-first list, cascade delete
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-games`
 
 ## Gotchas

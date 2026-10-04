@@ -168,8 +168,8 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `create-journal-entry-button` | games show opens create modal |
 | `add-journal-entry-button` | journal create modal submit |
 | `journal-entry-{id}` | games show dated list row → show modal |
-| `edit-journal-entry-button-{id}` | journal show modal edit |
-| `save-journal-entry-button-{id}` | journal show modal save |
+| `edit-journal-entry-button-{id}` | journal show modal → edit modal |
+| `save-journal-entry-button-{id}` | journal edit modal save |
 | `delete-journal-entry-button-{id}` | journal show modal delete |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
