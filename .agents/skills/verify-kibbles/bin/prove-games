@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Durable proof for the dashboard: Pest Feature + Browser tests.
+# Durable proof for Games CRUD: Pest Feature + Browser tests.
 # Pest boots its own server — composer dev is not required.
 # Doctor against VERIFY_BASE_URL (default http://localhost:8000) is recorded;
 # a down composer-dev server does not fail this proof.
-# Usage: .agents/skills/verify-kibbles/bin/prove-dashboard
+# Usage: .agents/skills/verify-kibbles/bin/prove-games
 # Do not pipe `php artisan test` through tee — Playwright run-server inherits the pipe.
 set -euo pipefail
 
@@ -17,44 +17,44 @@ BASE="${VERIFY_BASE_URL:-http://localhost:8000}"
 DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
 
 {
-  echo "=== prove-dashboard run_id=${RUN_ID} ==="
+  echo "=== prove-games run_id=${RUN_ID} ==="
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature DashboardTest + Browser DashboardTest; doctor is informational"
-} | tee "$ART/dashboard-summary.txt"
+  echo "note=Feature GameControllerTest + Browser GamesTest; doctor is informational"
+} | tee "$ART/games-summary.txt"
 
 set +e
-"$DOCTOR" "$BASE" 2>&1 | tee "$ART/dashboard-doctor.log"
+"$DOCTOR" "$BASE" 2>&1 | tee "$ART/games-doctor.log"
 DOCTOR_RC=${PIPESTATUS[0]}
 set -e
 
 set +e
 php artisan test --compact \
-  tests/Feature/Controllers/DashboardTest.php \
-  tests/Browser/DashboardTest.php \
-  > "$ART/dashboard-tests.log" 2>&1
+  tests/Feature/Controllers/GameControllerTest.php \
+  tests/Browser/GamesTest.php \
+  > "$ART/games-tests.log" 2>&1
 TEST_RC=$?
 set -e
-cat "$ART/dashboard-tests.log"
+cat "$ART/games-tests.log"
 
 {
   echo "doctor_rc=$DOCTOR_RC"
   echo "doctor_required=0"
   echo "tests_rc=$TEST_RC"
-  echo "feature=tests/Feature/Controllers/DashboardTest.php"
-  echo "browser=tests/Browser/DashboardTest.php"
-  echo "verified=guest→login, verified Inertia dashboard, unverified→verification.notice, browser assertSee Dashboard + Log out, logout click → /login"
+  echo "feature=tests/Feature/Controllers/GameControllerTest.php"
+  echo "browser=tests/Browser/GamesTest.php"
+  echo "verified=guest→login, unverified→verification.notice, unique titles, browser create/update/delete"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi
   ls -la "$ART" || true
-} | tee -a "$ART/dashboard-summary.txt"
+} | tee -a "$ART/games-summary.txt"
 
 if [[ "$TEST_RC" -ne 0 ]]; then
-  echo "=== prove-dashboard FAILED (evidence kept at $ART) ==="
+  echo "=== prove-games FAILED (evidence kept at $ART) ==="
   exit 1
 fi
 
-echo "=== prove-dashboard OK ==="
+echo "=== prove-games OK ==="
 exit 0
