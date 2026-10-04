@@ -1,10 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
-import {
-    ModalRoot,
-    ModalStackProvider,
-    putConfig,
-} from '@inertiaui/modal-react';
+import { putConfig, renderApp } from '@inertiaui/modal-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { ComponentType } from 'react';
 import ReactDOMServer from 'react-dom/server';
@@ -31,13 +27,10 @@ createServer((page) =>
             ),
         setup: ({ App, props }) => {
             return (
-                <ModalStackProvider>
-                    <TooltipProvider delayDuration={0}>
-                        <App {...props} />
-                        <ModalRoot />
-                        <Toaster />
-                    </TooltipProvider>
-                </ModalStackProvider>
+                <TooltipProvider delayDuration={0}>
+                    {renderApp(App as never, props as never)}
+                    <Toaster />
+                </TooltipProvider>
             );
         },
     }),
