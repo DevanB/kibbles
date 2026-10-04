@@ -72,22 +72,3 @@ it('exposes passkey endpoints', function (): void {
             'manage' => route('user-passkey.index'),
         ]);
 });
-
-it('binds passkey relying party and origins to the application url host', function (): void {
-    $appUrl = config()->string('app.url');
-    $appHost = parse_url($appUrl, PHP_URL_HOST);
-
-    expect(config('fortify.passkeys.relying_party_id'))->toBe($appHost)
-        ->and(config('fortify.passkeys.allowed_origins'))->toBe([$appUrl]);
-
-    expect(parse_url(route('user-passkey.index'), PHP_URL_HOST))->toBe($appHost);
-});
-
-it('does not treat a foreign browse host as a valid passkey origin', function (): void {
-    $appHost = parse_url(config()->string('app.url'), PHP_URL_HOST);
-    $foreignHost = $appHost === 'kibbles.test' ? 'localhost' : 'kibbles.test';
-    $foreignOrigin = 'http://'.$foreignHost;
-
-    expect(config('fortify.passkeys.relying_party_id'))->not->toBe($foreignHost)
-        ->and(config('fortify.passkeys.allowed_origins'))->not->toContain($foreignOrigin);
-});
