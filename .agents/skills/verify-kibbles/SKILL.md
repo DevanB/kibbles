@@ -133,6 +133,7 @@ Prefer Pest over inventing selectors from scratch.
 php artisan test --compact tests/Browser/HomeTest.php
 php artisan test --compact tests/Browser/DashboardTest.php
 php artisan test --compact tests/Browser/GamesTest.php
+php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -163,6 +164,12 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `delete-game-button-{id}` | games index row delete |
 | `game-title-{id}` | games index title link → show |
 | `game-art-slot` | games show box-art placeholder |
+| `add-journal-entry-button` | games show compose submit |
+| `journal-resume` | games show derived next banner |
+| `journal-entry-{id}` | games show entry card |
+| `edit-journal-entry-button-{id}` | games show inline edit |
+| `save-journal-entry-button-{id}` | games show inline save |
+| `delete-journal-entry-button-{id}` | games show entry delete |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 
@@ -176,6 +183,8 @@ php artisan test --compact tests/Feature/Controllers/UserControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.php
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php
 php artisan test --compact tests/Feature/Controllers/GameControllerTest.php
+php artisan test --compact tests/Feature/Controllers/JournalEntryControllerTest.php
+php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
 php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailVerificationTest.php

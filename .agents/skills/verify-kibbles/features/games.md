@@ -8,7 +8,7 @@ Authenticated, verified catalog at `/games` (full resource, including `show`). I
 
 - Index lists only the current user's games as `{id, title}`; empty copy **No games yet** / **Add game**
 - Create via `data-test="create-game-button"` → title → `data-test="save-game-button"` → toast **Game created.** → **show** (`/games/{id}`)
-- Show renders `{id, title}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and a journal placeholder
+- Show renders `{id, title}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and journal entries (compose, list, optional **Up next** resume)
 - Edit via `data-test="edit-game-button"` on show → title → `data-test="save-game-button"` → toast **Game updated.** → **show**
 - Delete on show (Browser happy path) via `data-test="delete-game-button"` → **Game deleted.** → index
 - Unique title per owner (case-insensitive); guests and unverified users are gated like dashboard
@@ -25,7 +25,8 @@ Preconditions:
 - Playwright browsers installed for the Browser file
 
 - **CRUD in browser →** `php artisan test --compact tests/Browser/GamesTest.php` → create **Catan** (lands on show), **Edit** → rename to **Ticket to Ride** (back to show), delete from show; toasts + `assertNoJavaScriptErrors()`
-- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids
+- **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → add body/next, see **Up next**, edit, delete; `assertDontSee('Journal entries will live here.')`
+- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal store/update/destroy, resume, cascade delete
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-games`
 
 ## Gotchas

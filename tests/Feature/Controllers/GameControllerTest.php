@@ -238,7 +238,9 @@ it('renders the show page for the owner with id and title only', function (): vo
             ->component('games/show')
             ->has('game', fn ($props) => $props
                 ->where('id', $game->id)
-                ->where('title', 'Catan')));
+                ->where('title', 'Catan'))
+            ->has('journalEntries', 0)
+            ->where('resume', null));
 });
 
 it('renders the edit page for the owner with id and title only', function (): void {
