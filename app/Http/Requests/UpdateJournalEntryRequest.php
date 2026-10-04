@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\JournalEntry;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdateJournalEntryRequest extends FormRequest
@@ -21,6 +22,12 @@ final class UpdateJournalEntryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $owner = $this->user();
+        assert($owner instanceof User);
+
+        $entry = $this->route('journal_entry');
+        assert($entry instanceof JournalEntry);
+
         return [
             'body' => ['required', 'string', 'max:10000'],
             'next' => ['nullable', 'string', 'max:2000'],
