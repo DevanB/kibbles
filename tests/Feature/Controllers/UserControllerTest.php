@@ -131,6 +131,27 @@ it('requires matching password confirmation', function (): void {
         ->assertSessionHasErrors('password');
 });
 
+it('rejects undeclared fields when the app is not in production', function (): void {
+    expect(app()->isProduction())->toBeFalse();
+
+    $response = $this->fromRoute('register')
+        ->post(route('register.store'), [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password1234',
+            'password_confirmation' => 'password1234',
+            'is_admin' => true,
+        ]);
+
+    $response->assertRedirectToRoute('register')
+        ->assertSessionHasErrors([
+            'is_admin' => __('validation.prohibited', ['attribute' => 'is admin']),
+        ]);
+
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
+});
+
 it('may delete user account', function (): void {
     $user = User::factory()->create([
         'password' => Hash::make('password'),
