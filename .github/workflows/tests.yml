@@ -25,7 +25,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.5
-          tools: composer:v2
+          # Stable Composer is 2.10.3; config.policy.cooldown needs Composer 2.11+.
+          tools: composer:snapshot
           coverage: pcov
           ini-values: zend.assertions=1
 
