@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\Game;
 use App\Models\User;
 
-it('may add, edit, and delete a journal entry on the game hub', function (): void {
+it('may add, view, edit, and delete a journal entry from hub modals', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
 
@@ -15,32 +15,35 @@ it('may add, edit, and delete a journal entry on the game hub', function (): voi
 
     $page->assertSee('Catan')
         ->assertDontSee('Journal entries will live here.')
+        ->assertDontSee('Up next')
         ->assertSee('No journal entries yet.')
         ->assertNoJavaScriptErrors();
 
-    $page->fill('#compose-body', 'Settled on the ore port.')
-        ->fill('#compose-next', 'Build a city next session.')
+    $page->click('@create-journal-entry-button')
+        ->assertSee('Create Entry')
+        ->fill('#compose-body', 'Settled on the ore port.')
         ->click('@add-journal-entry-button')
         ->assertSee('Journal entry added.')
-        ->assertSee('Settled on the ore port.')
-        ->assertSee('Build a city next session.')
-        ->assertSee('Up next')
+        ->assertDontSee('Settled on the ore port.')
+        ->assertDontSee('No journal entries yet.')
         ->assertNoJavaScriptErrors();
 
     $entry = $game->journalEntries()->first();
 
     expect($entry)->not->toBeNull();
 
-    $page->click('@edit-journal-entry-button-'.$entry->id)
+    $page->click('@journal-entry-'.$entry->id)
+        ->assertSee('Settled on the ore port.')
+        ->click('@edit-journal-entry-button-'.$entry->id)
         ->fill('#edit-'.$entry->id.'-body', 'Settled on the brick port.')
         ->click('@save-journal-entry-button-'.$entry->id)
         ->assertSee('Journal entry updated.')
-        ->assertSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 
     $page = visit(route('games.show', $game));
 
-    $page->assertSee('Settled on the brick port.')
+    $page->click('@journal-entry-'.$entry->id)
+        ->assertSee('Settled on the brick port.')
         ->click('@delete-journal-entry-button-'.$entry->id)
         ->assertSee('Journal entry deleted.')
         ->assertDontSee('Settled on the brick port.')

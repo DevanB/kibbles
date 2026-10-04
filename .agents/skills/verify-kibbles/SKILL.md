@@ -161,15 +161,15 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `save-game-button` | games create/edit save |
 | `edit-game-button` | games show → edit |
 | `delete-game-button` | games show/edit delete |
-| `delete-game-button-{id}` | games index row delete |
-| `game-title-{id}` | games index title link → show |
+| `game-title-{id}` | games index title → show |
+| `game-open-{id}` | games index disclosure chevron → show |
 | `game-art-slot` | games show box-art placeholder |
-| `add-journal-entry-button` | games show compose submit |
-| `journal-resume` | games show derived next banner |
-| `journal-entry-{id}` | games show entry card |
-| `edit-journal-entry-button-{id}` | games show inline edit |
-| `save-journal-entry-button-{id}` | games show inline save |
-| `delete-journal-entry-button-{id}` | games show entry delete |
+| `create-journal-entry-button` | games show opens create modal |
+| `add-journal-entry-button` | journal create modal submit |
+| `journal-entry-{id}` | games show dated list row → show modal |
+| `edit-journal-entry-button-{id}` | journal show modal edit |
+| `save-journal-entry-button-{id}` | journal show modal save |
+| `delete-journal-entry-button-{id}` | journal show modal delete |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 

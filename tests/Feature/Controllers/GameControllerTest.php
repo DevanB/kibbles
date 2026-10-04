@@ -240,7 +240,7 @@ it('renders the show page for the owner with id and title only', function (): vo
                 ->where('id', $game->id)
                 ->where('title', 'Catan'))
             ->has('journalEntries', 0)
-            ->where('resume', null));
+            ->missing('resume'));
 });
 
 it('renders the edit page for the owner with id and title only', function (): void {

@@ -30,7 +30,6 @@ final class UpdateJournalEntryRequest extends FormRequest
 
         return [
             'body' => ['required', 'string', 'max:10000'],
-            'next' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -43,8 +42,6 @@ final class UpdateJournalEntryRequest extends FormRequest
             'body.required' => 'A body is required.',
             'body.string' => 'The body must be a string.',
             'body.max' => 'The body may not be greater than 10000 characters.',
-            'next.string' => 'The next plan must be a string.',
-            'next.max' => 'The next plan may not be greater than 2000 characters.',
         ];
     }
 }

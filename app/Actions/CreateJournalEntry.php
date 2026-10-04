@@ -9,11 +9,10 @@ use App\Models\JournalEntry;
 
 final readonly class CreateJournalEntry
 {
-    public function handle(Game $game, string $body, ?string $next): JournalEntry
+    public function handle(Game $game, string $body): JournalEntry
     {
         return $game->journalEntries()->create([
             'body' => $body,
-            'next' => $next,
         ]);
     }
 }

@@ -17,14 +17,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read string $id
  * @property-read string $game_id
  * @property-read string $body
- * @property-read string|null $next
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read Game $game
  */
 #[Fillable([
     'body',
-    'next',
 ])]
 final class JournalEntry extends Model
 {
@@ -42,7 +40,6 @@ final class JournalEntry extends Model
             'id' => 'string',
             'game_id' => 'string',
             'body' => 'string',
-            'next' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

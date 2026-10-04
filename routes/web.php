@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
     Route::resource('games', GameController::class);
     Route::resource('games.journal-entries', JournalEntryController::class)
-        ->only(['store', 'update', 'destroy'])
+        ->only(['create', 'store', 'show', 'update', 'destroy'])
         ->scoped();
 });
 

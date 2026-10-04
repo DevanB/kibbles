@@ -21,7 +21,6 @@ final class JournalEntryFactory extends Factory
         return [
             'game_id' => Game::factory(),
             'body' => fake()->paragraph(),
-            'next' => fake()->optional()->sentence(),
         ];
     }
 }
