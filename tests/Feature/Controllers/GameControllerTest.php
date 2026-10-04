@@ -111,6 +111,38 @@ it('requires a title when the field is missing', function (): void {
         ->assertSessionHasErrors('title');
 });
 
+it('requires a unique title per user when creating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->for($user)->create(['title' => 'Elden Ring']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Elden Ring',
+        ]);
+
+    $response->assertRedirectToRoute('games.create')
+        ->assertSessionHasErrors('title');
+
+    expect(Game::query()->where('user_id', $user->id)->where('title', 'Elden Ring')->count())->toBe(1);
+});
+
+it('allows different users to use the same game title', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $otherUser = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->for($otherUser)->create(['title' => 'Elden Ring']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Elden Ring',
+        ]);
+
+    $response->assertRedirectToRoute('games.index');
+
+    expect(Game::query()->where('title', 'Elden Ring')->count())->toBe(2);
+});
+
 it('redirects show to edit for an owned game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->for($user)->create();
@@ -165,6 +197,39 @@ it('requires a title when updating a game', function (): void {
         ->assertSessionHasErrors('title');
 
     expect($game->refresh()->title)->toBe('Chess');
+});
+
+it('requires a unique title per user when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->for($user)->create(['title' => 'Elden Ring']);
+    $game = Game::factory()->for($user)->create(['title' => 'Chess']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->patch(route('games.update', $game), [
+            'title' => 'Elden Ring',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionHasErrors('title');
+
+    expect($game->refresh()->title)->toBe('Chess');
+});
+
+it('allows keeping the same title when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->for($user)->create(['title' => 'Elden Ring']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->patch(route('games.update', $game), [
+            'title' => 'Elden Ring',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionDoesntHaveErrors();
+
+    expect($game->refresh()->title)->toBe('Elden Ring');
 });
 
 it('may delete an owned game', function (): void {

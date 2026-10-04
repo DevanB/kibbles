@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Game;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StoreGameRequest extends FormRequest
 {
@@ -14,8 +17,16 @@ final class StoreGameRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = $this->user();
+        assert($user instanceof User);
+
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique(Game::class)->where('user_id', $user->id),
+            ],
         ];
     }
 }
