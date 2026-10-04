@@ -8,6 +8,7 @@ use App\Models\Game;
 use App\Models\User;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Translation\PotentiallyTranslatedString;
 use Illuminate\Validation\Rule;
@@ -45,7 +46,9 @@ final readonly class UniqueOwnedGameTitle implements ValidationRule
 
         $unique = Rule::unique(Game::class, 'title_normalized')
             ->where('user_id', $this->owner->id)
-            ->where(fn ($query) => $query->whereRaw('LOWER(title) = ?', [$normalizedTitle]));
+            ->where(function (Builder $query) use ($normalizedTitle): void {
+                $query->whereRaw('LOWER(title) = ?', [$normalizedTitle]);
+            });
 
         if ($this->ignore instanceof Game) {
             $unique->ignore($this->ignore);
