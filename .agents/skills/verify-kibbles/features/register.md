@@ -23,11 +23,11 @@ Preconditions:
 - **User opens register →** `php artisan test --compact --filter="renders registration page" tests/Feature/Controllers/UserControllerTest.php` → **Inertia `user/create`** with password rules
 - **User submits valid form →** `php artisan test --compact --filter="may register a new user" tests/Feature/Controllers/UserControllerTest.php` → **redirect `dashboard`**, user persisted, authenticated
 - **Browser nav smoke only →** LayoutTest auth case: `visit(route('login'))` → click **Sign up** → **`Create an account`** (does **not** submit the register form)
-- **Browser submit (pattern to add) →** `visit(route('register'))` → fill name/email/password/password_confirmation → `click('@register-user-button')` → **assertPathIs('/dashboard')**
+- **User submits valid form in browser →** `php artisan test --compact tests/Browser/RegistrationTest.php` → `Feature::define(Registration::class, true)` → fill name/email/password/password_confirmation → `click('@register-user-button')` → **path `/verify-email`** (new users are unverified; dashboard `verified` middleware sends them here). User persisted, `email_verified_at` null
 
 ## Gotchas
 
 - Password rules come from `Password::defaults()` — Feature tests use values that satisfy current rules (`password1234` in happy path)
 - Do not rely on DatabaseSeeder; it is empty
-- After register, email verification middleware may affect `/dashboard` depending on Fortify config — Feature happy path expects redirect to `dashboard`
-- LayoutTest covers register **nav smoke** only; full create path is Feature `UserControllerTest`
+- Feature happy path asserts the POST redirect to the `dashboard` **route**. The follow-up GET hits `verified` middleware, so Browser submit lands on `/verify-email`
+- LayoutTest covers register **nav smoke** only; HTTP create path is Feature `UserControllerTest`; Browser submit is `RegistrationTest`

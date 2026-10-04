@@ -23,6 +23,7 @@ Preconditions:
 - **User opens profile →** `php artisan test --compact --filter="renders profile edit page" tests/Feature/Controllers/UserProfileControllerTest.php` → **Inertia `user-profile/edit`**
 - **User saves profile →** Feature `may update profile information` → **redirect profile**, flash toast `Profile updated.`
 - **Browser layout + toast →** `php artisan test --compact --filter="renders settings pages|shows a toast after updating the profile" tests/Browser/LayoutTest.php` → **sees** app name, `Settings`, `Profile information`; fill `name` → click **Save** → **`Profile updated.`**
+- **Appearance GET (Feature) →** `php artisan test --compact tests/Feature/Controllers/AppearanceTest.php` → guest → `login`; verified → **200** + Inertia `appearance/update`; unverified → `verification.notice`
 - **Feature delete account →** `php artisan test --compact --filter="may delete user account" tests/Feature/Controllers/UserControllerTest.php` → **`UserController@destroy` / `user.destroy`**
 - **Browser delete account →** LayoutTest `may delete the account from the profile settings` → `click('@delete-user-button')` → fill password → `click('@confirm-delete-user-button')` → **path `/`**, user null
 

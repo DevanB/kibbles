@@ -41,6 +41,7 @@ Preconditions:
 - **Guest denied (Feature) →** `php artisan test --compact --filter="redirects guests to login" tests/Feature/Controllers/DashboardTest.php`
 - **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard`
 - **Unverified (Feature) →** `php artisan test --compact --filter="redirects unverified users" tests/Feature/Controllers/DashboardTest.php` → `verification.notice`
+- **Unverified notice UI (Browser) →** `php artisan test --compact tests/Browser/EmailVerificationTest.php` → unverified `actingAs` + `visit(dashboard)` → **path `/verify-email`**, sees `Verify email` / `Resend verification email` / `Log out`
 - **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, logout click lands on `/` then dashboard redirects to `/login`, `assertNoJavaScriptErrors()`
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-dashboard` (runs the two files above; doctor against `http://localhost:8000` is logged and does not fail the proof if `composer dev` is down)
 - **Logout →** open user menu `@sidebar-menu-button` → `click('@logout-button')` → `assertPathIs('/')` (welcome shows **Log in**). Revisit `dashboard` → `assertPathIs('/login')` proves the browser session is a guest. Feature `SessionControllerTest` `may destroy a session` is the HTTP `assertGuest()` proof
