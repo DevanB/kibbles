@@ -25,7 +25,12 @@ final readonly class GameController
         Gate::authorize('viewAny', Game::class);
 
         return Inertia::render('games/index', [
-            'games' => $user->games()->latest()->get(['id', 'title']),
+            'games' => $user->games()
+                ->latest()
+                ->get()
+                ->map($this->toWireGame(...))
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -53,13 +58,10 @@ final readonly class GameController
 
     public function edit(Game $game): Response
     {
-        Gate::authorize('view', $game);
+        Gate::authorize('update', $game);
 
         return Inertia::render('games/edit', [
-            'game' => [
-                'id' => $game->id,
-                'title' => $game->title,
-            ],
+            'game' => $this->toWireGame($game),
         ]);
     }
 
@@ -77,8 +79,6 @@ final readonly class GameController
 
     public function destroy(DeleteGameRequest $request, Game $game, DeleteGame $action): RedirectResponse
     {
-        $request->validated();
-
         $action->handle($game);
 
         Inertia::flash('toast', [
@@ -87,5 +87,16 @@ final readonly class GameController
         ]);
 
         return to_route('games.index');
+    }
+
+    /**
+     * @return array{id: string, title: string}
+     */
+    private function toWireGame(Game $game): array
+    {
+        return [
+            'id' => $game->id,
+            'title' => $game->title,
+        ];
     }
 }

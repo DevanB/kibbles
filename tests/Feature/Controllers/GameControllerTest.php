@@ -55,10 +55,9 @@ it('lists only the authenticated user games as id and title', function (): void 
         ->assertInertia(fn ($page) => $page
             ->component('games/index')
             ->has('games', 1)
-            ->where('games.0.id', $owned->id)
-            ->where('games.0.title', 'Owned Game')
-            ->missing('games.0.user_id')
-            ->missing('games.0.created_at'));
+            ->has('games.0', fn ($game) => $game
+                ->where('id', $owned->id)
+                ->where('title', 'Owned Game')));
 });
 
 it('renders the create page', function (): void {
@@ -140,6 +139,23 @@ it('rejects a duplicate title for the same user', function (): void {
         ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
 });
 
+it('rejects a case-insensitive duplicate title for the same user', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'catan',
+        ]);
+
+    $response->assertRedirectToRoute('games.create')
+        ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
+
+    expect(Game::query()->whereBelongsTo($user)->count())->toBe(1)
+        ->and(Game::query()->whereBelongsTo($user)->value('title'))->toBe('Catan');
+});
+
 it('allows the same title for different users', function (): void {
     $owner = User::factory()->withoutTwoFactor()->create();
     $other = User::factory()->withoutTwoFactor()->create();
@@ -158,6 +174,60 @@ it('allows the same title for different users', function (): void {
     $response->assertRedirectToRoute('games.edit', $game);
 });
 
+it('allows the same title in a different case for a different user', function (): void {
+    $owner = User::factory()->withoutTwoFactor()->create();
+    $other = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->recycle($other)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($owner)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'catan',
+        ]);
+
+    $game = Game::query()->whereBelongsTo($owner)->where('title', 'catan')->first();
+
+    expect($game)->not->toBeNull();
+
+    $response->assertRedirectToRoute('games.edit', $game);
+});
+
+it('maps a unique constraint race to a validation error when creating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $dispatcher = Game::getEventDispatcher();
+    Game::setEventDispatcher(clone $dispatcher);
+
+    Game::creating(function () use ($user): void {
+        static $seeded = false;
+
+        if ($seeded) {
+            return;
+        }
+
+        $seeded = true;
+
+        Game::withoutEvents(function () use ($user): void {
+            Game::factory()->recycle($user)->create([
+                'id' => (string) Str::uuid(),
+                'title' => 'Catan',
+            ]);
+        });
+    });
+
+    try {
+        $response = $this->actingAs($user)
+            ->fromRoute('games.create')
+            ->post(route('games.store'), [
+                'title' => 'Catan',
+            ]);
+
+        $response->assertRedirectToRoute('games.create')
+            ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
+    } finally {
+        Game::setEventDispatcher($dispatcher);
+    }
+});
+
 it('renders the edit page for the owner with id and title only', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
@@ -168,10 +238,9 @@ it('renders the edit page for the owner with id and title only', function (): vo
     $response->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('games/edit')
-            ->where('game.id', $game->id)
-            ->where('game.title', 'Catan')
-            ->missing('game.user_id')
-            ->missing('game.created_at'));
+            ->has('game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', 'Catan')));
 });
 
 it('may update a game', function (): void {
@@ -257,6 +326,76 @@ it('rejects updating to a duplicate title owned by the same user', function (): 
 
     $response->assertRedirectToRoute('games.edit', $game)
         ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
+});
+
+it('rejects updating to a case-insensitive duplicate title owned by the same user', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->recycle($user)->create(['title' => 'Catan']);
+    $game = Game::factory()->recycle($user)->create(['title' => 'Ticket to Ride']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'catan',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
+
+    expect($game->refresh()->title)->toBe('Ticket to Ride');
+});
+
+it('allows changing the casing of a game title', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'CATAN',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionDoesntHaveErrors();
+
+    expect($game->refresh()->title)->toBe('CATAN');
+});
+
+it('maps a unique constraint race to a validation error when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Ticket to Ride']);
+    $dispatcher = Game::getEventDispatcher();
+    Game::setEventDispatcher(clone $dispatcher);
+
+    Game::updating(function () use ($user): void {
+        static $seeded = false;
+
+        if ($seeded) {
+            return;
+        }
+
+        $seeded = true;
+
+        Game::withoutEvents(function () use ($user): void {
+            Game::factory()->recycle($user)->create([
+                'id' => (string) Str::uuid(),
+                'title' => 'Catan',
+            ]);
+        });
+    });
+
+    try {
+        $response = $this->actingAs($user)
+            ->fromRoute('games.edit', $game)
+            ->put(route('games.update', $game), [
+                'title' => 'Catan',
+            ]);
+
+        $response->assertRedirectToRoute('games.edit', $game)
+            ->assertSessionHasErrors(['title' => 'You already have a game with this title.']);
+    } finally {
+        Game::setEventDispatcher($dispatcher);
+    }
 });
 
 it('may delete a game', function (): void {
