@@ -40,5 +40,18 @@ final class DemoSeeder extends Seeder
                 'title' => $title,
             ]);
         }
+
+        $catan = $user->games()->where('title', 'Catan')->first();
+
+        if ($catan instanceof Game && $catan->journalEntries()->doesntExist()) {
+            $catan->journalEntries()->create([
+                'body' => 'Opened with a wood and brick settlement and raced for longest road.',
+                'next' => 'Contest the 8-wheat hex before the robber parks there.',
+            ]);
+            $catan->journalEntries()->create([
+                'body' => 'Cities went down early; the robber wrecked the wheat engine.',
+                'next' => null,
+            ]);
+        }
     }
 }

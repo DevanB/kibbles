@@ -21,7 +21,7 @@ DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature GameControllerTest + Browser GamesTest; doctor is informational"
+  echo "note=Feature GameControllerTest + JournalEntryControllerTest + Browser GamesTest + JournalEntriesTest; doctor is informational"
 } | tee "$ART/games-summary.txt"
 
 set +e
@@ -32,7 +32,9 @@ set -e
 set +e
 php artisan test --compact \
   tests/Feature/Controllers/GameControllerTest.php \
+  tests/Feature/Controllers/JournalEntryControllerTest.php \
   tests/Browser/GamesTest.php \
+  tests/Browser/JournalEntriesTest.php \
   > "$ART/games-tests.log" 2>&1
 TEST_RC=$?
 set -e
@@ -42,9 +44,9 @@ cat "$ART/games-tests.log"
   echo "doctor_rc=$DOCTOR_RC"
   echo "doctor_required=0"
   echo "tests_rc=$TEST_RC"
-  echo "feature=tests/Feature/Controllers/GameControllerTest.php"
-  echo "browser=tests/Browser/GamesTest.php"
-  echo "verified=guest→login, unverified→verification.notice, unique titles, browser create/update/delete"
+  echo "feature=tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php"
+  echo "browser=tests/Browser/GamesTest.php tests/Browser/JournalEntriesTest.php"
+  echo "verified=guest→login, unverified→verification.notice, unique titles, journal store/update/destroy, browser create/update/delete"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi
