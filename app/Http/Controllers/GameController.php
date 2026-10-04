@@ -53,7 +53,16 @@ final readonly class GameController
             'message' => __('Game created.'),
         ]);
 
-        return to_route('games.edit', $game);
+        return to_route('games.show', $game);
+    }
+
+    public function show(Game $game): Response
+    {
+        Gate::authorize('view', $game);
+
+        return Inertia::render('games/show', [
+            'game' => $this->toWireGame($game),
+        ]);
     }
 
     public function edit(Game $game): Response
@@ -74,7 +83,7 @@ final readonly class GameController
             'message' => __('Game updated.'),
         ]);
 
-        return to_route('games.edit', $game);
+        return to_route('games.show', $game);
     }
 
     public function destroy(DeleteGameRequest $request, Game $game, DeleteGame $action): RedirectResponse

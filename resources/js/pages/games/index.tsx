@@ -4,7 +4,7 @@ import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { create, edit, index } from '@/routes/games';
+import { create, edit, index, show } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -52,7 +52,7 @@ export default function Index({ games }: { games: Game[] }) {
                                 className="flex items-center justify-between gap-4 px-4 py-3"
                             >
                                 <Link
-                                    href={edit(game)}
+                                    href={show(game)}
                                     className="font-medium hover:underline"
                                     data-test={`game-title-${game.id}`}
                                 >
