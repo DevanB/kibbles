@@ -157,10 +157,11 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `delete-user-button` / `confirm-delete-user-button` | profile delete dialog |
 | `logout-button` | user menu |
 | `sidebar-menu-button` | nav user trigger |
-| `create-game-button` | `/games` add |
+| `create-game-button` | `/games` add (header when the list has games; empty-state CTA when it does not) |
 | `save-game-button` | games create/edit save |
 | `edit-game-button` | games show → edit |
-| `delete-game-button` | games show/edit delete |
+| `game-actions-button` | games show split-button chevron (Delete lives in the menu) |
+| `delete-game-button` | games show menu / edit delete |
 | `game-title-{id}` | games index title → show |
 | `game-open-{id}` | games index disclosure chevron → show |
 | `game-art-slot` | games show box-art placeholder |

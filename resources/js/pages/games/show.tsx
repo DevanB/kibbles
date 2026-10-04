@@ -1,10 +1,16 @@
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import Heading from '@/components/heading';
 import { Button, buttonVariants } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -48,28 +54,46 @@ export default function Show({
                 <div className="flex items-start justify-between gap-4">
                     <Heading title={game.title} />
 
-                    <div className="flex items-center gap-2">
+                    <div className="inline-flex">
                         <Button
                             variant="outline"
                             size="sm"
                             asChild
+                            className="rounded-r-none"
                             data-test="edit-game-button"
                         >
                             <Link href={edit(game)}>Edit</Link>
                         </Button>
-
-                        <Form {...GameController.destroy.form(game.id)}>
-                            {({ processing }) => (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                                 <Button
-                                    type="submit"
-                                    variant="destructive"
+                                    variant="outline"
                                     size="sm"
-                                    disabled={processing}
-                                    data-test="delete-game-button"
+                                    className="rounded-l-none border-l-0 px-2"
+                                    aria-label="More actions"
+                                    data-test="game-actions-button"
                                 >
-                                    Delete
+                                    <ChevronDown />
                                 </Button>
-                            )}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem variant="destructive" asChild>
+                                    <button
+                                        type="submit"
+                                        form="delete-game-form"
+                                        data-test="delete-game-button"
+                                    >
+                                        Delete
+                                    </button>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Form
+                            {...GameController.destroy.form(game.id)}
+                            id="delete-game-form"
+                            className="hidden"
+                        >
+                            {() => null}
                         </Form>
                     </div>
                 </div>
@@ -84,26 +108,45 @@ export default function Show({
 
                 <Separator />
 
-                <section className="max-w-2xl space-y-4">
+                <section className="flex flex-1 flex-col space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <Heading variant="small" title="Journal" />
 
-                        <ModalLink
-                            href={JournalEntryController.create.url(game.id)}
-                            navigate
-                            className={cn(buttonVariants({ size: 'sm' }))}
-                            data-test="create-journal-entry-button"
-                        >
-                            Create Entry
-                        </ModalLink>
+                        {journalEntries.length > 0 && (
+                            <ModalLink
+                                href={JournalEntryController.create.url(
+                                    game.id,
+                                )}
+                                navigate
+                                className={cn(buttonVariants({ size: 'sm' }))}
+                                data-test="create-journal-entry-button"
+                            >
+                                Create Entry
+                            </ModalLink>
+                        )}
                     </div>
 
                     {journalEntries.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            No journal entries yet.
-                        </p>
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border">
+                            <p className="text-lg font-medium">
+                                No journal entries yet
+                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Write what happened the last time you played.
+                            </p>
+                            <ModalLink
+                                href={JournalEntryController.create.url(
+                                    game.id,
+                                )}
+                                navigate
+                                className={cn(buttonVariants(), 'mt-4')}
+                                data-test="create-journal-entry-button"
+                            >
+                                Create Entry
+                            </ModalLink>
+                        </div>
                     ) : (
-                        <ul className="divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                        <ul className="w-full divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                             {journalEntries.map((entry) => (
                                 <li key={entry.id}>
                                     <ModalLink
@@ -112,7 +155,7 @@ export default function Show({
                                             journal_entry: entry.id,
                                         })}
                                         navigate
-                                        className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
+                                        className="flex w-full items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
                                         data-test={`journal-entry-${entry.id}`}
                                     >
                                         <time

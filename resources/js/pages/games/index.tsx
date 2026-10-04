@@ -25,12 +25,14 @@ export default function Index({ games }: { games: Game[] }) {
                         description="Your personal catalog of games"
                     />
 
-                    <Button asChild data-test="create-game-button">
-                        <Link href={create()}>
-                            <Plus />
-                            Add game
-                        </Link>
-                    </Button>
+                    {games.length > 0 && (
+                        <Button asChild data-test="create-game-button">
+                            <Link href={create()}>
+                                <Plus />
+                                Add game
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {games.length === 0 ? (
@@ -39,7 +41,11 @@ export default function Index({ games }: { games: Game[] }) {
                         <p className="mt-1 text-sm text-muted-foreground">
                             Add your first game to start your catalog.
                         </p>
-                        <Button asChild className="mt-4">
+                        <Button
+                            asChild
+                            className="mt-4"
+                            data-test="create-game-button"
+                        >
                             <Link href={create()}>Add game</Link>
                         </Button>
                     </div>

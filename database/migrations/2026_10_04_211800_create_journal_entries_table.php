@@ -14,7 +14,6 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('game_id')->constrained()->cascadeOnDelete();
             $table->text('body');
-            $table->text('next')->nullable();
             $table->timestamps();
 
             $table->index(['game_id', 'created_at', 'id']);
