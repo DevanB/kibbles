@@ -1,4 +1,4 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -7,21 +7,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/games';
-import type { BreadcrumbItem, Game } from '@/types';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Games',
-        href: index(),
-    },
-    {
-        title: 'Edit game',
-        href: '#',
-    },
-];
+import { index, show } from '@/routes/games';
+import type { Game } from '@/types';
 
 export default function Edit({ game }: { game: Game }) {
+    setLayoutProps({
+        breadcrumbs: [
+            {
+                title: 'Games',
+                href: index(),
+            },
+            {
+                title: game.title,
+                href: show(game),
+            },
+            {
+                title: 'Edit game',
+                href: '#',
+            },
+        ],
+    });
+
     return (
         <>
             <Head title={`Edit ${game.title}`} />
@@ -62,7 +68,7 @@ export default function Edit({ game }: { game: Game }) {
                                     Save changes
                                 </Button>
                                 <Button variant="ghost" asChild>
-                                    <Link href={index()}>Cancel</Link>
+                                    <Link href={show(game)}>Cancel</Link>
                                 </Button>
                             </div>
                         </>
@@ -94,4 +100,4 @@ export default function Edit({ game }: { game: Game }) {
     );
 }
 
-Edit.layout = [AppLayout, { breadcrumbs }];
+Edit.layout = [AppLayout];

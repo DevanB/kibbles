@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\Game;
 use App\Models\User;
 use Illuminate\Support\Str;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
     $response = $this->{$method}(route($route, $parameters));
@@ -15,24 +14,23 @@ it('redirects guests to login', function (string $method, string $route, array $
     'index' => ['get', 'games.index'],
     'create' => ['get', 'games.create'],
     'store' => ['post', 'games.store'],
+    'show' => ['get', 'games.show', ['game' => '00000000-0000-0000-0000-000000000001']],
     'edit' => ['get', 'games.edit', ['game' => '00000000-0000-0000-0000-000000000001']],
     'update' => ['put', 'games.update', ['game' => '00000000-0000-0000-0000-000000000001']],
     'destroy' => ['delete', 'games.destroy', ['game' => '00000000-0000-0000-0000-000000000001']],
 ]);
 
-it('does not register a show route', function (): void {
-    expect(fn (): string => route('games.show', Str::uuid()->toString()))
-        ->toThrow(RouteNotFoundException::class);
-});
-
-it('returns 404 for a missing game', function (): void {
+it('returns 404 for a missing game', function (string $route): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $missingId = Str::uuid()->toString();
 
     $this->actingAs($user)
-        ->get(route('games.edit', $missingId))
+        ->get(route($route, $missingId))
         ->assertNotFound();
-});
+})->with([
+    'show' => ['games.show'],
+    'edit' => ['games.edit'],
+]);
 
 it('redirects unverified users to the verification notice', function (): void {
     $user = User::factory()->unverified()->withoutTwoFactor()->create();
@@ -84,7 +82,7 @@ it('may create a game', function (): void {
     expect($game)->not->toBeNull()
         ->and($game->title)->toBe('Catan');
 
-    $response->assertRedirectToRoute('games.edit', $game)
+    $response->assertRedirectToRoute('games.show', $game)
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game created.')]);
 });
 
@@ -171,7 +169,7 @@ it('allows the same title for different users', function (): void {
 
     expect($game)->not->toBeNull();
 
-    $response->assertRedirectToRoute('games.edit', $game);
+    $response->assertRedirectToRoute('games.show', $game);
 });
 
 it('allows the same title in a different case for a different user', function (): void {
@@ -189,7 +187,7 @@ it('allows the same title in a different case for a different user', function ()
 
     expect($game)->not->toBeNull();
 
-    $response->assertRedirectToRoute('games.edit', $game);
+    $response->assertRedirectToRoute('games.show', $game);
 });
 
 it('maps a unique constraint race to a validation error when creating a game', function (): void {
@@ -228,6 +226,21 @@ it('maps a unique constraint race to a validation error when creating a game', f
     }
 });
 
+it('renders the show page for the owner with id and title only', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($user)
+        ->get(route('games.show', $game));
+
+    $response->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/show')
+            ->has('game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', 'Catan')));
+});
+
 it('renders the edit page for the owner with id and title only', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
@@ -253,7 +266,7 @@ it('may update a game', function (): void {
             'title' => 'Ticket to Ride',
         ]);
 
-    $response->assertRedirectToRoute('games.edit', $game)
+    $response->assertRedirectToRoute('games.show', $game)
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game updated.')]);
 
     expect($game->refresh()->title)->toBe('Ticket to Ride');
@@ -269,7 +282,7 @@ it('allows keeping the same title when updating a game', function (): void {
             'title' => 'Catan',
         ]);
 
-    $response->assertRedirectToRoute('games.edit', $game)
+    $response->assertRedirectToRoute('games.show', $game)
         ->assertSessionDoesntHaveErrors();
 });
 
@@ -355,7 +368,7 @@ it('allows changing the casing of a game title', function (): void {
             'title' => 'CATAN',
         ]);
 
-    $response->assertRedirectToRoute('games.edit', $game)
+    $response->assertRedirectToRoute('games.show', $game)
         ->assertSessionDoesntHaveErrors();
 
     expect($game->refresh()->title)->toBe('CATAN');
@@ -410,6 +423,17 @@ it('may delete a game', function (): void {
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game deleted.')]);
 
     $this->assertModelMissing($game);
+});
+
+it('forbids another user from viewing the show page', function (): void {
+    $owner = User::factory()->withoutTwoFactor()->create();
+    $intruder = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($owner)->create();
+
+    $response = $this->actingAs($intruder)
+        ->get(route('games.show', $game));
+
+    $response->assertForbidden();
 });
 
 it('forbids another user from viewing the edit page', function (): void {
