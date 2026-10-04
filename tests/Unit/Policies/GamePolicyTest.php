@@ -7,11 +7,10 @@ use App\Models\User;
 use App\Policies\GamePolicy;
 
 it('allows authenticated users to view any and create games', function (): void {
-    $user = User::factory()->create();
     $policy = new GamePolicy;
 
-    expect($policy->viewAny($user))->toBeTrue()
-        ->and($policy->create($user))->toBeTrue();
+    expect($policy->viewAny())->toBeTrue()
+        ->and($policy->create())->toBeTrue();
 });
 
 it('allows owners to view, update, and delete their games', function (): void {
