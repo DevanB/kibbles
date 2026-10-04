@@ -45,6 +45,9 @@ jobs:
         uses: voidzero-dev/setup-vp@v1.21.1
         with:
           node-version: 24
+          # @inertiaui/modal-react is file:vendor/inertiaui/modal/react.
+          # vp install runs bun before composer, so skip it here.
+          run-install: false
 
       - name: Cache Composer Dependencies
         uses: actions/cache@v6
