@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end proof: doctor + Welcome Browser test + durable artifacts.
-# Usage: .cursor/skills/verify-kibbles/bin/prove-welcome
+# Usage: .agents/skills/verify-kibbles/bin/prove-welcome
+# Do not pipe `php artisan test` through tee — Playwright run-server inherits the pipe.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
@@ -33,11 +34,13 @@ curl -sS -o /dev/null -w "%{http_code}" "$BASE/" > "$ART/welcome.http_code" || e
   rg -o '"component":"welcome"|<title>Laravel</title>|name":"Laravel"' "$ART/welcome.html" 2>/dev/null | sort -u || true
 } | tee "$ART/welcome.copy.txt"
 
-# Drive mapped welcome feature via existing Browser test
+# Drive mapped welcome feature via existing Browser test.
+# Redirect to a file (do not pipe through tee): leftover Playwright keeps the pipe open.
 set +e
-php artisan test --compact tests/Browser/WelcomeTest.php 2>&1 | tee "$ART/welcome-browser-test.log"
-TEST_RC=${PIPESTATUS[0]}
+php artisan test --compact tests/Browser/WelcomeTest.php > "$ART/welcome-browser-test.log" 2>&1
+TEST_RC=$?
 set -e
+cat "$ART/welcome-browser-test.log"
 
 if [[ -d tests/Browser/Screenshots ]]; then
   cp -f tests/Browser/Screenshots/*.png "$ART/screenshots/" 2>/dev/null || true
@@ -61,9 +64,11 @@ it('captures welcome proof screenshot', function (): void {
 PHP
 
 set +e
-php artisan test --compact "$PROOF_DIR/WelcomeProofTest.php" 2>&1 | tee -a "$ART/welcome-browser-test.log"
-PROOF_RC=${PIPESTATUS[0]}
+php artisan test --compact "$PROOF_DIR/WelcomeProofTest.php" > "$ART/welcome-proof-test.log" 2>&1
+PROOF_RC=$?
 set -e
+cat "$ART/welcome-proof-test.log"
+cat "$ART/welcome-proof-test.log" >> "$ART/welcome-browser-test.log"
 
 if [[ -f tests/Browser/Screenshots/welcome-proof.png ]]; then
   cp -f tests/Browser/Screenshots/welcome-proof.png "$ART/screenshots/"

@@ -3,7 +3,8 @@
 # Pest boots its own server — composer dev is not required.
 # Doctor against VERIFY_BASE_URL (default http://localhost:8000) is recorded;
 # a down composer-dev server does not fail this proof.
-# Usage: .cursor/skills/verify-kibbles/bin/prove-dashboard
+# Usage: .agents/skills/verify-kibbles/bin/prove-dashboard
+# Do not pipe `php artisan test` through tee — Playwright run-server inherits the pipe.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
@@ -32,9 +33,10 @@ set +e
 php artisan test --compact \
   tests/Feature/Controllers/DashboardTest.php \
   tests/Browser/DashboardTest.php \
-  2>&1 | tee "$ART/dashboard-tests.log"
-TEST_RC=${PIPESTATUS[0]}
+  > "$ART/dashboard-tests.log" 2>&1
+TEST_RC=$?
 set -e
+cat "$ART/dashboard-tests.log"
 
 {
   echo "doctor_rc=$DOCTOR_RC"
