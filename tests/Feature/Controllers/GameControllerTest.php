@@ -58,10 +58,11 @@ it('lists only the authenticated user games as id and title', function (): void 
                 ->where('title', 'Owned Game')));
 });
 
-it('renders the create page', function (): void {
+it('renders the create modal', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
 
     $response = $this->actingAs($user)
+        ->withHeaders(['X-InertiaUI-Modal' => '1'])
         ->get(route('games.create'));
 
     $response->assertOk()

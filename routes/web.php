@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\SessionController;
@@ -19,7 +20,7 @@ use Inertia\Inertia;
 Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::resource('games', GameController::class);
     Route::resource('games.journal-entries', JournalEntryController::class)
         ->only(['create', 'store', 'show', 'edit', 'update', 'destroy'])

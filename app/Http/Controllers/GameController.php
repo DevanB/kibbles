@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use InertiaUI\Modal\Modal;
 
 final readonly class GameController
 {
@@ -35,11 +36,12 @@ final readonly class GameController
         ]);
     }
 
-    public function create(): Response
+    public function create(): Modal
     {
         Gate::authorize('create', Game::class);
 
-        return Inertia::render('games/create');
+        return Inertia::modal('games/create')
+            ->baseRoute('games.index');
     }
 
     public function store(

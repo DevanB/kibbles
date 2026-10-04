@@ -1,40 +1,25 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
+import { Modal } from '@inertiaui/modal-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
-import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/games';
-import type { BreadcrumbItem } from '@/types';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Games',
-        href: index(),
-    },
-    {
-        title: 'Add game',
-        href: '#',
-    },
-];
 
 export default function Create() {
     return (
-        <>
-            <Head title="Add game" />
+        <Modal>
+            <Head title="Add Game" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
-                <Heading
-                    title="Add game"
-                    description="Create a game in your personal catalog"
-                />
+            <div className="space-y-4">
+                <h2 className="text-lg font-semibold tracking-tight">
+                    Add Game
+                </h2>
 
                 <Form
                     {...GameController.store.form()}
-                    className="max-w-xl space-y-6"
+                    className="space-y-4"
                     disableWhileProcessing
                 >
                     {({ processing, errors }) => (
@@ -52,24 +37,17 @@ export default function Create() {
                                 <InputError message={errors.title} />
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="save-game-button"
-                                >
-                                    {processing && <Spinner />}
-                                    Save game
-                                </Button>
-                                <Button variant="ghost" asChild>
-                                    <Link href={index()}>Cancel</Link>
-                                </Button>
-                            </div>
+                            <Button
+                                disabled={processing}
+                                data-test="save-game-button"
+                            >
+                                {processing && <Spinner />}
+                                Save Game
+                            </Button>
                         </>
                     )}
                 </Form>
             </div>
-        </>
+        </Modal>
     );
 }
-
-Create.layout = [AppLayout, { breadcrumbs }];
