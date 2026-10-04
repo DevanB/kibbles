@@ -6,9 +6,9 @@ namespace App\Http\Requests;
 
 use App\Models\Game;
 use App\Models\User;
+use App\Rules\UniqueOwnedGameTitle;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 final class CreateGameRequest extends FormRequest
 {
@@ -30,7 +30,7 @@ final class CreateGameRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique(Game::class, 'title')->where('user_id', $owner->id),
+                new UniqueOwnedGameTitle($owner),
             ],
         ];
     }
@@ -44,7 +44,7 @@ final class CreateGameRequest extends FormRequest
             'title.required' => 'A title is required.',
             'title.string' => 'The title must be a string.',
             'title.max' => 'The title may not be greater than 255 characters.',
-            'title.unique' => 'You already have a game with this title.',
+            'title.unique' => UniqueOwnedGameTitle::message(),
         ];
     }
 }
