@@ -1,10 +1,9 @@
-import { Form, Head, Link } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
-import GameController from '@/actions/App/Http/Controllers/GameController';
+import { Head, Link } from '@inertiajs/react';
+import { ChevronRight, Plus } from 'lucide-react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { create, edit, index, show } from '@/routes/games';
+import { create, index, show } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -47,41 +46,23 @@ export default function Index({ games }: { games: Game[] }) {
                 ) : (
                     <ul className="divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         {games.map((game) => (
-                            <li
-                                key={game.id}
-                                className="flex items-center justify-between gap-4 px-4 py-3"
-                            >
+                            <li key={game.id}>
                                 <Link
                                     href={show(game)}
-                                    className="font-medium hover:underline"
-                                    data-test={`game-title-${game.id}`}
+                                    className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
                                 >
-                                    {game.title}
-                                </Link>
-
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={edit(game)}>Edit</Link>
-                                    </Button>
-
-                                    <Form
-                                        {...GameController.destroy.form(
-                                            game.id,
-                                        )}
+                                    <span
+                                        className="font-medium"
+                                        data-test={`game-title-${game.id}`}
                                     >
-                                        {({ processing }) => (
-                                            <Button
-                                                type="submit"
-                                                variant="destructive"
-                                                size="sm"
-                                                disabled={processing}
-                                                data-test={`delete-game-button-${game.id}`}
-                                            >
-                                                Delete
-                                            </Button>
-                                        )}
-                                    </Form>
-                                </div>
+                                        {game.title}
+                                    </span>
+                                    <ChevronRight
+                                        aria-hidden
+                                        className="size-4 text-muted-foreground"
+                                        data-test={`game-open-${game.id}`}
+                                    />
+                                </Link>
                             </li>
                         ))}
                     </ul>

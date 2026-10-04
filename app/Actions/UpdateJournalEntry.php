@@ -8,11 +8,10 @@ use App\Models\JournalEntry;
 
 final readonly class UpdateJournalEntry
 {
-    public function handle(JournalEntry $entry, string $body, ?string $next): JournalEntry
+    public function handle(JournalEntry $entry, string $body): JournalEntry
     {
         $entry->update([
             'body' => $body,
-            'next' => $next,
         ]);
 
         return $entry;

@@ -6,7 +6,7 @@ use App\Models\Game;
 use App\Models\JournalEntry;
 use App\Models\User;
 
-it('lets the owner add an entry and see body, next, newest first, and resume on show', function (): void {
+it('lets the owner add an entry and see body newest first on show', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
 
@@ -14,7 +14,6 @@ it('lets the owner add an entry and see body, next, newest first, and resume on 
         ->fromRoute('games.show', $game)
         ->post(route('games.journal-entries.store', $game), [
             'body' => 'Opened with a wood and brick settlement.',
-            'next' => 'Contest the 8-wheat hex.',
         ])
         ->assertRedirectToRoute('games.show', $game)
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Journal entry added.')]);
@@ -25,7 +24,6 @@ it('lets the owner add an entry and see body, next, newest first, and resume on 
         ->fromRoute('games.show', $game)
         ->post(route('games.journal-entries.store', $game), [
             'body' => 'Cities went down early.',
-            'next' => '',
         ])
         ->assertRedirectToRoute('games.show', $game);
 
@@ -33,9 +31,7 @@ it('lets the owner add an entry and see body, next, newest first, and resume on 
     $older = $game->journalEntries()->where('body', 'Opened with a wood and brick settlement.')->first();
 
     expect($newer)->not->toBeNull()
-        ->and($older)->not->toBeNull()
-        ->and($newer->next)->toBeNull()
-        ->and($older->next)->toBe('Contest the 8-wheat hex.');
+        ->and($older)->not->toBeNull();
 
     $this->actingAs($user)
         ->get(route('games.show', $game))
@@ -46,43 +42,52 @@ it('lets the owner add an entry and see body, next, newest first, and resume on 
             ->has('journalEntries.0', fn ($entry) => $entry
                 ->where('id', $newer->id)
                 ->where('body', 'Cities went down early.')
-                ->where('next', null)
+                ->missing('next')
                 ->has('createdAt')
                 ->has('updatedAt'))
             ->has('journalEntries.1', fn ($entry) => $entry
                 ->where('id', $older->id)
                 ->where('body', 'Opened with a wood and brick settlement.')
-                ->where('next', 'Contest the 8-wheat hex.')
+                ->missing('next')
                 ->has('createdAt')
                 ->has('updatedAt'))
-            ->where('resume', 'Contest the 8-wheat hex.'));
+            ->missing('resume'));
 });
 
-it('stores and wires a blank next as null', function (): void {
+it('renders the create modal for the owner', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
 
     $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.journal-entries.store', $game), [
-            'body' => 'Just a recap.',
-            'next' => '',
-        ])
-        ->assertRedirectToRoute('games.show', $game);
-
-    $entry = $game->journalEntries()->first();
-
-    expect($entry)->not->toBeNull()
-        ->and($entry->next)->toBeNull();
-
-    $this->actingAs($user)
-        ->get(route('games.show', $game))
+        ->withHeaders(['X-InertiaUI-Modal' => '1'])
+        ->get(route('games.journal-entries.create', $game))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('games/show')
-            ->has('journalEntries', 1)
-            ->where('journalEntries.0.next', null)
-            ->where('resume', null));
+            ->component('games/journal-entries/create')
+            ->has('game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', $game->title)));
+});
+
+it('renders the show modal for the owner', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $entry = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Settled on the ore port.',
+    ]);
+
+    $this->actingAs($user)
+        ->withHeaders(['X-InertiaUI-Modal' => '1'])
+        ->get(route('games.journal-entries.show', [$game, $entry]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/journal-entries/show')
+            ->has('journalEntry', fn ($props) => $props
+                ->where('id', $entry->id)
+                ->where('body', 'Settled on the ore port.')
+                ->missing('next')
+                ->has('createdAt')
+                ->has('updatedAt')));
 });
 
 it('lets the owner update a journal entry', function (): void {
@@ -90,20 +95,17 @@ it('lets the owner update a journal entry', function (): void {
     $game = Game::factory()->recycle($user)->create();
     $entry = JournalEntry::factory()->recycle($game)->create([
         'body' => 'Original sitting',
-        'next' => 'Original plan',
     ]);
 
     $this->actingAs($user)
         ->fromRoute('games.show', $game)
         ->put(route('games.journal-entries.update', [$game, $entry]), [
             'body' => 'Corrected sitting',
-            'next' => 'Corrected plan',
         ])
         ->assertRedirectToRoute('games.show', $game)
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Journal entry updated.')]);
 
-    expect($entry->refresh()->body)->toBe('Corrected sitting')
-        ->and($entry->next)->toBe('Corrected plan');
+    expect($entry->refresh()->body)->toBe('Corrected sitting');
 });
 
 it('lets the owner delete a journal entry', function (): void {
@@ -120,6 +122,21 @@ it('lets the owner delete a journal entry', function (): void {
     $this->assertModelMissing($entry);
 });
 
+it('forbids another user from creating or viewing journal entry modals', function (): void {
+    $owner = User::factory()->withoutTwoFactor()->create();
+    $intruder = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($owner)->create();
+    $entry = JournalEntry::factory()->recycle($game)->create();
+
+    $this->actingAs($intruder)
+        ->get(route('games.journal-entries.create', $game))
+        ->assertForbidden();
+
+    $this->actingAs($intruder)
+        ->get(route('games.journal-entries.show', [$game, $entry]))
+        ->assertForbidden();
+});
+
 it('forbids another user from storing a journal entry', function (): void {
     $owner = User::factory()->withoutTwoFactor()->create();
     $intruder = User::factory()->withoutTwoFactor()->create();
@@ -128,7 +145,6 @@ it('forbids another user from storing a journal entry', function (): void {
     $this->actingAs($intruder)
         ->post(route('games.journal-entries.store', $game), [
             'body' => 'Stolen note',
-            'next' => 'Stolen plan',
         ])
         ->assertForbidden();
 
@@ -141,18 +157,15 @@ it('forbids another user from updating a journal entry', function (): void {
     $game = Game::factory()->recycle($owner)->create();
     $entry = JournalEntry::factory()->recycle($game)->create([
         'body' => 'Owned sitting',
-        'next' => 'Owned plan',
     ]);
 
     $this->actingAs($intruder)
         ->put(route('games.journal-entries.update', [$game, $entry]), [
             'body' => 'Stolen sitting',
-            'next' => 'Stolen plan',
         ])
         ->assertForbidden();
 
-    expect($entry->refresh()->body)->toBe('Owned sitting')
-        ->and($entry->next)->toBe('Owned plan');
+    expect($entry->refresh()->body)->toBe('Owned sitting');
 });
 
 it('forbids another user from deleting a journal entry', function (): void {
@@ -175,9 +188,12 @@ it('returns 404 when an entry is addressed under a different owned game', functi
     $entry = JournalEntry::factory()->recycle($game)->create();
 
     $this->actingAs($user)
+        ->get(route('games.journal-entries.show', [$otherGame, $entry]))
+        ->assertNotFound();
+
+    $this->actingAs($user)
         ->put(route('games.journal-entries.update', [$otherGame, $entry]), [
             'body' => 'Moved sitting',
-            'next' => 'Moved plan',
         ])
         ->assertNotFound();
 

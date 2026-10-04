@@ -7,6 +7,7 @@
         "@headlessui/react": "^2.2.10",
         "@inertiajs/react": "^3.8.0",
         "@inertiajs/vite": "^3.8.0",
+        "@inertiaui/modal-react": "file:vendor/inertiaui/modal/react",
         "@laravel/passkeys": "^0.4.0",
         "@radix-ui/react-avatar": "^1.2.6",
         "@radix-ui/react-checkbox": "^1.3.11",
@@ -116,6 +117,10 @@
     "@inertiajs/react": ["@inertiajs/react@3.8.0", "", { "dependencies": { "@inertiajs/core": "3.8.0", "es-toolkit": "^1.33.0", "laravel-precognition": "^2.1.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-jH5IIimpm8+cROqeLMf3rUoZcp2VF9CgTgziYtikfpd3TrJYb2aVLMB67+0mIij0HLvVlPd7HlLdmMoqNj2kbA=="],
 
     "@inertiajs/vite": ["@inertiajs/vite@3.8.0", "", { "dependencies": { "@inertiajs/core": "3.8.0", "tinyglobby": "^0.2.15" }, "peerDependencies": { "vite": "^7.0.0 || ^8.0.0" } }, "sha512-Tq1q5PnJWwGppHeWMnPsI1dgc59f0MoTDOyYdhh2tMoKfrfd5HojwEJ6K+Z/SLq1RfDfY9o4Olr7melXpD1FtA=="],
+
+    "@inertiaui/modal-react": ["@inertiaui/modal-react@file:vendor/inertiaui/modal/react", { "dependencies": { "@inertiaui/vanilla": "^1.0.2" }, "peerDependencies": { "@inertiajs/react": "^3.0.0", "react": "^19.0.0", "react-dom": "^19.0.0" } }],
+
+    "@inertiaui/vanilla": ["@inertiaui/vanilla@1.3.1", "", {}, "sha512-ir93aiFqGAhabC+WXkqKW+ORcJCZEaDC4LXmdHxQp8pY/3jbI9l6uvnWfnZudPD/TyQMb1YWh8O/Ad1spyziPg=="],
 
     "@internationalized/date": ["@internationalized/date@3.12.4", "", { "dependencies": { "@swc/helpers": "^0.5.0" } }, "sha512-M1dEn4c1U1HsSlaVR8upZtSqvXrTkHDfv18H01uCSJyjVLDxnBR38v/fMxecmlwXKR4i9HeZcmgQAPE6A+aGJQ=="],
 
