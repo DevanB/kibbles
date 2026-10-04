@@ -11,7 +11,7 @@ Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature 
 5. If Pest Browser errors about Playwright outdated/missing browsers: `bunx playwright install`
 6. Ad-hoc curls use `http://localhost:8000`; Pest Browser boots its own server. Optional alternate: Herd `http://kibbles.test` only if you pass that URL explicitly.
 7. Auth fixtures: `User::factory()->withoutTwoFactor()->create()` — seeder is empty
-8. Do not modify `.env`. Keep `APP_URL=http://localhost:8000`. Passkey RP mismatch only if the browser host differs from `APP_URL` (e.g. Herd while APP_URL is localhost).
+8. Do not modify `.env`. Keep `APP_URL=http://localhost:8000`. Passkey RP mismatch only if the browser host differs from `APP_URL` (e.g. Herd while APP_URL is localhost). Doctor runs `bin/check-passkey-host` and **fails** on mismatch — do not treat that browse URL as a working passkey path.
 
 ## Driving conventions
 
@@ -41,4 +41,8 @@ Baseline map for **verify-kibbles**. Drive features with Pest Browser / Feature 
 - **Dashboard:** `tests/Feature/Controllers/DashboardTest.php` (guest → login, verified → Inertia `dashboard`, unverified → `verification.notice`) and `tests/Browser/DashboardTest.php` (`assertSee('Dashboard')` + user menu Log out). See [dashboard.md](./dashboard.md) and `bin/prove-dashboard`.
 - **Welcome Register:** gated by `canRegister`; Laracasts/Deploy links are optional marketing.
 - **Profile delete:** `UserController@destroy` (`user.destroy`); Feature in `UserControllerTest`.
-- **Register Browser:** LayoutTest is nav smoke only (login → Sign up).
+- **Register Browser:** LayoutTest is nav smoke only (login → Sign up). Full submit is `tests/Browser/RegistrationTest.php` (lands on `/verify-email`).
+- **Login Browser submit:** `tests/Browser/SessionTest.php` (success → `/dashboard`; invalid password stays `/login` with `auth.failed`; 2FA recovery code → `/dashboard`).
+- **Appearance GET:** `tests/Feature/Controllers/AppearanceTest.php` (guest → login, verified → Inertia `appearance/update`, unverified → `verification.notice`).
+- **Verify-email notice UI:** `tests/Browser/EmailVerificationTest.php` (unverified dashboard visit).
+- **Passkey host:** `bin/check-passkey-host` + Feature `UserPasskeyControllerTest` RP/origin assertions. Mismatched browse host is a hard fail.

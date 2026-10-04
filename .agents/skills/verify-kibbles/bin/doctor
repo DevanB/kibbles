@@ -42,6 +42,10 @@ if command -v php >/dev/null 2>&1; then
   php artisan about --only=environment,drivers 2>/dev/null | head -40 || echo "(php artisan about skipped)"
 fi
 
+if ! "$ROOT/.agents/skills/verify-kibbles/bin/check-passkey-host" "$BASE"; then
+  FAIL=1
+fi
+
 if [[ "$FAIL" -ne 0 ]]; then
   echo "=== doctor FAILED ==="
   exit 1
