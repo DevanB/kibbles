@@ -158,11 +158,13 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `sidebar-menu-button` | nav user trigger |
 | `create-game-button` | `/games` add |
 | `save-game-button` | games create/edit save |
-| `delete-game-button` | games edit delete |
+| `edit-game-button` | games show → edit |
+| `delete-game-button` | games show/edit delete |
 | `delete-game-button-{id}` | games index row delete |
-| `game-title-{id}` | games index title link |
+| `game-title-{id}` | games index title link → show |
+| `game-art-slot` | games show box-art placeholder |
 
-Fixtures: `User::factory()->withoutTwoFactor()->create()` (empty `DatabaseSeeder`). Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
+Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 
 Public registration defaults **off** (`REGISTRATION_ENABLED=false`). Tests that need signup: `Feature::define(\App\Features\Registration::class, true)`.
 
