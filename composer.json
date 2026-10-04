@@ -121,6 +121,12 @@
             "pestphp/pest-plugin": true,
             "php-http/discovery": true,
             "laravel/vet": true
+        },
+        "policy": {
+            "cooldown": {
+                "period": "3 days",
+                "block": true
+            }
         }
     },
     "minimum-stability": "stable",
