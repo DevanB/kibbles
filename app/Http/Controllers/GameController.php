@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateGame;
 use App\Actions\DeleteGame;
+use App\Actions\RecallJournalEntries;
 use App\Actions\UpdateGame;
 use App\Http\Requests\CreateGameRequest;
 use App\Http\Requests\DeleteGameRequest;
@@ -56,12 +57,13 @@ final readonly class GameController
         return to_route('games.show', $game);
     }
 
-    public function show(Game $game): Response
+    public function show(Game $game, RecallJournalEntries $recall): Response
     {
         Gate::authorize('view', $game);
 
         return Inertia::render('games/show', [
             'game' => $this->toWireGame($game),
+            ...$recall->handle($game),
         ]);
     }
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserEmailResetNotificationController;
@@ -20,6 +21,9 @@ Route::redirect('/', '/dashboard')->name('home');
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
     Route::resource('games', GameController::class);
+    Route::resource('games.journal-entries', JournalEntryController::class)
+        ->only(['store', 'update', 'destroy'])
+        ->scoped();
 });
 
 Route::middleware('auth')->group(function (): void {
