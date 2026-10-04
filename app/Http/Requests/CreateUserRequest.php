@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Features\Registration;
 use App\Models\User;
 use App\Rules\ValidEmail;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +13,11 @@ use Illuminate\Validation\Rules\Password;
 
 final class CreateUserRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return Registration::enabled();
+    }
+
     /**
      * @return array<string, array<mixed>|string>
      */

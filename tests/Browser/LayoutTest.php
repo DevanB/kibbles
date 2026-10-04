@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Features\Registration;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Laravel\Pennant\Feature;
 
 it('renders auth pages inside the auth layout', function (): void {
+    Feature::define(Registration::class, true);
+
     $page = visit(route('login'));
 
     $page->assertSee('Log in to your account')

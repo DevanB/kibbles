@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Features\Registration;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Pennant\Feature;
 
 it('renders login page', function (): void {
     $response = $this->fromRoute('home')
@@ -15,8 +17,19 @@ it('renders login page', function (): void {
         ->assertInertia(fn ($page) => $page
             ->component('session/create')
             ->where('canResetPassword', true)
-            ->where('canRegister', true)
+            ->where('canRegister', false)
             ->has('status'));
+});
+
+it('offers registration on the login page when the feature is active', function (): void {
+    Feature::define(Registration::class, true);
+
+    $this->fromRoute('home')
+        ->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('session/create')
+            ->where('canRegister', true));
 });
 
 it('may create a session', function (): void {
