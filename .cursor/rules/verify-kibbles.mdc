@@ -1,0 +1,33 @@
+---
+description: Required verify-kibbles gate for UI, auth, and feature work
+alwaysApply: true
+---
+
+# Verify kibbles — required gate
+
+Do not claim done on user-facing UI, auth, routing, Inertia pages, or feature work until you have run the project verify skill. This is a hard gate, not optional flavor.
+
+## What to run
+
+1. Read `.agents/skills/verify-kibbles/SKILL.md` first. That is the live path. `.cursor/skills` and `.claude/skills` are symlinks to `.agents/skills` — do not invent a second copy.
+2. Follow that skill: doctor when a local server is in play, then the mapped Pest Feature and/or Browser tests, or a prove helper:
+
+```bash
+.agents/skills/verify-kibbles/bin/doctor
+.agents/skills/verify-kibbles/bin/prove-welcome
+.agents/skills/verify-kibbles/bin/prove-dashboard
+php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
+```
+
+3. If Pest Browser complains about missing or outdated Playwright browsers: `bun install` then `bunx playwright install` (or `bunx playwright install chromium`).
+
+## What does not count
+
+- Reading the skill and skipping the commands
+- "CI will catch it" without a local run
+- A screenshot of a page you did not drive
+- Inventing a parallel Playwright CLI or tautological file-content tests
+
+CI (`.github/workflows/tests.yml`) runs `composer test` on every PR to `master` and fails on red. That is the merge gate. It does not replace a local verify-kibbles run before you say the work is done.
+
+Copy, comments-only, and docs-only changes do not need the full Browser suite. Still run the smallest relevant Pest Feature/Unit tests when you change behavior.
