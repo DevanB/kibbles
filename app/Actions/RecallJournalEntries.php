@@ -11,7 +11,7 @@ final readonly class RecallJournalEntries
 {
     /**
      * @return array{
-     *     journalEntries: list<array{id: string, body: string, next: string|null, createdAt: string, updatedAt: string}>,
+     *     journalEntries: array<int, array{id: string, body: string, next: string|null, createdAt: string, updatedAt: string}>,
      *     resume: string|null
      * }
      */

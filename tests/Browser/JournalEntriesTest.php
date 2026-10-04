@@ -38,7 +38,10 @@ it('may add, edit, and delete a journal entry on the game hub', function (): voi
         ->assertSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 
-    $page->click('@delete-journal-entry-button-'.$entry->id)
+    $page = visit(route('games.show', $game));
+
+    $page->assertSee('Settled on the brick port.')
+        ->click('@delete-journal-entry-button-'.$entry->id)
         ->assertSee('Journal entry deleted.')
         ->assertDontSee('Settled on the brick port.')
         ->assertSee('No journal entries yet.')
