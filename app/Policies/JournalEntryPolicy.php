@@ -10,18 +10,28 @@ use App\Models\User;
 
 final class JournalEntryPolicy
 {
+    public function viewAny(): bool
+    {
+        return true;
+    }
+
+    public function view(User $user, JournalEntry $entry): bool
+    {
+        return $entry->game->user()->is($user);
+    }
+
     public function create(User $user, Game $game): bool
     {
-        return $user->can('update', $game);
+        return $game->user()->is($user);
     }
 
     public function update(User $user, JournalEntry $entry): bool
     {
-        return $user->can('update', $entry->game);
+        return $entry->game->user()->is($user);
     }
 
     public function delete(User $user, JournalEntry $entry): bool
     {
-        return $user->can('delete', $entry->game);
+        return $entry->game->user()->is($user);
     }
 }
