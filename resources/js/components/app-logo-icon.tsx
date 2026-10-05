@@ -1,6 +1,9 @@
+import { usePage } from '@inertiajs/react';
 import type { SVGAttributes } from 'react';
 
 export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
+    const name = usePage().props.name;
+
     return (
         <svg
             {...props}
@@ -17,7 +20,7 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
                 fontFamily="ui-sans-serif, system-ui, sans-serif"
                 fill="currentColor"
             >
-                K
+                {name.charAt(0)}
             </text>
         </svg>
     );

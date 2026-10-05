@@ -25,7 +25,7 @@ Preconditions:
 - Playwright browsers installed for the Browser file
 
 - **CRUD in browser →** `php artisan test --compact tests/Browser/GamesTest.php` → create **Catan** (lands on show), **Edit** → rename to **Ticket to Ride** (back to show), delete from show; toasts + `assertNoJavaScriptErrors()`
-- **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal → edit modal, delete; `assertDontSee('Journal entries will live here.')` and no **Up next**
+- **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal → edit modal, delete; empty copy **No journal entries yet** / **Journal Entries**
 - **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal create/show/edit/store/update/destroy, newest-first list, cascade delete
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-games`
 
