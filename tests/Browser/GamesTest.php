@@ -44,6 +44,17 @@ it('may create, update, and delete a game', function (): void {
 
     $page->click('@game-actions-button')
         ->click('@delete-game-button')
+        ->assertSee('Delete Ticket to Ride?')
+        ->assertSee('This will permanently delete Ticket to Ride and its journal entries.')
+        ->click('@cancel-delete-game-button')
+        ->assertSee('Ticket to Ride')
+        ->assertNoJavaScriptErrors();
+
+    expect($game->fresh())->not->toBeNull();
+
+    $page->click('@game-actions-button')
+        ->click('@delete-game-button')
+        ->click('@confirm-delete-game-button')
         ->assertSee('Game deleted.')
         ->assertSee('No games yet')
         ->assertNoJavaScriptErrors();

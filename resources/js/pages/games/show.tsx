@@ -1,8 +1,10 @@
-import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
+import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import Heading from '@/components/heading';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -33,6 +35,8 @@ export default function Show({
     game: Game;
     journalEntries: JournalEntry[];
 }) {
+    const [deleteOpen, setDeleteOpen] = useState(false);
+
     setLayoutProps({
         breadcrumbs: [
             {
@@ -80,28 +84,25 @@ export default function Show({
                                 <DropdownMenuItem
                                     variant="destructive"
                                     data-test="delete-game-button"
-                                    onSelect={() => {
-                                        const form =
-                                            document.getElementById(
-                                                'delete-game-form',
-                                            );
-
-                                        if (form instanceof HTMLFormElement) {
-                                            form.requestSubmit();
-                                        }
+                                    onSelect={(event) => {
+                                        event.preventDefault();
+                                        setDeleteOpen(true);
                                     }}
                                 >
                                     Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Form
-                            {...GameController.destroy.form(game.id)}
-                            id="delete-game-form"
-                            className="hidden"
-                        >
-                            {() => null}
-                        </Form>
+                        <DeleteConfirmationDialog
+                            open={deleteOpen}
+                            onOpenChange={setDeleteOpen}
+                            title={`Delete ${game.title}?`}
+                            description={`This will permanently delete ${game.title} and its journal entries. This cannot be undone.`}
+                            confirmLabel="Delete Game"
+                            confirmTest="confirm-delete-game-button"
+                            cancelTest="cancel-delete-game-button"
+                            form={GameController.destroy.form(game.id)}
+                        />
                     </div>
                 </div>
 
