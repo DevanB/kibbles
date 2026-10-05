@@ -50,6 +50,8 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->click('@delete-journal-entry-button-'.$entry->id)
         ->assertSee('Delete journal entry?')
         ->assertSee('This will permanently delete this journal entry from Catan.')
+        ->assertDontSee('Settled on the brick port.')
+        ->screenshot(filename: 'journal-delete-confirm')
         ->click('@cancel-delete-journal-entry-button-'.$entry->id)
         ->assertDontSee('Delete journal entry?')
         ->assertSee('Settled on the brick port.')
