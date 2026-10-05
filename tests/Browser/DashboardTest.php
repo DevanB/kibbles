@@ -38,17 +38,19 @@ it('keeps the Kibbles mark readable in dark mode', function (): void {
         ->screenshotElement('[data-test="app-logo"]', 'kibbles-mark-dark');
 
     $colors = $page->script(<<<'JS'
-        const mark = document.querySelector('[data-test="app-logo-mark"]');
-        const box = document.querySelector('[data-test="app-logo"]');
+        (() => {
+            const mark = document.querySelector('[data-test="app-logo-mark"]');
+            const box = document.querySelector('[data-test="app-logo"]');
 
-        if (!mark || !box) {
-            return null;
-        }
+            if (!mark || !box) {
+                return null;
+            }
 
-        return {
-            color: getComputedStyle(mark).color,
-            background: getComputedStyle(box).backgroundColor,
-        };
+            return {
+                color: getComputedStyle(mark).color,
+                background: getComputedStyle(box).backgroundColor,
+            };
+        })()
     JS);
 
     expect($colors)->toBeArray()
