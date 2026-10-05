@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Modal, ModalLink } from '@inertiaui/modal-react';
+import { useState } from 'react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -22,6 +23,8 @@ export default function Show({
     game: Game;
     journalEntry: JournalEntry;
 }) {
+    const [deleteOpen, setDeleteOpen] = useState(false);
+
     return (
         <Modal>
             <Head title="Journal Entries" />
@@ -50,7 +53,19 @@ export default function Show({
                     >
                         Edit
                     </ModalLink>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        data-test={`delete-journal-entry-button-${journalEntry.id}`}
+                        onClick={() => {
+                            setDeleteOpen(true);
+                        }}
+                    >
+                        Delete
+                    </Button>
                     <DeleteConfirmationDialog
+                        open={deleteOpen}
+                        onOpenChange={setDeleteOpen}
                         title="Delete journal entry?"
                         description={`This will permanently delete this journal entry from ${game.title}. This cannot be undone.`}
                         confirmLabel="Delete Entry"
@@ -60,15 +75,6 @@ export default function Show({
                             game: game.id,
                             journal_entry: journalEntry.id,
                         })}
-                        trigger={
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                data-test={`delete-journal-entry-button-${journalEntry.id}`}
-                            >
-                                Delete
-                            </Button>
-                        }
                     />
                 </div>
             </div>

@@ -51,6 +51,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertSee('Delete journal entry?')
         ->assertSee('This will permanently delete this journal entry from Catan.')
         ->click('@cancel-delete-journal-entry-button-'.$entry->id)
+        ->assertDontSee('Delete journal entry?')
         ->assertSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 

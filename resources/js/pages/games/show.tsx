@@ -84,8 +84,7 @@ export default function Show({
                                 <DropdownMenuItem
                                     variant="destructive"
                                     data-test="delete-game-button"
-                                    onSelect={(event) => {
-                                        event.preventDefault();
+                                    onSelect={() => {
                                         setDeleteOpen(true);
                                     }}
                                 >
