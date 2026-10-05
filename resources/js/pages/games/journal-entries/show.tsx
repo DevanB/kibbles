@@ -1,8 +1,7 @@
-import { Head } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { Modal, ModalLink } from '@inertiaui/modal-react';
 import { useState } from 'react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
-import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Game, JournalEntry } from '@/types';
@@ -23,7 +22,7 @@ export default function Show({
     game: Game;
     journalEntry: JournalEntry;
 }) {
-    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     return (
         <Modal>
@@ -39,44 +38,78 @@ export default function Show({
 
                 <p className="whitespace-pre-wrap">{journalEntry.body}</p>
 
-                <div className="flex items-center gap-2">
-                    <ModalLink
-                        href={JournalEntryController.edit.url({
-                            game: game.id,
-                            journal_entry: journalEntry.id,
-                        })}
-                        navigate
-                        className={cn(
-                            buttonVariants({ variant: 'outline', size: 'sm' }),
-                        )}
-                        data-test={`edit-journal-entry-button-${journalEntry.id}`}
-                    >
-                        Edit
-                    </ModalLink>
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        data-test={`delete-journal-entry-button-${journalEntry.id}`}
-                        onClick={() => {
-                            setDeleteOpen(true);
-                        }}
-                    >
-                        Delete
-                    </Button>
-                    <DeleteConfirmationDialog
-                        open={deleteOpen}
-                        onOpenChange={setDeleteOpen}
-                        title="Delete journal entry?"
-                        description={`This will permanently delete this journal entry from ${game.title}. This cannot be undone.`}
-                        confirmLabel="Delete Entry"
-                        confirmTest={`confirm-delete-journal-entry-button-${journalEntry.id}`}
-                        cancelTest={`cancel-delete-journal-entry-button-${journalEntry.id}`}
-                        form={JournalEntryController.destroy.form({
-                            game: game.id,
-                            journal_entry: journalEntry.id,
-                        })}
-                    />
-                </div>
+                {confirmingDelete ? (
+                    <div className="space-y-3">
+                        <div className="space-y-1">
+                            <p className="font-semibold">
+                                Delete journal entry?
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                This will permanently delete this journal entry
+                                from {game.title}. This cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                data-test={`cancel-delete-journal-entry-button-${journalEntry.id}`}
+                                onClick={() => {
+                                    setConfirmingDelete(false);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Form
+                                {...JournalEntryController.destroy.form({
+                                    game: game.id,
+                                    journal_entry: journalEntry.id,
+                                })}
+                            >
+                                {({ processing }) => (
+                                    <Button
+                                        type="submit"
+                                        variant="destructive"
+                                        size="sm"
+                                        disabled={processing}
+                                        data-test={`confirm-delete-journal-entry-button-${journalEntry.id}`}
+                                    >
+                                        Delete Entry
+                                    </Button>
+                                )}
+                            </Form>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <ModalLink
+                            href={JournalEntryController.edit.url({
+                                game: game.id,
+                                journal_entry: journalEntry.id,
+                            })}
+                            navigate
+                            className={cn(
+                                buttonVariants({
+                                    variant: 'outline',
+                                    size: 'sm',
+                                }),
+                            )}
+                            data-test={`edit-journal-entry-button-${journalEntry.id}`}
+                        >
+                            Edit
+                        </ModalLink>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            data-test={`delete-journal-entry-button-${journalEntry.id}`}
+                            onClick={() => {
+                                setConfirmingDelete(true);
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                )}
             </div>
         </Modal>
     );
