@@ -244,11 +244,12 @@ it('renders the show page for the owner with id and title only', function (): vo
             ->missing('resume'));
 });
 
-it('renders the edit page for the owner with id and title only', function (): void {
+it('renders the edit modal for the owner with id and title only', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
 
     $response = $this->actingAs($user)
+        ->withHeaders(['X-InertiaUI-Modal' => '1'])
         ->get(route('games.edit', $game));
 
     $response->assertOk()

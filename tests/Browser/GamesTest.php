@@ -33,6 +33,8 @@ it('may create, update, and delete a game', function (): void {
         ->assertSee('Edit Game')
         ->assertValue('title', 'Catan')
         ->assertPathIs('/games/'.$game->id.'/edit')
+        ->assertSee('Catan')
+        ->screenshot(filename: 'game-edit-modal')
         ->assertNoJavaScriptErrors();
 
     $page->fill('title', 'Ticket to Ride')
