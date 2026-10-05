@@ -1,4 +1,4 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { edit, index, show } from '@/routes/games';
+import { index, show } from '@/routes/games';
 import type { Game, JournalEntry } from '@/types';
 
 function formatEntryDate(value: string): string {
@@ -64,9 +64,14 @@ export default function Show({
                             size="sm"
                             asChild
                             className="rounded-r-none"
-                            data-test="edit-game-button"
                         >
-                            <Link href={edit(game)}>Edit</Link>
+                            <ModalLink
+                                href={GameController.edit.url(game.id)}
+                                navigate
+                                data-test="edit-game-button"
+                            >
+                                Edit
+                            </ModalLink>
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

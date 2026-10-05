@@ -69,13 +69,13 @@ final readonly class GameController
         ]);
     }
 
-    public function edit(Game $game): Response
+    public function edit(Game $game): Modal
     {
         Gate::authorize('update', $game);
 
-        return Inertia::render('games/edit', [
+        return Inertia::modal('games/edit', [
             'game' => $this->toWireGame($game),
-        ]);
+        ])->baseRoute('games.show', $game);
     }
 
     public function update(UpdateGameRequest $request, Game $game, UpdateGame $action): RedirectResponse
