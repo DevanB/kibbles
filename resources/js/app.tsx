@@ -20,7 +20,12 @@ putConfig(
 );
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} :: Kibbles` : 'Kibbles'),
+    title: (title, page) => {
+        const name =
+            typeof page.props.name === 'string' ? page.props.name : 'Kibbles';
+
+        return title ? `${title} :: ${name}` : name;
+    },
     resolve: (name) =>
         resolvePageComponent<ComponentType>(
             `./pages/${name}.tsx`,

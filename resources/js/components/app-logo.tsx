@@ -1,4 +1,8 @@
+import { usePage } from '@inertiajs/react';
+
 export default function AppLogo() {
+    const name = usePage().props.name;
+
     return (
         <>
             <div
@@ -9,12 +13,12 @@ export default function AppLogo() {
                     className="text-sm font-semibold"
                     data-test="app-logo-mark"
                 >
-                    K
+                    {name.charAt(0)}
                 </span>
             </div>
             <div className="ml-1 grid flex-1 text-left text-sm">
                 <span className="mb-0.5 truncate leading-tight font-semibold">
-                    Kibbles
+                    {name}
                 </span>
             </div>
         </>
