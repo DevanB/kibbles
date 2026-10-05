@@ -10,7 +10,7 @@ Authenticated, verified catalog at `/games` (full resource, including `show`). I
 - Create via `data-test="create-game-button"` → title → `data-test="save-game-button"` → toast **Game created.** → **show** (`/games/{id}`)
 - Show renders `{id, title}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and a full-width dated journal list under **Journal Entries**. **Create Entry** opens the create modal (header when entries exist; empty-state card when they do not); a row opens the read-only show modal (Edit opens the edit modal; Delete stays on show)
 - Edit via `data-test="edit-game-button"` on show → edit modal (`/games/{id}/edit` over show) → title → `data-test="save-game-button"` → toast **Game updated.** → **show**
-- Delete on show (Browser happy path) via `data-test="game-actions-button"` then `data-test="delete-game-button"` → confirm dialog → `data-test="confirm-delete-game-button"` → **Game deleted.** → index. Cancel (`cancel-delete-game-button`) leaves the game. Index has no edit/delete. Journal delete on the show modal uses the same Dialog confirm (`confirm-delete-journal-entry-button-{id}`).
+- Delete on show (Browser happy path) via `data-test="game-actions-button"` then `data-test="delete-game-button"` → confirm dialog → `data-test="confirm-delete-game-button"` → **Game deleted.** → index. Cancel (`cancel-delete-game-button`) leaves the game. After delete, breadcrumbs are only **Games** (the deleted title must not remain). Index has no edit/delete. Journal delete confirm is warning copy only (no date/body) with Cancel / **Delete Entry** (`confirm-delete-journal-entry-button-{id}`).
 - Unique title per owner (case-insensitive); guests and unverified users are gated like dashboard
 
 ## How to get to it (user POV)
