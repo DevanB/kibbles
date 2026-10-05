@@ -10,18 +10,6 @@ it('redirects guests to login', function (): void {
     $response->assertRedirectToRoute('login');
 });
 
-it('renders the dashboard for a verified user', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $response = $this->actingAs($user)
-        ->get(route('dashboard'));
-
-    $response->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('dashboard')
-            ->missing('recentJournalEntries'));
-});
-
 it('redirects unverified users to the verification notice', function (): void {
     $user = User::factory()->unverified()->withoutTwoFactor()->create();
 

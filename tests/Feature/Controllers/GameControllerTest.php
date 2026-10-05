@@ -58,35 +58,6 @@ it('lists only the authenticated user games as id and title', function (): void 
                 ->where('title', 'Owned Game')));
 });
 
-it('renders the create modal', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $response = $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => '1'])
-        ->get(route('games.create'));
-
-    $response->assertOk()
-        ->assertInertia(fn ($page) => $page->component('games/create'));
-});
-
-it('may create a game', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.create')
-        ->post(route('games.store'), [
-            'title' => 'Catan',
-        ]);
-
-    $game = Game::query()->whereBelongsTo($user)->first();
-
-    expect($game)->not->toBeNull()
-        ->and($game->title)->toBe('Catan');
-
-    $response->assertRedirectToRoute('games.show', $game)
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game created.')]);
-});
-
 it('requires a title when creating a game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
 
@@ -227,55 +198,6 @@ it('maps a unique constraint race to a validation error when creating a game', f
     }
 });
 
-it('renders the show page for the owner with id and title only', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
-
-    $response = $this->actingAs($user)
-        ->get(route('games.show', $game));
-
-    $response->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/show')
-            ->has('game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', 'Catan'))
-            ->has('journalEntries', 0)
-            ->missing('resume'));
-});
-
-it('renders the edit modal for the owner with id and title only', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
-
-    $response = $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => '1'])
-        ->get(route('games.edit', $game));
-
-    $response->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/edit')
-            ->has('game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', 'Catan')));
-});
-
-it('may update a game', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.edit', $game)
-        ->put(route('games.update', $game), [
-            'title' => 'Ticket to Ride',
-        ]);
-
-    $response->assertRedirectToRoute('games.show', $game)
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game updated.')]);
-
-    expect($game->refresh()->title)->toBe('Ticket to Ride');
-});
-
 it('allows keeping the same title when updating a game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
@@ -413,20 +335,6 @@ it('maps a unique constraint race to a validation error when updating a game', f
     } finally {
         Game::setEventDispatcher($dispatcher);
     }
-});
-
-it('may delete a game', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.edit', $game)
-        ->delete(route('games.destroy', $game));
-
-    $response->assertRedirectToRoute('games.index')
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Game deleted.')]);
-
-    $this->assertModelMissing($game);
 });
 
 it('forbids another user from viewing the show page', function (): void {

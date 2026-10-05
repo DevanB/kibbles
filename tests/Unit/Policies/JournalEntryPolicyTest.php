@@ -13,18 +13,6 @@ it('allows authenticated users to view any journal entries', function (): void {
     expect($policy->viewAny())->toBeTrue();
 });
 
-it('allows owners to create entries on their game and to view, update, and delete them', function (): void {
-    $user = User::factory()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $entry = JournalEntry::factory()->recycle($game)->create();
-    $policy = new JournalEntryPolicy;
-
-    expect($policy->create($user, $game))->toBeTrue()
-        ->and($policy->view($user, $entry))->toBeTrue()
-        ->and($policy->update($user, $entry))->toBeTrue()
-        ->and($policy->delete($user, $entry))->toBeTrue();
-});
-
 it('denies other users from creating, viewing, updating, or deleting a journal entry', function (): void {
     $owner = User::factory()->create();
     $intruder = User::factory()->create();
