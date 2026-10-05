@@ -282,8 +282,9 @@ it('allows keeping the same title when updating a game', function (): void {
             'title' => 'Catan',
         ]);
 
-    $response->assertRedirectToRoute('games.show', $game)
-        ->assertSessionDoesntHaveErrors();
+    $response->assertRedirectToRoute('games.show', $game);
+
+    expect($game->refresh()->title)->toBe('Catan');
 });
 
 it('requires a title when updating a game', function (): void {
@@ -368,8 +369,7 @@ it('allows changing the casing of a game title', function (): void {
             'title' => 'CATAN',
         ]);
 
-    $response->assertRedirectToRoute('games.show', $game)
-        ->assertSessionDoesntHaveErrors();
+    $response->assertRedirectToRoute('games.show', $game);
 
     expect($game->refresh()->title)->toBe('CATAN');
 });

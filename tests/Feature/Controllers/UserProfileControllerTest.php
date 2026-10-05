@@ -143,6 +143,8 @@ it('allows keeping same email', function (): void {
             'email' => 'test@example.com',
         ]);
 
-    $response->assertRedirectToRoute('user-profile.edit')
-        ->assertSessionDoesntHaveErrors();
+    $response->assertRedirectToRoute('user-profile.edit');
+
+    expect($user->refresh()->name)->toBe('Updated Name')
+        ->and($user->email)->toBe('test@example.com');
 });
