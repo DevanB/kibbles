@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
+import { cn } from 'cn';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import { index, show } from '@/routes/games';
 import type { Game, JournalEntry } from '@/types';
 

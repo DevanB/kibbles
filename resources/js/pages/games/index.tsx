@@ -1,11 +1,11 @@
 import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
+import { cn } from 'cn';
 import { ChevronRight, Plus } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import { index, show } from '@/routes/games';
 import type { BreadcrumbItem, Game } from '@/types';
 
