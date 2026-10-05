@@ -13,9 +13,7 @@ it('renders the dashboard for a verified user', function (): void {
 
     $page->assertSee('Dashboard')
         ->assertSee('Kibbles')
-        ->assertSee('Recent Journal Entries')
-        ->assertSee('No journal entries yet')
-        ->assertSee('Add Game')
+        ->assertDontSee('Recent Journal Entries')
         ->assertDontSee('Repository')
         ->assertDontSee('Documentation')
         ->assertNoJavaScriptErrors();

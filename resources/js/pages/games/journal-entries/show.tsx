@@ -1,6 +1,7 @@
-import { Form, Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Modal, ModalLink } from '@inertiaui/modal-react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
+import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Game, JournalEntry } from '@/types';
@@ -49,24 +50,26 @@ export default function Show({
                     >
                         Edit
                     </ModalLink>
-                    <Form
-                        {...JournalEntryController.destroy.form({
+                    <DeleteConfirmationDialog
+                        title="Delete journal entry?"
+                        description={`This will permanently delete this journal entry from ${game.title}. This cannot be undone.`}
+                        confirmLabel="Delete Entry"
+                        confirmTest={`confirm-delete-journal-entry-button-${journalEntry.id}`}
+                        cancelTest={`cancel-delete-journal-entry-button-${journalEntry.id}`}
+                        form={JournalEntryController.destroy.form({
                             game: game.id,
                             journal_entry: journalEntry.id,
                         })}
-                    >
-                        {({ processing }) => (
+                        trigger={
                             <Button
-                                type="submit"
                                 variant="destructive"
                                 size="sm"
-                                disabled={processing}
                                 data-test={`delete-journal-entry-button-${journalEntry.id}`}
                             >
                                 Delete
                             </Button>
-                        )}
-                    </Form>
+                        }
+                    />
                 </div>
             </div>
         </Modal>

@@ -1,5 +1,6 @@
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
+import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -82,18 +83,22 @@ export default function Edit({ game }: { game: Game }) {
                         description="Permanently remove this game from your catalog"
                     />
 
-                    <Form {...GameController.destroy.form(game.id)}>
-                        {({ processing }) => (
+                    <DeleteConfirmationDialog
+                        title={`Delete ${game.title}?`}
+                        description={`This will permanently delete ${game.title} and its journal entries. This cannot be undone.`}
+                        confirmLabel="Delete Game"
+                        confirmTest="confirm-delete-game-button"
+                        cancelTest="cancel-delete-game-button"
+                        form={GameController.destroy.form(game.id)}
+                        trigger={
                             <Button
-                                type="submit"
                                 variant="destructive"
-                                disabled={processing}
                                 data-test="delete-game-button"
                             >
                                 Delete Game
                             </Button>
-                        )}
-                    </Form>
+                        }
+                    />
                 </div>
             </div>
         </>
