@@ -60,6 +60,9 @@ it('may create, update, and delete a game', function (): void {
         ->click('@confirm-delete-game-button')
         ->assertSee('Game deleted.')
         ->assertSee('No games yet')
+        ->assertPathIs('/games')
+        ->assertDontSee('Ticket to Ride')
+        ->screenshot(filename: 'games-index-after-delete')
         ->assertNoJavaScriptErrors();
 
     expect($game->fresh())->toBeNull();

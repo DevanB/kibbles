@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { ChevronRight, Plus } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
@@ -17,6 +17,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Index({ games }: { games: Game[] }) {
+    setLayoutProps({ breadcrumbs });
+
     return (
         <>
             <Head title="Games" />
