@@ -38,5 +38,5 @@ There is **no** Feature test that asserts `canRegister: true` on the login page.
 
 - Passkey register/assert fails only if the browser host differs from `APP_URL` (e.g. Herd `kibbles.test` while `APP_URL` is `http://localhost:8000`). `composer dev` on localhost matches.
 - Prefer `withoutTwoFactor()` unless intentionally testing the 2FA challenge — factory default **enables** 2FA. Browser challenge uses a known encrypted recovery code, not the factory’s random `two_factor_recovery_codes` string
-- Empty seeder — always factory users; default password `password`
+- Tests use factories (default password `password`). Local `DatabaseSeeder` calls `DemoSeeder` for Games-show review, not login fixtures.
 - Unverified users who log in are still authenticated but `/dashboard` sends them to `verification.notice`

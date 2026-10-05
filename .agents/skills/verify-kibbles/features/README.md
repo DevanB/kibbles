@@ -11,7 +11,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 3. Preferred stack: `composer dev` (serve + queue + pail + Vite) at `http://localhost:8000`. Ready when `/up` is 200 and Vite is up (`public/hot`, or `public/build/manifest.json` if you built instead). Do not start `composer dev` from a skill — it is a foreground TUI.
 4. Doctor green: `.agents/skills/verify-kibbles/bin/doctor` (default `http://localhost:8000`) → `/up` is 200, guest `/` is **302** to `/dashboard`, `/login` is 200
 5. If Pest Browser errors about Playwright outdated/missing browsers: `bunx playwright install`
-6. Ad-hoc curls use `http://localhost:8000`; Pest Browser boots its own server. Optional alternate: Herd `http://kibbles.test` only if you pass that URL explicitly.
+6. Ad-hoc curls use `http://localhost:8000`; Pest Browser boots its own server. Isolated serve: doctor `http://localhost:$PORT`, never `http://127.0.0.1:$PORT`. Optional alternate: Herd `http://kibbles.test` only if you pass that URL explicitly.
 7. Auth fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Factory default enables 2FA; omit `withoutTwoFactor()` and login goes to the 2FA challenge.
 8. Do not modify `.env`. Keep `APP_URL=http://localhost:8000`. Passkey RP mismatch only if the browser host differs from `APP_URL` (e.g. Herd while APP_URL is localhost). Doctor runs `bin/check-passkey-host` and **fails** on mismatch — do not treat that browse URL as a working passkey path.
 9. Public registration defaults **off** (`REGISTRATION_ENABLED=false` / Pennant `App\Features\Registration`). Tests that need signup call `Feature::define(Registration::class, true)`.

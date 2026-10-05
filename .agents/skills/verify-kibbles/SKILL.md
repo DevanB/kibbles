@@ -73,17 +73,19 @@ PORT=8$(printf '%03d' $((RANDOM % 1000)))   # e.g. 8123–8999
 DB_FILE="/tmp/kibbles-verify-${RUN_ID}.sqlite"
 touch "$DB_FILE"
 # Record the PID you start — cleanup kills only this PID
-APP_URL="http://127.0.0.1:${PORT}" \
+# Bind 127.0.0.1, but APP_URL and doctor must use hostname localhost.
+# Browse host 127.0.0.1 fails check-passkey-host (WebAuthn RP ≠ localhost).
+APP_URL="http://localhost:${PORT}" \
   DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
   php artisan serve --host=127.0.0.1 --port="$PORT" &
 echo $! > "/tmp/kibbles-verify-${RUN_ID}.pid"
 echo "$PORT" > "/tmp/kibbles-verify-${RUN_ID}.port"
 echo "$DB_FILE" > "/tmp/kibbles-verify-${RUN_ID}.db"
-APP_URL="http://127.0.0.1:${PORT}" DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
+APP_URL="http://localhost:${PORT}" DB_CONNECTION=sqlite DB_DATABASE="$DB_FILE" \
   php artisan migrate --force --no-interaction
 ```
 
-Match `APP_URL` to the serve URL **for that process only** (inline env, not `.env`). Do **not** rewrite committed `.env`. Leave the project `APP_URL` at `http://localhost:8000`.
+Match `APP_URL` host to **localhost** for that process only (inline env, not `.env`). Doctor as `http://localhost:${PORT}`. Do **not** pass `http://127.0.0.1:${PORT}` to doctor. Do **not** rewrite committed `.env`. Leave the project `APP_URL` at `http://localhost:8000`.
 
 ### Passkey / APP_URL mismatch (known)
 
@@ -106,6 +108,7 @@ Run from the project root (or via the helper). Default base is `http://localhost
 # from the project root
 .agents/skills/verify-kibbles/bin/doctor
 # equivalent: .agents/skills/verify-kibbles/bin/doctor http://localhost:8000
+# isolated serve: .agents/skills/verify-kibbles/bin/doctor http://localhost:$PORT
 ```
 
 Manual equivalent:
@@ -113,7 +116,7 @@ Manual equivalent:
 ```bash
 BASE="${1:-http://localhost:8000}"
 curl -sS -o /dev/null -w "up:%{http_code}\n" "$BASE/up"          # expect 200
-curl -sS -o /dev/null -w "home:%{http_code}\n" "$BASE/"           # expect 302 (redirect to /dashboard)
+curl -sS -D - -o /dev/null "$BASE/"                              # expect 302, Location contains /dashboard
 curl -sS -o /dev/null -w "login:%{http_code}\n" "$BASE/login"     # expect 200 once Vite is up
 if [[ -f public/hot ]]; then echo "vite:hot"; elif [[ -f public/build/manifest.json ]]; then echo "vite:manifest"; else echo "vite:MISSING"; fi
 php artisan about --only=environment,drivers 2>/dev/null | head -40
@@ -121,7 +124,7 @@ echo "url_under_test=$BASE"
 .agents/skills/verify-kibbles/bin/check-passkey-host "$BASE"   # passkey:host_ok, or FAIL on browse ≠ APP_URL / RP
 ```
 
-Fail doctor if `/up` ≠ 200, guest `/` ≠ 302, `/login` ≠ 200, Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing), or the passkey host check fails. Login 500 almost always means Vite is not running and there is no production build. Do **not** expect `/` to be 200 — it is a redirect. A passkey host mismatch means WebAuthn will fail on that browse URL.
+Fail doctor if `/up` ≠ 200, guest `/` ≠ 302, `/` Location does not contain `/dashboard`, `/login` ≠ 200, Vite is down (`public/hot` missing **and** `public/build/manifest.json` missing), or the passkey host check fails. Login 500 almost always means Vite is not running and there is no production build. Do **not** expect `/` to be 200 — it is a redirect. A passkey host mismatch means WebAuthn will fail on that browse URL. Isolated serve: doctor `http://localhost:$PORT`, never `http://127.0.0.1:$PORT`.
 
 ## Drive
 
@@ -162,15 +165,19 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `edit-game-button` | games show → edit |
 | `game-actions-button` | games show split-button chevron (Delete lives in the menu) |
 | `delete-game-button` | games show menu / edit delete |
+| `confirm-delete-game-button` / `cancel-delete-game-button` | games show delete dialog |
 | `game-title-{id}` | games index title → show |
 | `game-open-{id}` | games index disclosure chevron → show |
 | `game-art-slot` | games show box-art placeholder |
 | `create-journal-entry-button` | games show opens create modal |
 | `add-journal-entry-button` | journal create modal submit |
+| `compose-body` | journal create modal textarea |
 | `journal-entry-{id}` | games show dated list row → show modal |
+| `journal-entry-modal-{id}` | journal show modal |
 | `edit-journal-entry-button-{id}` | journal show modal → edit modal |
 | `save-journal-entry-button-{id}` | journal edit modal save |
 | `delete-journal-entry-button-{id}` | journal show modal delete |
+| `confirm-delete-journal-entry-button-{id}` / `cancel-delete-journal-entry-button-{id}` | journal delete confirm |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 
@@ -191,6 +198,7 @@ php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.
 php artisan test --compact tests/Feature/Controllers/UserEmailVerificationTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailVerificationNotificationControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserTwoFactorAuthenticationControllerTest.php
+php artisan test --compact tests/Feature/Controllers/UserPasskeyControllerTest.php
 php artisan test --compact tests/Feature/Controllers/AppearanceTest.php
 php artisan test --compact tests/Feature/BootstrapTest.php
 ```
@@ -244,6 +252,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Passkey host | `.agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]` — exit 0 + `passkey:host_ok` when browse host equals APP_URL / RP; exit 1 on mismatch |
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
-| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `tests/Feature/Controllers/GameControllerTest.php` + `tests/Browser/GamesTest.php`. Doctor is logged only. |
+| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `GamesTest` + `JournalEntriesTest`. Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it.
