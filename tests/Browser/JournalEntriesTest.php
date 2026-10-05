@@ -45,6 +45,8 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
 
     expect($newer)->not->toBeNull();
 
+    $page = visit(route('games.show', $game));
+
     $rowOrder = $page->script(<<<'JS'
         (() => [...document.querySelectorAll('[data-test^="journal-entry-"]')]
             .map((el) => el.getAttribute('data-test'))
