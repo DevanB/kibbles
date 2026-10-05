@@ -30,13 +30,14 @@ Preconditions:
 - **User submits invalid password in browser →** `--filter="shows an error when login credentials are invalid"` (same file) → stays `/login`, sees `__('auth.failed')`, guest
 - **2FA user →** Feature `redirects to two-factor challenge when enabled` → `two-factor.login`
 - **2FA user in browser →** `--filter="challenges a two-factor user" tests/Browser/SessionTest.php` → password submit → `/two-factor-challenge` → recovery code → `/dashboard`
+- **Lockout →** Feature `throttles login attempts after too many failures` (same Feature file) → 5 failures, then `auth.throttle`
 - **Home hop →** `php artisan test --compact --filter="sends guests from home to login" tests/Browser/HomeTest.php`
 
 There is **no** Feature test that asserts `canRegister: true` on the login page. The true path is Browser LayoutTest (Sign up visible after `Feature::define`).
 
 ## Gotchas
 
-- Passkey register/assert fails only if the browser host differs from `APP_URL` (e.g. Herd `kibbles.test` while `APP_URL` is `http://localhost:8000`). `composer dev` on localhost matches.
+- Passkey register/assert fails only if the browser host differs from `APP_URL` (e.g. Herd `kibbles.test` while `APP_URL` is `http://localhost:8000`). `composer dev` on localhost matches. **Sign in with a passkey** renders only when WebAuthn is present (Pest Browser has it).
 - Prefer `withoutTwoFactor()` unless intentionally testing the 2FA challenge — factory default **enables** 2FA. Browser challenge uses a known encrypted recovery code, not the factory’s random `two_factor_recovery_codes` string
 - Tests use factories (default password `password`). Local `DatabaseSeeder` calls `DemoSeeder` for Games-show review, not login fixtures.
 - Unverified users who log in are still authenticated but `/dashboard` sends them to `verification.notice`

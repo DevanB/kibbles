@@ -44,7 +44,7 @@ cat "$ART/dashboard-tests.log"
   echo "tests_rc=$TEST_RC"
   echo "feature=tests/Feature/Controllers/DashboardTest.php"
   echo "browser=tests/Browser/DashboardTest.php"
-  echo "verified=guest→login, verified Inertia dashboard, unverified→verification.notice, browser assertSee Dashboard + Log out, logout click → /login"
+  echo "verified=guest→login, unverified→verification.notice, browser assertSee Dashboard + Log out, logout click → /login"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi

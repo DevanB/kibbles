@@ -9,8 +9,8 @@ Dedicated tests:
 | Proof | How |
 |-------|-----|
 | Guest gate | `tests/Feature/Controllers/DashboardTest.php` — guest `GET dashboard` → `assertRedirectToRoute('login')` |
-| Verified render | same file — `User::factory()->withoutTwoFactor()->create()` + `actingAs` → **200** + `assertInertia` component `dashboard` (no `recentJournalEntries`) |
-| Unverified gate | same file — `unverified()` → `assertRedirectToRoute('verification.notice')` |
+| Verified render | `tests/Browser/DashboardTest.php` — `renders the dashboard for a verified user` → `assertSee('Dashboard')` (Feature file has no Inertia render case) |
+| Unverified gate | Feature `DashboardTest` — `unverified()` → `assertRedirectToRoute('verification.notice')` |
 | Authenticated UI | `tests/Browser/DashboardTest.php` — `actingAs` + `visit(route('dashboard'))` → `assertSee('Dashboard')`, open `@sidebar-menu-button`, `assertSee('Log out')` |
 | Logout UI | same Browser file — `@sidebar-menu-button` then `click('@logout-button')` → **`assertPathIs('/login')`** (home redirect chain). HTTP logout stays `SessionControllerTest` `may destroy a session` (`POST logout` → `/` + `assertGuest()`) |
 | Home hop | `tests/Browser/HomeTest.php` — verified `visit('/')` → `/dashboard` |
@@ -19,7 +19,7 @@ Adjacent (still true, not the dashboard proof):
 
 - `SessionControllerTest` / `UserControllerTest` success paths `assertRedirectToRoute('dashboard')`
 - `LayoutTest` starts on settings (same app layout), not the dashboard page
-- Sidebar/header also link to **Games** (`games.index`) — see [games.md](./games.md)
+- Sidebar links to **Games** (`games.index`) — see [games.md](./games.md). `AppLayout` mounts the sidebar shell, not `AppHeader`.
 
 ## Sub-features
 
@@ -45,7 +45,7 @@ Preconditions:
 - Playwright browsers installed (`bunx playwright install chromium` if Pest says they are missing)
 
 - **Guest denied (Feature) →** `php artisan test --compact --filter="redirects guests to login" tests/Feature/Controllers/DashboardTest.php`
-- **Verified render (Feature) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Feature/Controllers/DashboardTest.php` → **200** + Inertia `dashboard`
+- **Verified render (Browser) →** `php artisan test --compact --filter="renders the dashboard for a verified user" tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**
 - **Unverified (Feature) →** `php artisan test --compact --filter="redirects unverified users" tests/Feature/Controllers/DashboardTest.php` → `verification.notice`
 - **Unverified notice UI (Browser) →** `php artisan test --compact tests/Browser/EmailVerificationTest.php` → unverified `actingAs` + `visit(dashboard)` → **path `/verify-email`**, sees `Verify email` / `Resend verification email` / `Log out`
 - **Browser →** `php artisan test --compact tests/Browser/DashboardTest.php` → **`assertSee('Dashboard')`**, user menu shows **Log out**, logout click lands on **`/login`**, `assertNoJavaScriptErrors()`

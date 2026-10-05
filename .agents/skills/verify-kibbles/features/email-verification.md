@@ -5,7 +5,7 @@ Authenticated notice at `/verify-email` (route `verification.notice`, Inertia `u
 ## Sub-features
 
 - Notice page + resend POST `verification.send` (throttled)
-- Signed link verifies and redirects to `dashboard?verified=1`
+- Signed link verifies, then `redirect()->intended()` with fallback `dashboard?verified=1`. After a dashboard bounce the intended URL is `/dashboard` with no query string.
 - Already-verified users hitting the notice go to dashboard
 - Unverified users hitting `/dashboard` or `/games` go to this notice
 
@@ -22,5 +22,6 @@ Register (when Pennant is on) or sign in with `email_verified_at` null, then ope
 
 ## Gotchas
 
-- Factory users are **verified by default**. Use `unverified()` (or `email_verified_at => null`) for this surface
+- Factory users are **verified by default**. Use `unverified()` (or `email_verified_at => null`) for this surface. Form login also needs `withoutTwoFactor()` or the factory 2FA challenge runs first. Browser notice uses `actingAs` + both.
+- Feature `may verify email` starts from `verification.notice`, so it asserts the `?verified=1` fallback. A notice reached via `/dashboard` stores `/dashboard` as intended.
 - Invalid signatures fail; do not follow an unsigned `/verify-email/{id}/{hash}`

@@ -1,6 +1,6 @@
 # Games
 
-Authenticated, verified catalog at `/games` (full resource, including `show`). Inertia pages `games/index` and `games/show` inside `AppLayout`. Create and edit are route-backed inertia-modals (`games/create` over index, `games/edit` over show). Sidebar + header nav include **Games** next to Dashboard.
+Authenticated, verified catalog at `/games` (full resource, including `show`). Inertia pages `games/index` and `games/show` inside `AppLayout` (sidebar shell). Create and edit are route-backed inertia-modals (`games/create` over index, `games/edit` over show). Sidebar nav includes **Games** next to Dashboard.
 
 **Show is the hub.** Create and update redirect to `games.show`. Edit is title-only in a modal. Index title and disclosure go to show. Journal create/view/edit are route-backed inertia-modal pages.
 
@@ -26,7 +26,7 @@ Preconditions:
 
 - **CRUD in browser →** `php artisan test --compact tests/Browser/GamesTest.php` → create **Catan** (lands on show), **Edit** → rename to **Ticket to Ride** (back to show), delete from show; toasts + `assertNoJavaScriptErrors()`
 - **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal → edit modal, delete; empty copy **No journal entries yet** / **Journal Entries**
-- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal create/show/edit/store/update/destroy, newest-first list, cascade delete
+- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal guest/ownership/cascade/body-limit. Journal store/update/destroy and newest-first list are Browser `JournalEntriesTest`.
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-games`
 
 ## Gotchas
