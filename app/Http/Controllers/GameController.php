@@ -8,6 +8,7 @@ use App\Actions\CreateGame;
 use App\Actions\DeleteGame;
 use App\Actions\ListJournalEntries;
 use App\Actions\UpdateGame;
+use App\Enums\GameStatus;
 use App\Http\Requests\CreateGameRequest;
 use App\Http\Requests\DeleteGameRequest;
 use App\Http\Requests\UpdateGameRequest;
@@ -75,12 +76,17 @@ final readonly class GameController
 
         return Inertia::modal('games/edit', [
             'game' => $this->toWireGame($game),
+            'statuses' => GameStatus::options(),
         ])->baseRoute('games.show', $game);
     }
 
     public function update(UpdateGameRequest $request, Game $game, UpdateGame $action): RedirectResponse
     {
-        $action->handle($game, $request->string('title')->value());
+        $action->handle(
+            $game,
+            $request->string('title')->value(),
+            GameStatus::from($request->string('status')->value()),
+        );
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -103,13 +109,15 @@ final readonly class GameController
     }
 
     /**
-     * @return array{id: string, title: string}
+     * @return array{id: string, title: string, status: string, statusLabel: string}
      */
     private function toWireGame(Game $game): array
     {
         return [
             'id' => $game->id,
             'title' => $game->title,
+            'status' => $game->status->value,
+            'statusLabel' => $game->status->label(),
         ];
     }
 }

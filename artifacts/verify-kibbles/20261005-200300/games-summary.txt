@@ -1,0 +1,18 @@
+=== prove-games run_id=20261005-200300 ===
+artifacts=artifacts/verify-kibbles/20261005-200300
+base=http://localhost:8000
+cwd=/workspace
+note=Feature GameControllerTest + JournalEntryControllerTest + Browser GamesTest + JournalEntriesTest; doctor is informational
+doctor_rc=1
+doctor_required=0
+tests_rc=0
+feature=tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php
+browser=tests/Browser/GamesTest.php tests/Browser/JournalEntriesTest.php
+verified=guest→login, unverified→verification.notice, unique titles, journal store/update/destroy, browser create/update/delete
+doctor_note=composer dev / http://localhost:8000 was not green; Pest does not need it
+total 20
+drwxr-xr-x 2 ubuntu ubuntu 4096 Oct  5 20:03 .
+drwxr-xr-x 6 ubuntu ubuntu 4096 Oct  5 20:03 ..
+-rw-r--r-- 1 ubuntu ubuntu 1290 Oct  5 20:03 games-doctor.log
+-rw-r--r-- 1 ubuntu ubuntu  709 Oct  5 20:03 games-summary.txt
+-rw-r--r-- 1 ubuntu ubuntu  128 Oct  5 20:03 games-tests.log

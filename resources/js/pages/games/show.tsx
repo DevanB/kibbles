@@ -7,6 +7,7 @@ import GameController from '@/actions/App/Http/Controllers/GameController';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -56,7 +57,14 @@ export default function Show({
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-start justify-between gap-4">
-                    <Heading title={game.title} />
+                    <header className="mb-8 flex min-w-0 flex-wrap items-center gap-3">
+                        <h2 className="text-xl font-semibold tracking-tight">
+                            {game.title}
+                        </h2>
+                        <Badge variant="secondary" data-test="game-status">
+                            {game.statusLabel}
+                        </Badge>
+                    </header>
 
                     <div className="inline-flex">
                         <Button

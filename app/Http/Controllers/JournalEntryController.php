@@ -100,13 +100,15 @@ final readonly class JournalEntryController
     }
 
     /**
-     * @return array{id: string, title: string}
+     * @return array{id: string, title: string, status: string, statusLabel: string}
      */
     private function toWireGame(Game $game): array
     {
         return [
             'id' => $game->id,
             'title' => $game->title,
+            'status' => $game->status->value,
+            'statusLabel' => $game->status->label(),
         ];
     }
 }

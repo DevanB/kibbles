@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -41,7 +42,7 @@ it('redirects unverified users to the verification notice', function (): void {
     $response->assertRedirectToRoute('verification.notice');
 });
 
-it('lists only the authenticated user games as id and title', function (): void {
+it('lists only the authenticated user games as id, title, and status', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $owned = Game::factory()->recycle($user)->create(['title' => 'Owned Game']);
     Game::factory()->create(['title' => 'Someone Else Game']);
@@ -55,7 +56,9 @@ it('lists only the authenticated user games as id and title', function (): void 
             ->has('games', 1)
             ->has('games.0', fn ($game) => $game
                 ->where('id', $owned->id)
-                ->where('title', 'Owned Game')));
+                ->where('title', 'Owned Game')
+                ->where('status', GameStatus::Backlog->value)
+                ->where('statusLabel', 'Backlog')));
 });
 
 it('requires a title when creating a game', function (): void {
@@ -198,6 +201,89 @@ it('maps a unique constraint race to a validation error when creating a game', f
     }
 });
 
+it('creates a game as backlog', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Catan',
+        ]);
+
+    $game = Game::query()->whereBelongsTo($user)->where('title', 'Catan')->first();
+
+    expect($game)->not->toBeNull()
+        ->and($game->status)->toBe(GameStatus::Backlog);
+
+    $response->assertRedirectToRoute('games.show', $game);
+});
+
+it('rejects a client-sent status when creating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Catan',
+            'status' => GameStatus::Finished->value,
+        ]);
+
+    $response->assertRedirectToRoute('games.create')
+        ->assertSessionHasErrors(['status' => 'The status field is prohibited.']);
+
+    expect(Game::query()->whereBelongsTo($user)->count())->toBe(0);
+});
+
+it('shows a game with its status', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->finished()->create(['title' => 'Catan']);
+
+    $this->actingAs($user)
+        ->get(route('games.show', $game))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/show')
+            ->has('game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', 'Catan')
+                ->where('status', GameStatus::Finished->value)
+                ->where('statusLabel', 'Finished')));
+});
+
+it('includes status options on the edit modal', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $this->actingAs($user)
+        ->get(route('games.edit', $game))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/show')
+            ->where('_inertiaui_modal.component', 'games/edit')
+            ->has('_inertiaui_modal.props.game', fn ($props) => $props
+                ->where('id', $game->id)
+                ->where('title', 'Catan')
+                ->where('status', GameStatus::Backlog->value)
+                ->where('statusLabel', 'Backlog'))
+            ->has('_inertiaui_modal.props.statuses', 4)
+            ->where('_inertiaui_modal.props.statuses.0', [
+                'value' => GameStatus::Backlog->value,
+                'label' => 'Backlog',
+            ])
+            ->where('_inertiaui_modal.props.statuses.1', [
+                'value' => GameStatus::InProgress->value,
+                'label' => 'In Progress',
+            ])
+            ->where('_inertiaui_modal.props.statuses.2', [
+                'value' => GameStatus::Abandoned->value,
+                'label' => 'Abandoned',
+            ])
+            ->where('_inertiaui_modal.props.statuses.3', [
+                'value' => GameStatus::Finished->value,
+                'label' => 'Finished',
+            ]));
+});
+
 it('allows keeping the same title when updating a game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
@@ -206,11 +292,13 @@ it('allows keeping the same title when updating a game', function (): void {
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => 'Catan',
+            'status' => $game->status->value,
         ]);
 
     $response->assertRedirectToRoute('games.show', $game);
 
-    expect($game->refresh()->title)->toBe('Catan');
+    expect($game->refresh()->title)->toBe('Catan')
+        ->and($game->status)->toBe(GameStatus::Backlog);
 });
 
 it('requires a title when updating a game', function (): void {
@@ -225,6 +313,39 @@ it('requires a title when updating a game', function (): void {
         ->assertSessionHasErrors(['title' => 'A title is required.']);
 });
 
+it('requires a status when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'Catan',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionHasErrors(['status' => 'A status is required.']);
+
+    expect($game->refresh()->status)->toBe(GameStatus::Backlog);
+});
+
+it('rejects an invalid status when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'Catan',
+            'status' => 'playing',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionHasErrors(['status' => 'The status must be Backlog, In Progress, Abandoned, or Finished.']);
+
+    expect($game->refresh()->status)->toBe(GameStatus::Backlog);
+});
+
 it('requires a string title when updating a game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
@@ -233,6 +354,7 @@ it('requires a string title when updating a game', function (): void {
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => ['Catan'],
+            'status' => GameStatus::Backlog->value,
         ]);
 
     $response->assertRedirectToRoute('games.edit', $game)
@@ -247,6 +369,7 @@ it('rejects titles longer than 255 characters when updating a game', function ()
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => str_repeat('a', 256),
+            'status' => GameStatus::Backlog->value,
         ]);
 
     $response->assertRedirectToRoute('games.edit', $game)
@@ -262,6 +385,7 @@ it('rejects updating to a duplicate title owned by the same user', function (): 
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => 'Catan',
+            'status' => GameStatus::Backlog->value,
         ]);
 
     $response->assertRedirectToRoute('games.edit', $game)
@@ -277,6 +401,7 @@ it('rejects updating to a case-insensitive duplicate title owned by the same use
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => 'catan',
+            'status' => GameStatus::Backlog->value,
         ]);
 
     $response->assertRedirectToRoute('games.edit', $game)
@@ -293,6 +418,7 @@ it('allows changing the casing of a game title', function (): void {
         ->fromRoute('games.edit', $game)
         ->put(route('games.update', $game), [
             'title' => 'CATAN',
+            'status' => GameStatus::Backlog->value,
         ]);
 
     $response->assertRedirectToRoute('games.show', $game);
@@ -328,6 +454,7 @@ it('maps a unique constraint race to a validation error when updating a game', f
             ->fromRoute('games.edit', $game)
             ->put(route('games.update', $game), [
                 'title' => 'Catan',
+                'status' => GameStatus::Backlog->value,
             ]);
 
         $response->assertRedirectToRoute('games.edit', $game)
@@ -368,6 +495,7 @@ it('forbids another user from updating a game', function (): void {
         ->fromRoute('games.index')
         ->put(route('games.update', $game), [
             'title' => 'Stolen Title',
+            'status' => GameStatus::Finished->value,
         ]);
 
     $response->assertForbidden();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,14 +14,14 @@ final class DemoSeeder extends Seeder
     private const string EMAIL = 'devan@localhost.test';
 
     /**
-     * @var list<string>
+     * @var array<string, GameStatus>
      */
     private const array TITLES = [
-        'Catan',
-        'Ticket to Ride',
-        'Azul',
-        'Wingspan',
-        'Pandemic',
+        'Catan' => GameStatus::InProgress,
+        'Ticket to Ride' => GameStatus::Backlog,
+        'Azul' => GameStatus::Abandoned,
+        'Wingspan' => GameStatus::Finished,
+        'Pandemic' => GameStatus::Backlog,
     ];
 
     public function run(): void
@@ -31,13 +32,18 @@ final class DemoSeeder extends Seeder
                 'email' => self::EMAIL,
             ]);
 
-        foreach (self::TITLES as $title) {
-            if ($user->games()->where('title', $title)->exists()) {
+        foreach (self::TITLES as $title => $status) {
+            $game = $user->games()->where('title', $title)->first();
+
+            if ($game instanceof Game) {
+                $game->update(['status' => $status]);
+
                 continue;
             }
 
             Game::factory()->for($user)->create([
                 'title' => $title,
+                'status' => $status,
             ]);
         }
 

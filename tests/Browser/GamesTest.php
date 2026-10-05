@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 
@@ -22,6 +23,7 @@ it('may create, update, and delete a game', function (): void {
         ->click('@save-game-button')
         ->assertSee('Game created.')
         ->assertSee('Catan')
+        ->assertSee('Backlog')
         ->assertNoJavaScriptErrors();
 
     $game = Game::query()->whereBelongsTo($user)->first();
@@ -64,4 +66,36 @@ it('may create, update, and delete a game', function (): void {
         ->assertNoJavaScriptErrors();
 
     expect($game->fresh())->toBeNull();
+});
+
+it('persists a status change from the edit modal', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
+
+    $this->actingAs($user);
+
+    $page = visit(route('games.show', $game));
+
+    $page->assertSee('Catan')
+        ->assertSee('Backlog')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('@edit-game-button')
+        ->assertSee('Edit Game')
+        ->select('status', GameStatus::Finished->value)
+        ->click('@save-game-button')
+        ->assertSee('Game updated.')
+        ->assertSee('Finished')
+        ->assertPathIs('/games/'.$game->id)
+        ->screenshot(filename: 'game-show-finished-status')
+        ->assertNoJavaScriptErrors();
+
+    expect($game->refresh()->status)->toBe(GameStatus::Finished);
+
+    $index = visit(route('games.index'));
+
+    $index->assertSee('Catan')
+        ->assertSee('Finished')
+        ->screenshot(filename: 'games-index-finished-status')
+        ->assertNoJavaScriptErrors();
 });
