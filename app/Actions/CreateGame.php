@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 use App\Rules\UniqueOwnedGameTitle;
@@ -16,6 +17,7 @@ final readonly class CreateGame
         try {
             return $user->games()->create([
                 'title' => $title,
+                'status' => GameStatus::Backlog,
             ]);
         } catch (UniqueConstraintViolationException) {
             throw UniqueOwnedGameTitle::conflict();

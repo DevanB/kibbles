@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -17,7 +18,14 @@ test('to array', function (): void {
             'title',
             'created_at',
             'updated_at',
+            'status',
         ]);
+});
+
+it('defaults status to backlog', function (): void {
+    $game = Game::factory()->create();
+
+    expect($game->status)->toBe(GameStatus::Backlog);
 });
 
 it('belongs to a user', function (): void {

@@ -4,6 +4,7 @@ import { cn } from 'cn';
 import { ChevronRight, Plus } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index, show } from '@/routes/games';
@@ -66,11 +67,19 @@ export default function Index({ games }: { games: Game[] }) {
                                     href={show(game)}
                                     className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
                                 >
-                                    <span
-                                        className="font-medium"
-                                        data-test={`game-title-${game.id}`}
-                                    >
-                                        {game.title}
+                                    <span className="flex min-w-0 items-center gap-2">
+                                        <span
+                                            className="font-medium"
+                                            data-test={`game-title-${game.id}`}
+                                        >
+                                            {game.title}
+                                        </span>
+                                        <Badge
+                                            variant="secondary"
+                                            data-test={`game-status-${game.id}`}
+                                        >
+                                            {game.statusLabel}
+                                        </Badge>
                                     </span>
                                     <ChevronRight
                                         aria-hidden

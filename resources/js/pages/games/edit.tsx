@@ -6,9 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import type { Game } from '@/types';
+import type { Game, GameStatusOption } from '@/types';
 
-export default function Edit({ game }: { game: Game }) {
+export default function Edit({
+    game,
+    statuses,
+}: {
+    game: Game;
+    statuses: GameStatusOption[];
+}) {
     return (
         <Modal>
             <Head title={`Edit ${game.title}`} />
@@ -36,6 +42,28 @@ export default function Edit({ game }: { game: Game }) {
                                     defaultValue={game.title}
                                 />
                                 <InputError message={errors.title} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="status">Status</Label>
+                                <select
+                                    id="status"
+                                    name="status"
+                                    required
+                                    defaultValue={game.status}
+                                    data-test="game-status-select"
+                                    className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:ring-destructive/40"
+                                >
+                                    {statuses.map((status) => (
+                                        <option
+                                            key={status.value}
+                                            value={status.value}
+                                        >
+                                            {status.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.status} />
                             </div>
 
                             <Button
