@@ -30,6 +30,6 @@ Preconditions:
 ## Gotchas
 
 - Password rules come from `Password::defaults()` — Feature tests use values that satisfy current rules (`password1234` in happy path)
-- Do not rely on DatabaseSeeder; it is empty
+- Do not rely on DatabaseSeeder for tests. Local `DatabaseSeeder` calls `DemoSeeder`; tests use factories.
 - Feature happy path asserts the POST redirect to the `dashboard` **route**. The follow-up GET hits `verified` middleware, so Browser submit lands on `/verify-email`
 - LayoutTest covers register **nav smoke** only; HTTP create path is Feature `UserControllerTest`; Browser submit is `RegistrationTest`
