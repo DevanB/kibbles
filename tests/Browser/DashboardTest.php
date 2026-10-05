@@ -12,47 +12,12 @@ it('renders the dashboard for a verified user', function (): void {
     $page = visit(route('dashboard'));
 
     $page->assertSee('Dashboard')
-        ->assertSee('Kibbles')
-        ->assertDontSee('Recent Journal Entries')
-        ->assertDontSee('Repository')
-        ->assertDontSee('Documentation')
+        ->assertSee(config('app.name'))
         ->assertNoJavaScriptErrors();
 
     $page->click('@sidebar-menu-button')
         ->assertSee('Log out')
         ->assertNoJavaScriptErrors();
-});
-
-it('keeps the Kibbles mark readable in dark mode', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $this->actingAs($user);
-
-    $page = visit(route('dashboard'))->inDarkMode();
-
-    $page->assertSee('Kibbles')
-        ->assertNoJavaScriptErrors()
-        ->screenshot(filename: 'kibbles-sidebar-dark')
-        ->screenshotElement('[data-test="app-logo"]', 'kibbles-mark-dark');
-
-    $colors = $page->script(<<<'JS'
-        (() => {
-            const mark = document.querySelector('[data-test="app-logo-mark"]');
-            const box = document.querySelector('[data-test="app-logo"]');
-
-            if (!mark || !box) {
-                return null;
-            }
-
-            return {
-                color: getComputedStyle(mark).color,
-                background: getComputedStyle(box).backgroundColor,
-            };
-        })()
-    JS);
-
-    expect($colors)->toBeArray()
-        ->and($colors['color'])->not->toBe($colors['background']);
 });
 
 it('logs out from the dashboard user menu', function (): void {

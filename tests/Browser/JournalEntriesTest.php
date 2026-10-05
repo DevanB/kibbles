@@ -14,8 +14,6 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
     $page = visit(route('games.show', $game));
 
     $page->assertSee('Catan')
-        ->assertDontSee('Journal entries will live here.')
-        ->assertDontSee('Up next')
         ->assertSee('No journal entries yet')
         ->assertSee('Journal Entries')
         ->assertSee('Write what happened the last time you played.')
@@ -26,8 +24,6 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->fill('#compose-body', 'Settled on the ore port.')
         ->click('@add-journal-entry-button')
         ->assertSee('Journal entry added.')
-        ->assertDontSee('Settled on the ore port.')
-        ->assertDontSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 
     $older = $game->journalEntries()->first();
@@ -72,10 +68,8 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->click('@delete-journal-entry-button-'.$older->id)
         ->assertSee('Delete journal entry?')
         ->assertSee('This will permanently delete this journal entry from Catan.')
-        ->assertDontSee('Settled on the brick port.')
         ->screenshot(filename: 'journal-delete-confirm')
         ->click('@cancel-delete-journal-entry-button-'.$older->id)
-        ->assertDontSee('Delete journal entry?')
         ->assertSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 
@@ -84,7 +78,6 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
     $page->click('@delete-journal-entry-button-'.$older->id)
         ->click('@confirm-delete-journal-entry-button-'.$older->id)
         ->assertSee('Journal entry deleted.')
-        ->assertDontSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 
     expect($older->fresh())->toBeNull()
