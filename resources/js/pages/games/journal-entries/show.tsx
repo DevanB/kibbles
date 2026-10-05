@@ -1,9 +1,9 @@
 import { Form, Head } from '@inertiajs/react';
 import { Modal, ModalLink } from '@inertiaui/modal-react';
+import { cn } from 'cn';
 import { useState } from 'react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type { Game, JournalEntry } from '@/types';
 
 function formatEntryDate(value: string): string {
