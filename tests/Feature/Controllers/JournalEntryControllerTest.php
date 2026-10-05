@@ -6,144 +6,24 @@ use App\Models\Game;
 use App\Models\JournalEntry;
 use App\Models\User;
 
-it('lets the owner add an entry and see body newest first on show', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
+it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
+    $this->{$method}(route($route, $parameters))->assertRedirectToRoute('login');
+})->with([
+    'create' => ['get', 'games.journal-entries.create', ['game' => '00000000-0000-0000-0000-000000000001']],
+    'store' => ['post', 'games.journal-entries.store', ['game' => '00000000-0000-0000-0000-000000000001']],
+    'show' => ['get', 'games.journal-entries.show', ['game' => '00000000-0000-0000-0000-000000000001', 'journal_entry' => '00000000-0000-0000-0000-000000000002']],
+    'edit' => ['get', 'games.journal-entries.edit', ['game' => '00000000-0000-0000-0000-000000000001', 'journal_entry' => '00000000-0000-0000-0000-000000000002']],
+    'update' => ['put', 'games.journal-entries.update', ['game' => '00000000-0000-0000-0000-000000000001', 'journal_entry' => '00000000-0000-0000-0000-000000000002']],
+    'destroy' => ['delete', 'games.journal-entries.destroy', ['game' => '00000000-0000-0000-0000-000000000001', 'journal_entry' => '00000000-0000-0000-0000-000000000002']],
+]);
+
+it('redirects unverified users to the verification notice', function (): void {
+    $user = User::factory()->unverified()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
 
     $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.journal-entries.store', $game), [
-            'body' => 'Opened with a wood and brick settlement.',
-        ])
-        ->assertRedirectToRoute('games.show', $game)
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Journal entry added.')]);
-
-    $this->travel(1)->minute();
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.journal-entries.store', $game), [
-            'body' => 'Cities went down early.',
-        ])
-        ->assertRedirectToRoute('games.show', $game);
-
-    $newer = $game->journalEntries()->where('body', 'Cities went down early.')->first();
-    $older = $game->journalEntries()->where('body', 'Opened with a wood and brick settlement.')->first();
-
-    expect($newer)->not->toBeNull()
-        ->and($older)->not->toBeNull();
-
-    $this->actingAs($user)
-        ->get(route('games.show', $game))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/show')
-            ->has('journalEntries', 2)
-            ->has('journalEntries.0', fn ($entry) => $entry
-                ->where('id', $newer->id)
-                ->where('body', 'Cities went down early.')
-                ->missing('next')
-                ->has('createdAt')
-                ->has('updatedAt'))
-            ->has('journalEntries.1', fn ($entry) => $entry
-                ->where('id', $older->id)
-                ->where('body', 'Opened with a wood and brick settlement.')
-                ->missing('next')
-                ->has('createdAt')
-                ->has('updatedAt'))
-            ->missing('resume'));
-});
-
-it('renders the create modal for the owner', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-
-    $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => '1'])
         ->get(route('games.journal-entries.create', $game))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/journal-entries/create')
-            ->has('game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', $game->title)));
-});
-
-it('renders the edit modal for the owner', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $entry = JournalEntry::factory()->recycle($game)->create([
-        'body' => 'Settled on the ore port.',
-    ]);
-
-    $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => '1'])
-        ->get(route('games.journal-entries.edit', [$game, $entry]))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/journal-entries/edit')
-            ->has('game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', $game->title))
-            ->has('journalEntry', fn ($props) => $props
-                ->where('id', $entry->id)
-                ->where('body', 'Settled on the ore port.')
-                ->missing('next')
-                ->has('createdAt')
-                ->has('updatedAt')));
-});
-
-it('renders the show modal for the owner', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $entry = JournalEntry::factory()->recycle($game)->create([
-        'body' => 'Settled on the ore port.',
-    ]);
-
-    $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => '1'])
-        ->get(route('games.journal-entries.show', [$game, $entry]))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/journal-entries/show')
-            ->has('journalEntry', fn ($props) => $props
-                ->where('id', $entry->id)
-                ->where('body', 'Settled on the ore port.')
-                ->missing('next')
-                ->has('createdAt')
-                ->has('updatedAt')));
-});
-
-it('lets the owner update a journal entry', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $entry = JournalEntry::factory()->recycle($game)->create([
-        'body' => 'Original sitting',
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->put(route('games.journal-entries.update', [$game, $entry]), [
-            'body' => 'Corrected sitting',
-        ])
-        ->assertRedirectToRoute('games.show', $game)
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Journal entry updated.')]);
-
-    expect($entry->refresh()->body)->toBe('Corrected sitting');
-});
-
-it('lets the owner delete a journal entry', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $entry = JournalEntry::factory()->recycle($game)->create();
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->delete(route('games.journal-entries.destroy', [$game, $entry]))
-        ->assertRedirectToRoute('games.show', $game)
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Journal entry deleted.')]);
-
-    $this->assertModelMissing($entry);
+        ->assertRedirectToRoute('verification.notice');
 });
 
 it('forbids another user from creating or viewing journal entry modals', function (): void {

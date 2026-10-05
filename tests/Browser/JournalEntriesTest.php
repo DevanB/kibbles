@@ -30,41 +30,70 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertDontSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 
-    $entry = $game->journalEntries()->first();
+    $older = $game->journalEntries()->first();
 
-    expect($entry)->not->toBeNull();
+    expect($older)->not->toBeNull();
 
-    $page->click('@journal-entry-'.$entry->id)
+    $page->click('@create-journal-entry-button')
+        ->assertSee('Create Entry')
+        ->fill('#compose-body', 'Cities went down early.')
+        ->click('@add-journal-entry-button')
+        ->assertSee('Journal entry added.')
+        ->assertNoJavaScriptErrors();
+
+    $newer = $game->journalEntries()->where('body', 'Cities went down early.')->first();
+
+    expect($newer)->not->toBeNull();
+
+    $rowOrder = $page->script(<<<'JS'
+        (() => [...document.querySelectorAll('[data-test^="journal-entry-"]')]
+            .map((el) => el.getAttribute('data-test'))
+            .filter((name) => /^journal-entry-[0-9a-f-]+$/i.test(name ?? '')))()
+    JS);
+
+    expect($rowOrder[0])->toBe('journal-entry-'.$newer->id)
+        ->and($rowOrder[1])->toBe('journal-entry-'.$older->id);
+
+    $page->click('@journal-entry-'.$older->id)
         ->assertSee('Settled on the ore port.')
-        ->click('@edit-journal-entry-button-'.$entry->id)
+        ->click('@edit-journal-entry-button-'.$older->id)
         ->assertSee('Edit Entry')
-        ->fill('#edit-'.$entry->id.'-body', 'Settled on the brick port.')
-        ->click('@save-journal-entry-button-'.$entry->id)
+        ->fill('#edit-'.$older->id.'-body', 'Settled on the brick port.')
+        ->click('@save-journal-entry-button-'.$older->id)
         ->assertSee('Journal entry updated.')
         ->assertNoJavaScriptErrors();
 
     $page = visit(route('games.show', $game));
 
-    $page->click('@journal-entry-'.$entry->id)
+    $page->click('@journal-entry-'.$older->id)
         ->assertSee('Settled on the brick port.')
-        ->click('@delete-journal-entry-button-'.$entry->id)
+        ->click('@delete-journal-entry-button-'.$older->id)
         ->assertSee('Delete journal entry?')
         ->assertSee('This will permanently delete this journal entry from Catan.')
         ->assertDontSee('Settled on the brick port.')
         ->screenshot(filename: 'journal-delete-confirm')
-        ->click('@cancel-delete-journal-entry-button-'.$entry->id)
+        ->click('@cancel-delete-journal-entry-button-'.$older->id)
         ->assertDontSee('Delete journal entry?')
         ->assertSee('Settled on the brick port.')
         ->assertNoJavaScriptErrors();
 
-    expect($entry->fresh())->not->toBeNull();
+    expect($older->fresh())->not->toBeNull();
 
-    $page->click('@delete-journal-entry-button-'.$entry->id)
-        ->click('@confirm-delete-journal-entry-button-'.$entry->id)
+    $page->click('@delete-journal-entry-button-'.$older->id)
+        ->click('@confirm-delete-journal-entry-button-'.$older->id)
         ->assertSee('Journal entry deleted.')
         ->assertDontSee('Settled on the brick port.')
+        ->assertNoJavaScriptErrors();
+
+    expect($older->fresh())->toBeNull()
+        ->and($newer->fresh())->not->toBeNull();
+
+    $page->click('@journal-entry-'.$newer->id)
+        ->click('@delete-journal-entry-button-'.$newer->id)
+        ->click('@confirm-delete-journal-entry-button-'.$newer->id)
+        ->assertSee('Journal entry deleted.')
         ->assertSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 
-    expect($entry->fresh())->toBeNull();
+    expect($newer->fresh())->toBeNull();
 });
