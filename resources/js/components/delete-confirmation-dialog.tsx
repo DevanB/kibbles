@@ -37,7 +37,14 @@ export default function DeleteConfirmationDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
-            <DialogContent>
+            <DialogContent
+                onCloseAutoFocus={(event) => {
+                    event.preventDefault();
+                }}
+                onInteractOutside={(event) => {
+                    event.preventDefault();
+                }}
+            >
                 <DialogTitle>{title}</DialogTitle>
                 <DialogDescription>{description}</DialogDescription>
                 <DialogFooter className="gap-2">

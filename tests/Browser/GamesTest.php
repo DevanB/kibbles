@@ -47,6 +47,7 @@ it('may create, update, and delete a game', function (): void {
         ->assertSee('Delete Ticket to Ride?')
         ->assertSee('This will permanently delete Ticket to Ride and its journal entries.')
         ->click('@cancel-delete-game-button')
+        ->assertDontSee('Delete Ticket to Ride?')
         ->assertSee('Ticket to Ride')
         ->assertNoJavaScriptErrors();
 
