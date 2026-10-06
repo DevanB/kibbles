@@ -1,3 +1,0 @@
-guest_curl_rc=0
-guest_http=302
-guest_location=http://kibbles.test/login
