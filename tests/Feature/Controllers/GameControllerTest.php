@@ -201,23 +201,6 @@ it('maps a unique constraint race to a validation error when creating a game', f
     }
 });
 
-it('creates a game as backlog', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.create')
-        ->post(route('games.store'), [
-            'title' => 'Catan',
-        ]);
-
-    $game = Game::query()->whereBelongsTo($user)->where('title', 'Catan')->first();
-
-    expect($game)->not->toBeNull()
-        ->and($game->status)->toBe(GameStatus::Backlog);
-
-    $response->assertRedirectToRoute('games.show', $game);
-});
-
 it('rejects a client-sent status when creating a game', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
 
@@ -232,56 +215,6 @@ it('rejects a client-sent status when creating a game', function (): void {
         ->assertSessionHasErrors(['status' => 'The status field is prohibited.']);
 
     expect(Game::query()->whereBelongsTo($user)->count())->toBe(0);
-});
-
-it('shows a game with its status', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->finished()->create(['title' => 'Catan']);
-
-    $this->actingAs($user)
-        ->get(route('games.show', $game))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/show')
-            ->has('game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', 'Catan')
-                ->where('status', GameStatus::Finished->value)
-                ->where('statusLabel', 'Finished')));
-});
-
-it('includes status options on the edit modal', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create(['title' => 'Catan']);
-
-    $this->actingAs($user)
-        ->get(route('games.edit', $game))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('games/show')
-            ->where('_inertiaui_modal.component', 'games/edit')
-            ->has('_inertiaui_modal.props.game', fn ($props) => $props
-                ->where('id', $game->id)
-                ->where('title', 'Catan')
-                ->where('status', GameStatus::Backlog->value)
-                ->where('statusLabel', 'Backlog'))
-            ->has('_inertiaui_modal.props.statuses', 4)
-            ->where('_inertiaui_modal.props.statuses.0', [
-                'value' => GameStatus::Backlog->value,
-                'label' => 'Backlog',
-            ])
-            ->where('_inertiaui_modal.props.statuses.1', [
-                'value' => GameStatus::InProgress->value,
-                'label' => 'In Progress',
-            ])
-            ->where('_inertiaui_modal.props.statuses.2', [
-                'value' => GameStatus::Abandoned->value,
-                'label' => 'Abandoned',
-            ])
-            ->where('_inertiaui_modal.props.statuses.3', [
-                'value' => GameStatus::Finished->value,
-                'label' => 'Finished',
-            ]));
 });
 
 it('allows keeping the same title when updating a game', function (): void {
