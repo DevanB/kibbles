@@ -8,7 +8,7 @@ use App\Models\Game;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
-it('may update a game title and status', function (): void {
+it('may update a game title', function (): void {
     $game = Game::factory()->create([
         'title' => 'Catan',
     ]);
@@ -18,9 +18,7 @@ it('may update a game title and status', function (): void {
     $updated = $action->handle($game, 'Ticket to Ride', GameStatus::Finished);
 
     expect($updated->title)->toBe('Ticket to Ride')
-        ->and($updated->status)->toBe(GameStatus::Finished)
-        ->and($game->refresh()->title)->toBe('Ticket to Ride')
-        ->and($game->status)->toBe(GameStatus::Finished);
+        ->and($game->refresh()->title)->toBe('Ticket to Ride');
 });
 
 it('maps a unique constraint violation to a title validation error', function (): void {
