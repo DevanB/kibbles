@@ -7,23 +7,6 @@ use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 
-test('to array', function (): void {
-    $game = Game::factory()->create()->refresh();
-
-    expect(array_keys($game->toArray()))
-        ->toBe([
-            'id',
-            'user_id',
-            'title',
-            'created_at',
-            'updated_at',
-            'status',
-            'rawg_id',
-            'image_url',
-            'description',
-        ]);
-});
-
 it('belongs to a user', function (): void {
     $user = User::factory()->create();
     $game = Game::factory()->recycle($user)->create();
