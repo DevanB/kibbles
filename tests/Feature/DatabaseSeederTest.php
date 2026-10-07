@@ -23,6 +23,8 @@ it('creates the demo user and games when the environment is not production', fun
     ]);
     $this->assertDatabaseCount('games', 5);
 
+    expect(Game::query()->whereNotNull('rawg_id')->count())->toBe(0);
+
     $statuses = Game::query()
         ->whereHas('user', fn ($query) => $query->where('email', 'devan@localhost.test'))
         ->pluck('status')
@@ -43,15 +45,15 @@ it('creates the demo user and games when the environment is not production', fun
 it('updates demo game statuses on re-seed without duplicating journals', function (): void {
     $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
 
-    $catan = Game::query()->where('title', 'Catan')->first();
+    $hades = Game::query()->where('title', 'Hades')->first();
 
-    expect($catan)->not->toBeNull();
+    expect($hades)->not->toBeNull();
 
-    $catan->update(['status' => GameStatus::Abandoned]);
+    $hades->update(['status' => GameStatus::Abandoned]);
 
     $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
 
-    expect($catan->refresh()->status)->toBe(GameStatus::InProgress)
-        ->and($catan->journalEntries)->toHaveCount(2)
+    expect($hades->refresh()->status)->toBe(GameStatus::InProgress)
+        ->and($hades->journalEntries)->toHaveCount(2)
         ->and(Game::query()->count())->toBe(5);
 });
