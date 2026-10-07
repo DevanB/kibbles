@@ -17,11 +17,11 @@ final class DemoSeeder extends Seeder
      * @var array<string, GameStatus>
      */
     private const array TITLES = [
-        'Catan' => GameStatus::InProgress,
-        'Ticket to Ride' => GameStatus::Backlog,
-        'Azul' => GameStatus::Abandoned,
-        'Wingspan' => GameStatus::Finished,
-        'Pandemic' => GameStatus::Backlog,
+        'Hades' => GameStatus::InProgress,
+        'Stardew Valley' => GameStatus::Backlog,
+        'Celeste' => GameStatus::Abandoned,
+        'Hollow Knight' => GameStatus::Finished,
+        'Baldur\'s Gate 3' => GameStatus::Backlog,
     ];
 
     public function run(): void
@@ -47,14 +47,14 @@ final class DemoSeeder extends Seeder
             ]);
         }
 
-        $catan = $user->games()->where('title', 'Catan')->first();
+        $hades = $user->games()->where('title', 'Hades')->first();
 
-        if ($catan instanceof Game && $catan->journalEntries()->doesntExist()) {
-            $catan->journalEntries()->create([
-                'body' => 'Opened with a wood and brick settlement and raced for longest road.',
+        if ($hades instanceof Game && $hades->journalEntries()->doesntExist()) {
+            $hades->journalEntries()->create([
+                'body' => 'Cleared Tartarus on the first heat and died to the bone hydra anyway.',
             ]);
-            $catan->journalEntries()->create([
-                'body' => 'Cities went down early; the robber wrecked the wheat engine.',
+            $hades->journalEntries()->create([
+                'body' => 'Duo boon with Aphrodite finally clicked; made it to Elysium.',
             ]);
         }
     }
