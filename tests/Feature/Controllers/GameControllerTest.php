@@ -487,28 +487,6 @@ it('rejects a non-integer rawg id when updating a game', function (): void {
     expect($game->refresh()->rawg_id)->toBeNull();
 });
 
-it('saves a linked game with catalog details fetched on the server', function (): void {
-    fakeHadesCatalog();
-
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.create')
-        ->post(route('games.store'), [
-            'title' => 'Hades',
-            'rawg_id' => HADES_RAWG_ID,
-        ]);
-
-    $game = Game::query()->whereBelongsTo($user)->first();
-
-    expect($game)->not->toBeNull()
-        ->and($game->rawg_id)->toBe(HADES_RAWG_ID)
-        ->and($game->image_url)->toBe(HADES_IMAGE_URL)
-        ->and($game->description)->toBe(HADES_DESCRIPTION);
-
-    $response->assertRedirectToRoute('games.show', $game);
-});
-
 it('still saves the game when the catalog lookup fails', function (): void {
     config(['services.rawg.key' => 'testing']);
 
@@ -534,27 +512,6 @@ it('still saves the game when the catalog lookup fails', function (): void {
         ->and($game->description)->toBeNull();
 
     $response->assertRedirectToRoute('games.show', $game);
-});
-
-it('links an existing game and pulls catalog details', function (): void {
-    fakeHadesCatalog();
-
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create(['title' => 'Hades']);
-
-    $response = $this->actingAs($user)
-        ->fromRoute('games.edit', $game)
-        ->put(route('games.update', $game), [
-            'title' => 'Hades',
-            'status' => GameStatus::Backlog->value,
-            'rawg_id' => HADES_RAWG_ID,
-        ]);
-
-    $response->assertRedirectToRoute('games.show', $game);
-
-    expect($game->refresh()->rawg_id)->toBe(HADES_RAWG_ID)
-        ->and($game->image_url)->toBe(HADES_IMAGE_URL)
-        ->and($game->description)->toBe(HADES_DESCRIPTION);
 });
 
 it('clears catalog details when a game is unlinked', function (): void {

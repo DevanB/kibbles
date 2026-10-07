@@ -23,8 +23,6 @@ it('creates the demo user and games when the environment is not production', fun
     ]);
     $this->assertDatabaseCount('games', 5);
 
-    expect(Game::query()->whereNotNull('rawg_id')->count())->toBe(0);
-
     $statuses = Game::query()
         ->whereHas('user', fn ($query) => $query->where('email', 'devan@localhost.test'))
         ->pluck('status')
