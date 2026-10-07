@@ -118,12 +118,31 @@ export default function Show({
                     </div>
                 </div>
 
-                <div
-                    aria-label="Box art"
-                    data-test="game-art-slot"
-                    className="flex aspect-[3/4] w-40 items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-4 text-center text-sm text-muted-foreground dark:border-sidebar-border"
-                >
-                    No box art yet
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                    {game.imageUrl ? (
+                        <img
+                            src={game.imageUrl}
+                            alt=""
+                            data-test="game-art"
+                            className="aspect-[3/4] w-40 shrink-0 rounded-xl object-cover"
+                        />
+                    ) : (
+                        <div
+                            aria-label="Box art"
+                            data-test="game-art-slot"
+                            className="flex aspect-[3/4] w-40 items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-4 text-center text-sm text-muted-foreground dark:border-sidebar-border"
+                        >
+                            No box art yet
+                        </div>
+                    )}
+                    {game.description ? (
+                        <p
+                            data-test="game-description"
+                            className="max-w-prose text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground"
+                        >
+                            {game.description}
+                        </p>
+                    ) : null}
                 </div>
 
                 <Separator />

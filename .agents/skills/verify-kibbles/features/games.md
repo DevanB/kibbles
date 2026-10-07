@@ -6,10 +6,10 @@ Authenticated, verified catalog at `/games` (full resource, including `show`). I
 
 ## Sub-features
 
-- Index lists only the current user's games as `{id, title, status, statusLabel}`; empty copy **No games yet** / **Add Game**. The header **Add Game** button is hidden when the list is empty — only the empty-state CTA is shown. Create is a route-backed inertia-modal (`games/create` over `games.index`).
-- Create via `data-test="create-game-button"` → title → `data-test="save-game-button"` → toast **Game created.** → **show** (`/games/{id}`) as **Backlog**. Create does not offer a status picker.
-- Show renders `{id, title, status, statusLabel}` plus a box-art slot (`data-test="game-art-slot"`, **No box art yet**) and a full-width dated journal list under **Journal Entries**. **Create Entry** opens the create modal (header when entries exist; empty-state card when they do not); a row opens the read-only show modal (Edit opens the edit modal; Delete stays on show)
-- Edit via `data-test="edit-game-button"` on show → edit modal (`/games/{id}/edit` over show) → title + status (`data-test="game-status-select"`) → `data-test="save-game-button"` → toast **Game updated.** → **show**. Status options: Backlog, In Progress, Abandoned, Finished.
+- Index lists only the current user's games as `{id, title, status, statusLabel, rawgId, imageUrl, description}` with a small thumbnail (or muted placeholder); empty copy **No games yet** / **Add Game**. The header **Add Game** button is hidden when the list is empty — only the empty-state CTA is shown. Create is a route-backed inertia-modal (`games/create` over `games.index`).
+- Create via `data-test="create-game-button"` → title (`data-test="game-title-input"`) can search RAWG (`data-test="game-catalog-results"` / `game-catalog-result-{id}`) or be typed as a custom title → `data-test="save-game-button"` → toast **Game created.** → **show** (`/games/{id}`) as **Backlog**. Create does not offer a status picker. Client sends `title` and optional `rawg_id` only.
+- Show renders `{id, title, status, statusLabel, rawgId, imageUrl, description}` plus box art (`data-test="game-art"` when linked, otherwise `data-test="game-art-slot"` **No box art yet**) and description (`data-test="game-description"`) when present, and a full-width dated journal list under **Journal Entries**. **Create Entry** opens the create modal (header when entries exist; empty-state card when they do not); a row opens the read-only show modal (Edit opens the edit modal; Delete stays on show)
+- Edit via `data-test="edit-game-button"` on show → edit modal (`/games/{id}/edit` over show) → same catalog picker + status (`data-test="game-status-select"`) → `data-test="save-game-button"` → toast **Game updated.** → **show**. Status options: Backlog, In Progress, Abandoned, Finished. `data-test="clear-catalog-link-button"` unlinks.
 - Delete on show (Browser happy path) via `data-test="game-actions-button"` then `data-test="delete-game-button"` → confirm dialog → `data-test="confirm-delete-game-button"` → **Game deleted.** → index. Cancel (`cancel-delete-game-button`) leaves the game. After delete, breadcrumbs are only **Games** (the deleted title must not remain). Index has no edit/delete. Journal delete confirm is warning copy only (no date/body) with Cancel / **Delete Entry** (`confirm-delete-journal-entry-button-{id}`).
 - Unique title per owner (case-insensitive); guests and unverified users are gated like dashboard
 
@@ -35,4 +35,5 @@ Preconditions:
 - Titles must be unique **per user**, not globally
 - Index has no row delete. The Browser happy path deletes from **show** (`@game-actions-button` then `@delete-game-button` then `@confirm-delete-game-button`). Edit is title + status in a modal.
 - Same `auth` + `verified` middleware group as dashboard
-- Local `DatabaseSeeder` calls `DemoSeeder` (`devan@localhost.test` + five titles) for reviewing show. Tests do not use that seeder
+- Local `DatabaseSeeder` calls `DemoSeeder` (`devan@localhost.test` + five unlinked video-game titles) for reviewing show. Tests do not use that seeder
+- Catalog search is `GET /rawg/games?query=` (auth + verified + throttle). No key configured → empty results; the modal still saves a typed title. `RAWG_API_KEY` must be set locally and on the NAS. No RAWG attribution in the UI.

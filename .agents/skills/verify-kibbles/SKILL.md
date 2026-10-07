@@ -162,6 +162,13 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `sidebar-menu-button` | nav user trigger |
 | `create-game-button` | `/games` add (header when the list has games; empty-state CTA when it does not) |
 | `save-game-button` | games create/edit save |
+| `game-title-input` | games create/edit title + catalog search |
+| `game-catalog-results` | games create/edit RAWG result list |
+| `game-catalog-result-{id}` | games create/edit one RAWG row |
+| `clear-catalog-link-button` | games create/edit unlink |
+| `game-rawg-id` | games create/edit hidden catalog id |
+| `game-art` | games show hotlinked box art |
+| `game-description` | games show catalog description |
 | `edit-game-button` | games show → edit |
 | `game-actions-button` | games show split-button chevron (Delete lives in the menu) |
 | `delete-game-button` | games show menu / edit delete |
