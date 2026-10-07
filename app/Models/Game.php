@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read string $user_id
  * @property-read string $title
  * @property-read GameStatus $status
+ * @property-read int|null $rawg_id
+ * @property-read string|null $image_url
+ * @property-read string|null $description
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read User $user
@@ -29,6 +32,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'title',
     'status',
+    'rawg_id',
+    'image_url',
+    'description',
 ])]
 #[Hidden([
     'title_normalized',
@@ -50,6 +56,7 @@ final class Game extends Model
             'user_id' => 'string',
             'title' => 'string',
             'status' => GameStatus::class,
+            'rawg_id' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -69,5 +76,21 @@ final class Game extends Model
     public function journalEntries(): HasMany
     {
         return $this->hasMany(JournalEntry::class);
+    }
+
+    /**
+     * @return array{id: string, title: string, status: string, statusLabel: string, rawgId: int|null, imageUrl: string|null, description: string|null}
+     */
+    public function toWire(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'status' => $this->status->value,
+            'statusLabel' => $this->status->label(),
+            'rawgId' => $this->rawg_id,
+            'imageUrl' => $this->image_url,
+            'description' => $this->description,
+        ];
     }
 }

@@ -18,6 +18,9 @@ test('to array', function (): void {
             'created_at',
             'updated_at',
             'status',
+            'rawg_id',
+            'image_url',
+            'description',
         ]);
 });
 
