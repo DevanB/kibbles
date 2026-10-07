@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
@@ -511,8 +512,8 @@ it('saves a linked game with catalog details fetched on the server', function ()
 it('still saves the game when the catalog lookup fails', function (): void {
     config(['services.rawg.key' => 'testing']);
 
-    Illuminate\Support\Facades\Http::fake([
-        'https://api.rawg.io/api/games/*' => Illuminate\Support\Facades\Http::failedConnection(),
+    Http::fake([
+        'https://api.rawg.io/api/games/*' => Http::failedConnection(),
     ]);
 
     $user = User::factory()->withoutTwoFactor()->create();

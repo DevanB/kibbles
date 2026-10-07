@@ -21,7 +21,7 @@ final class DemoSeeder extends Seeder
         'Stardew Valley' => GameStatus::Backlog,
         'Celeste' => GameStatus::Abandoned,
         'Hollow Knight' => GameStatus::Finished,
-        'Baldur\'s Gate 3' => GameStatus::Backlog,
+        "Baldur's Gate 3" => GameStatus::Backlog,
     ];
 
     public function run(): void

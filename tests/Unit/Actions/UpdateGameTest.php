@@ -6,6 +6,7 @@ use App\Actions\UpdateGame;
 use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 it('may update a game title', function (): void {
@@ -26,11 +27,11 @@ it('does not refetch catalog details when the catalog id is unchanged', function
 
     $game = Game::factory()->catalogLinked()->create(['title' => 'Hades']);
 
-    Illuminate\Support\Facades\Http::fake();
+    Http::fake();
 
     resolve(UpdateGame::class)->handle($game, 'HADES', GameStatus::Finished, HADES_RAWG_ID);
 
-    Illuminate\Support\Facades\Http::assertNothingSent();
+    Http::assertNothingSent();
 
     expect($game->refresh()->title)->toBe('HADES')
         ->and($game->rawg_id)->toBe(HADES_RAWG_ID)
