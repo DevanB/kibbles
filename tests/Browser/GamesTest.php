@@ -24,6 +24,7 @@ it('may create, update, and delete a game', function (): void {
         ->assertSee('Game created.')
         ->assertSee('Catan')
         ->assertSee('Backlog')
+        ->assertSee('No box art yet')
         ->assertNoJavaScriptErrors();
 
     $game = Game::query()->whereBelongsTo($user)->first();
