@@ -13,55 +13,19 @@ final readonly class RawgSearchResult
         public ?string $backgroundImage,
     ) {}
 
-    public static function tryFrom(mixed $payload): ?self
+    public static function from(mixed $payload): self
     {
-        if (! is_array($payload)) {
-            return null;
-        }
-
-        $id = $payload['id'] ?? null;
-        $name = $payload['name'] ?? null;
-
-        if (! is_numeric($id) || (int) $id < 1 || (string) (int) $id !== (string) $id) {
-            return null;
-        }
-
-        if (! is_string($name) || $name === '') {
-            return null;
-        }
+        $id = data_get($payload, 'id');
+        $name = data_get($payload, 'name');
+        $released = data_get($payload, 'released');
+        $image = data_get($payload, 'background_image');
 
         return new self(
-            id: (int) $id,
-            name: $name,
-            releasedYear: self::year($payload['released'] ?? null),
-            backgroundImage: self::imageUrl($payload['background_image'] ?? null),
+            id: is_int($id) ? $id : 0,
+            name: is_string($name) ? $name : '',
+            releasedYear: is_string($released) ? (int) mb_substr($released, 0, 4) : null,
+            backgroundImage: is_string($image) ? $image : null,
         );
-    }
-
-    public static function year(mixed $released): ?int
-    {
-        if (! is_string($released) || ! preg_match('/^(\d{4})/', $released, $matches)) {
-            return null;
-        }
-
-        return (int) $matches[1];
-    }
-
-    public static function imageUrl(mixed $url): ?string
-    {
-        if (! is_string($url) || $url === '') {
-            return null;
-        }
-
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            return null;
-        }
-
-        if (! str_starts_with($url, 'https://') && ! str_starts_with($url, 'http://')) {
-            return null;
-        }
-
-        return $url;
     }
 
     /**
