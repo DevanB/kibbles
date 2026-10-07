@@ -43,7 +43,21 @@ final class UpdateGameRequest extends FormRequest
                 'required',
                 Rule::enum(GameStatus::class),
             ],
+            'rawg_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
         ];
+    }
+
+    public function rawgId(): ?int
+    {
+        if (! $this->filled('rawg_id')) {
+            return null;
+        }
+
+        return $this->integer('rawg_id');
     }
 
     /**
@@ -58,6 +72,8 @@ final class UpdateGameRequest extends FormRequest
             'title.unique' => UniqueOwnedGameTitle::message(),
             'status.required' => 'A status is required.',
             'status.enum' => 'The status must be Backlog, In Progress, Abandoned, or Finished.',
+            'rawg_id.integer' => 'The RAWG id must be an integer.',
+            'rawg_id.min' => 'The RAWG id must be an integer.',
         ];
     }
 }

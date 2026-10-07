@@ -11,13 +11,22 @@ use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class UpdateGame
 {
-    public function handle(Game $game, string $title, GameStatus $status): Game
+    public function __construct(private ResolveRawgDetails $details) {}
+
+    public function handle(Game $game, string $title, GameStatus $status, ?int $rawgId = null): Game
     {
+        $attributes = [
+            'title' => $title,
+            'status' => $status,
+        ];
+
+        if ($rawgId !== $game->rawg_id) {
+            $attributes['rawg_id'] = $rawgId;
+            $attributes = [...$attributes, ...$this->details->handle($rawgId)];
+        }
+
         try {
-            $game->update([
-                'title' => $title,
-                'status' => $status,
-            ]);
+            $game->update($attributes);
         } catch (UniqueConstraintViolationException) {
             throw UniqueOwnedGameTitle::conflict();
         }

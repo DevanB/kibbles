@@ -26,7 +26,7 @@ final readonly class JournalEntryController
         Gate::authorize('create', [JournalEntry::class, $game]);
 
         return Inertia::modal('games/journal-entries/create', [
-            'game' => $this->toWireGame($game),
+            'game' => $game->toWire(),
         ])->baseRoute('games.show', $game);
     }
 
@@ -52,7 +52,7 @@ final readonly class JournalEntryController
         ListJournalEntries $list,
     ): Modal {
         return Inertia::modal('games/journal-entries/show', [
-            'game' => $this->toWireGame($game),
+            'game' => $game->toWire(),
             'journalEntry' => $list->toWire($journalEntry),
         ])->baseRoute('games.show', $game);
     }
@@ -62,7 +62,7 @@ final readonly class JournalEntryController
         Gate::authorize('update', $journalEntry);
 
         return Inertia::modal('games/journal-entries/edit', [
-            'game' => $this->toWireGame($game),
+            'game' => $game->toWire(),
             'journalEntry' => $list->toWire($journalEntry),
         ])->baseRoute('games.show', $game);
     }
@@ -97,18 +97,5 @@ final readonly class JournalEntryController
         ]);
 
         return to_route('games.show', $game);
-    }
-
-    /**
-     * @return array{id: string, title: string, status: string, statusLabel: string}
-     */
-    private function toWireGame(Game $game): array
-    {
-        return [
-            'id' => $game->id,
-            'title' => $game->title,
-            'status' => $game->status->value,
-            'statusLabel' => $game->status->label(),
-        ];
     }
 }

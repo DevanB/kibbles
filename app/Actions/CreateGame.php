@@ -12,12 +12,16 @@ use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class CreateGame
 {
-    public function handle(User $user, string $title): Game
+    public function __construct(private ResolveRawgDetails $details) {}
+
+    public function handle(User $user, string $title, ?int $rawgId = null): Game
     {
         try {
             return $user->games()->create([
                 'title' => $title,
                 'status' => GameStatus::Backlog,
+                'rawg_id' => $rawgId,
+                ...$this->details->handle($rawgId),
             ]);
         } catch (UniqueConstraintViolationException) {
             throw UniqueOwnedGameTitle::conflict();
