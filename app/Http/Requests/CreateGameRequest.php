@@ -42,11 +42,7 @@ final class CreateGameRequest extends FormRequest
 
     public function rawgId(): ?int
     {
-        if (! $this->filled('rawg_id')) {
-            return null;
-        }
-
-        return $this->integer('rawg_id');
+        return $this->filled('rawg_id') ? $this->integer('rawg_id') : null;
     }
 
     /**
