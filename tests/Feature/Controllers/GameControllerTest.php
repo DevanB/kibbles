@@ -58,7 +58,10 @@ it('lists only the authenticated user games as id, title, and status', function 
                 ->where('id', $owned->id)
                 ->where('title', 'Owned Game')
                 ->where('status', GameStatus::Backlog->value)
-                ->where('statusLabel', 'Backlog')));
+                ->where('statusLabel', 'Backlog')
+                ->where('rawgId', null)
+                ->where('imageUrl', null)
+                ->where('description', null)));
 });
 
 it('requires a title when creating a game', function (): void {
@@ -447,4 +450,126 @@ it('forbids another user from deleting a game', function (): void {
     $response->assertForbidden();
 
     $this->assertModelExists($game);
+});
+
+it('rejects a non-integer rawg id when creating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Hades',
+            'rawg_id' => 'not-an-id',
+        ]);
+
+    $response->assertRedirectToRoute('games.create')
+        ->assertSessionHasErrors(['rawg_id' => 'The RAWG id must be an integer.']);
+
+    expect(Game::query()->whereBelongsTo($user)->count())->toBe(0);
+});
+
+it('rejects a non-integer rawg id when updating a game', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Hades']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'Hades',
+            'status' => GameStatus::Backlog->value,
+            'rawg_id' => 'not-an-id',
+        ]);
+
+    $response->assertRedirectToRoute('games.edit', $game)
+        ->assertSessionHasErrors(['rawg_id' => 'The RAWG id must be an integer.']);
+
+    expect($game->refresh()->rawg_id)->toBeNull();
+});
+
+it('saves a linked game with catalog details fetched on the server', function (): void {
+    fakeHadesCatalog();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Hades',
+            'rawg_id' => HADES_RAWG_ID,
+        ]);
+
+    $game = Game::query()->whereBelongsTo($user)->first();
+
+    expect($game)->not->toBeNull()
+        ->and($game->rawg_id)->toBe(HADES_RAWG_ID)
+        ->and($game->image_url)->toBe(HADES_IMAGE_URL)
+        ->and($game->description)->toBe(HADES_DESCRIPTION);
+
+    $response->assertRedirectToRoute('games.show', $game);
+});
+
+it('still saves the game when the catalog lookup fails', function (): void {
+    config(['services.rawg.key' => 'testing']);
+
+    Illuminate\Support\Facades\Http::fake([
+        'https://api.rawg.io/api/games/*' => Illuminate\Support\Facades\Http::failedConnection(),
+    ]);
+
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.create')
+        ->post(route('games.store'), [
+            'title' => 'Hades',
+            'rawg_id' => HADES_RAWG_ID,
+        ]);
+
+    $game = Game::query()->whereBelongsTo($user)->first();
+
+    expect($game)->not->toBeNull()
+        ->and($game->title)->toBe('Hades')
+        ->and($game->rawg_id)->toBe(HADES_RAWG_ID)
+        ->and($game->image_url)->toBeNull()
+        ->and($game->description)->toBeNull();
+
+    $response->assertRedirectToRoute('games.show', $game);
+});
+
+it('links an existing game and pulls catalog details', function (): void {
+    fakeHadesCatalog();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Hades']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'Hades',
+            'status' => GameStatus::Backlog->value,
+            'rawg_id' => HADES_RAWG_ID,
+        ]);
+
+    $response->assertRedirectToRoute('games.show', $game);
+
+    expect($game->refresh()->rawg_id)->toBe(HADES_RAWG_ID)
+        ->and($game->image_url)->toBe(HADES_IMAGE_URL)
+        ->and($game->description)->toBe(HADES_DESCRIPTION);
+});
+
+it('clears catalog details when a game is unlinked', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->catalogLinked()->create(['title' => 'Hades']);
+
+    $response = $this->actingAs($user)
+        ->fromRoute('games.edit', $game)
+        ->put(route('games.update', $game), [
+            'title' => 'Hades',
+            'status' => GameStatus::Backlog->value,
+        ]);
+
+    $response->assertRedirectToRoute('games.show', $game);
+
+    expect($game->refresh()->rawg_id)->toBeNull()
+        ->and($game->image_url)->toBeNull()
+        ->and($game->description)->toBeNull();
 });

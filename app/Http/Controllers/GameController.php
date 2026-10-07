@@ -31,7 +31,7 @@ final readonly class GameController
             'games' => $user->games()
                 ->latest()
                 ->get()
-                ->map($this->toWireGame(...))
+                ->map(fn (Game $game): array => $game->toWire())
                 ->values()
                 ->all(),
         ]);
@@ -50,7 +50,11 @@ final readonly class GameController
         #[CurrentUser] User $owner,
         CreateGame $action,
     ): RedirectResponse {
-        $game = $action->handle($owner, $request->string('title')->value());
+        $game = $action->handle(
+            $owner,
+            $request->string('title')->value(),
+            $request->rawgId(),
+        );
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -65,7 +69,7 @@ final readonly class GameController
         Gate::authorize('view', $game);
 
         return Inertia::render('games/show', [
-            'game' => $this->toWireGame($game),
+            'game' => $game->toWire(),
             'journalEntries' => $list->handle($game),
         ]);
     }
@@ -75,7 +79,7 @@ final readonly class GameController
         Gate::authorize('update', $game);
 
         return Inertia::modal('games/edit', [
-            'game' => $this->toWireGame($game),
+            'game' => $game->toWire(),
             'statuses' => GameStatus::options(),
         ])->baseRoute('games.show', $game);
     }
@@ -86,6 +90,7 @@ final readonly class GameController
             $game,
             $request->string('title')->value(),
             GameStatus::from($request->string('status')->value()),
+            $request->rawgId(),
         );
 
         Inertia::flash('toast', [
@@ -106,18 +111,5 @@ final readonly class GameController
         ]);
 
         return to_route('games.index');
-    }
-
-    /**
-     * @return array{id: string, title: string, status: string, statusLabel: string}
-     */
-    private function toWireGame(Game $game): array
-    {
-        return [
-            'id' => $game->id,
-            'title' => $game->title,
-            'status' => $game->status->value,
-            'statusLabel' => $game->status->label(),
-        ];
     }
 }

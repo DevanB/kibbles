@@ -32,7 +32,21 @@ final class CreateGameRequest extends FormRequest
                 'max:255',
                 new UniqueOwnedGameTitle($owner),
             ],
+            'rawg_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
         ];
+    }
+
+    public function rawgId(): ?int
+    {
+        if (! $this->filled('rawg_id')) {
+            return null;
+        }
+
+        return $this->integer('rawg_id');
     }
 
     /**
@@ -45,6 +59,8 @@ final class CreateGameRequest extends FormRequest
             'title.string' => 'The title must be a string.',
             'title.max' => 'The title may not be greater than 255 characters.',
             'title.unique' => UniqueOwnedGameTitle::message(),
+            'rawg_id.integer' => 'The RAWG id must be an integer.',
+            'rawg_id.min' => 'The RAWG id must be an integer.',
         ];
     }
 }

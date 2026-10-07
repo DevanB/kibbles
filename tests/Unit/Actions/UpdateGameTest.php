@@ -21,6 +21,22 @@ it('may update a game title', function (): void {
         ->and($game->refresh()->title)->toBe('Ticket to Ride');
 });
 
+it('does not refetch catalog details when the catalog id is unchanged', function (): void {
+    fakeHadesCatalog();
+
+    $game = Game::factory()->catalogLinked()->create(['title' => 'Hades']);
+
+    Illuminate\Support\Facades\Http::fake();
+
+    resolve(UpdateGame::class)->handle($game, 'HADES', GameStatus::Finished, HADES_RAWG_ID);
+
+    Illuminate\Support\Facades\Http::assertNothingSent();
+
+    expect($game->refresh()->title)->toBe('HADES')
+        ->and($game->rawg_id)->toBe(HADES_RAWG_ID)
+        ->and($game->image_url)->toBe(HADES_IMAGE_URL);
+});
+
 it('maps a unique constraint violation to a title validation error', function (): void {
     $user = User::factory()->create();
     Game::factory()->recycle($user)->create(['title' => 'Catan']);
