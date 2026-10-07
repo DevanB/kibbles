@@ -67,7 +67,19 @@ export default function Index({ games }: { games: Game[] }) {
                                     href={show(game)}
                                     className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
                                 >
-                                    <span className="flex min-w-0 items-center gap-2">
+                                    <span className="flex min-w-0 items-center gap-3">
+                                        {game.imageUrl ? (
+                                            <img
+                                                src={game.imageUrl}
+                                                alt=""
+                                                className="size-10 shrink-0 rounded-md object-cover"
+                                            />
+                                        ) : (
+                                            <span
+                                                aria-hidden
+                                                className="size-10 shrink-0 rounded-md bg-muted"
+                                            />
+                                        )}
                                         <span
                                             className="font-medium"
                                             data-test={`game-title-${game.id}`}

@@ -1,9 +1,9 @@
 import { Form, Head } from '@inertiajs/react';
 import { Modal } from '@inertiaui/modal-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
+import GameCatalogPicker from '@/components/game-catalog-picker';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import type { Game, GameStatusOption } from '@/types';
@@ -31,18 +31,12 @@ export default function Edit({
                 >
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    name="title"
-                                    required
-                                    autoFocus
-                                    maxLength={255}
-                                    defaultValue={game.title}
-                                />
-                                <InputError message={errors.title} />
-                            </div>
+                            <GameCatalogPicker
+                                autoFocus
+                                initialTitle={game.title}
+                                initialRawgId={game.rawgId}
+                                error={errors.title ?? errors.rawg_id}
+                            />
 
                             <div className="grid gap-2">
                                 <Label htmlFor="status">Status</Label>

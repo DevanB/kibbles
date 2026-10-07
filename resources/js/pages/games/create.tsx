@@ -1,10 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
 import { Modal } from '@inertiaui/modal-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
-import InputError from '@/components/input-error';
+import GameCatalogPicker from '@/components/game-catalog-picker';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function Create() {
@@ -24,18 +22,10 @@ export default function Create() {
                 >
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    name="title"
-                                    required
-                                    autoFocus
-                                    maxLength={255}
-                                    placeholder="Catan"
-                                />
-                                <InputError message={errors.title} />
-                            </div>
+                            <GameCatalogPicker
+                                autoFocus
+                                error={errors.title ?? errors.rawg_id}
+                            />
 
                             <Button
                                 disabled={processing}
