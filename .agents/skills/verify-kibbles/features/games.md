@@ -25,8 +25,9 @@ Preconditions:
 - Playwright browsers installed for the Browser file
 
 - **CRUD in browser →** `php artisan test --compact tests/Browser/GamesTest.php` → create **Catan** (lands on show), **Edit** → rename to **Ticket to Ride** (back to show), delete from show; toasts + `assertNoJavaScriptErrors()`
+- **Catalog picker →** `php artisan test --compact tests/Browser/GameCatalogTest.php` → type **hades** in create, pick faked RAWG result, show has art + `description_raw`; typed custom title stays unlinked; edit linking pulls details. Feature `RawgGameSearchControllerTest` + catalog cases in `GameControllerTest` cover empty key, failed lookup, and non-integer `rawg_id`.
 - **Journal on show →** `php artisan test --compact tests/Browser/JournalEntriesTest.php` → empty-state create modal, list date, show modal → edit modal, delete; empty copy **No journal entries yet** / **Journal Entries**
-- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal guest/ownership/cascade/body-limit. Journal store/update/destroy and newest-first list are Browser `JournalEntriesTest`.
+- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/GameControllerTest.php tests/Feature/Controllers/JournalEntryControllerTest.php tests/Feature/Controllers/RawgGameSearchControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, create/update redirect to `games.show`, unique-title validation, show/edit 404 for missing ids, journal guest/ownership/cascade/body-limit. Journal store/update/destroy and newest-first list are Browser `JournalEntriesTest`.
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-games`
 
 ## Gotchas
