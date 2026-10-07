@@ -12,24 +12,16 @@ final readonly class RawgGameDetail
         public ?string $description,
     ) {}
 
-    public static function tryFrom(mixed $payload): ?self
+    public static function from(mixed $payload): self
     {
-        if (! is_array($payload)) {
-            return null;
-        }
-
-        $name = $payload['name'] ?? null;
-
-        if (! is_string($name) || $name === '') {
-            return null;
-        }
-
-        $description = $payload['description_raw'] ?? null;
+        $name = data_get($payload, 'name');
+        $image = data_get($payload, 'background_image');
+        $description = data_get($payload, 'description_raw');
 
         return new self(
-            name: $name,
-            backgroundImage: RawgSearchResult::imageUrl($payload['background_image'] ?? null),
-            description: is_string($description) && mb_trim($description) !== '' ? $description : null,
+            name: is_string($name) ? $name : '',
+            backgroundImage: is_string($image) ? $image : null,
+            description: is_string($description) ? $description : null,
         );
     }
 }

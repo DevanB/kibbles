@@ -7,11 +7,12 @@ namespace App\Actions;
 use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Rules\UniqueOwnedGameTitle;
+use App\Services\RawgClient;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class UpdateGame
 {
-    public function __construct(private ResolveRawgDetails $details) {}
+    public function __construct(private RawgClient $rawg) {}
 
     public function handle(Game $game, string $title, GameStatus $status, ?int $rawgId = null): Game
     {
@@ -21,8 +22,10 @@ final readonly class UpdateGame
         ];
 
         if ($rawgId !== $game->rawg_id) {
+            $detail = $rawgId === null ? null : $this->rawg->find($rawgId);
             $attributes['rawg_id'] = $rawgId;
-            $attributes = [...$attributes, ...$this->details->handle($rawgId)];
+            $attributes['image_url'] = $detail?->backgroundImage;
+            $attributes['description'] = $detail?->description;
         }
 
         try {

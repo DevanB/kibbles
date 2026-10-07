@@ -6,6 +6,7 @@ namespace App\Services;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 final readonly class RawgClient
@@ -15,55 +16,50 @@ final readonly class RawgClient
      */
     public function search(string $query): array
     {
-        if ($this->key() === null || mb_trim($query) === '') {
+        $response = $this->send('/games', [
+            'search' => $query,
+            'page_size' => 8,
+        ]);
+
+        if ($response === null) {
             return [];
         }
 
-        try {
-            $response = $this->request()->get('/games', [
-                'key' => $this->key(),
-                'search' => $query,
-                'page_size' => 8,
-            ]);
-        } catch (ConnectionException) {
-            return [];
-        }
-
-        if (! $response->successful()) {
-            return [];
-        }
-
-        $results = $response->json('results');
-
-        if (! is_array($results)) {
-            return [];
-        }
-
-        return array_values(array_filter(array_map(
-            RawgSearchResult::tryFrom(...),
-            $results,
-        )));
+        return array_values(
+            $response->collect('results')
+                ->map(RawgSearchResult::from(...))
+                ->all(),
+        );
     }
 
     public function find(int $id): ?RawgGameDetail
     {
-        if ($this->key() === null) {
+        $response = $this->send('/games/'.$id);
+
+        return $response === null ? null : RawgGameDetail::from($response->json());
+    }
+
+    /**
+     * @param  array<string, int|string>  $query
+     */
+    private function send(string $path, array $query = []): ?Response
+    {
+        $key = $this->key();
+
+        if ($key === null) {
             return null;
         }
 
         try {
-            $response = $this->request()->get('/games/'.$id, [
-                'key' => $this->key(),
+            $response = $this->request()->get($path, [
+                'key' => $key,
+                ...$query,
             ]);
         } catch (ConnectionException) {
             return null;
         }
 
-        if (! $response->successful()) {
-            return null;
-        }
-
-        return RawgGameDetail::tryFrom($response->json());
+        return $response->successful() ? $response : null;
     }
 
     private function key(): ?string
