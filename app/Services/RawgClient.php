@@ -21,7 +21,7 @@ final readonly class RawgClient
             'page_size' => 8,
         ]);
 
-        if ($response === null) {
+        if (! $response instanceof Response) {
             return [];
         }
 
@@ -36,7 +36,7 @@ final readonly class RawgClient
     {
         $response = $this->send('/games/'.$id);
 
-        return $response === null ? null : RawgGameDetail::from($response->json());
+        return $response instanceof Response ? RawgGameDetail::from($response->json()) : null;
     }
 
     /**
