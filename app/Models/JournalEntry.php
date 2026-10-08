@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Builders\JournalEntryBuilder;
 use Carbon\CarbonInterface;
 use Database\Factories\JournalEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,11 +23,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CarbonInterface $updated_at
  * @property-read Game $game
  * @property-read PlaySession|null $playSession
+ *
+ * @method static JournalEntryBuilder query()
  */
 #[Fillable([
     'body',
     'play_session_id',
 ])]
+#[UseEloquentBuilder(JournalEntryBuilder::class)]
 final class JournalEntry extends Model
 {
     /** @use HasFactory<JournalEntryFactory> */
@@ -78,14 +81,5 @@ final class JournalEntry extends Model
             'updatedAt' => $this->updated_at->toIso8601String(),
             'playSessionId' => $this->play_session_id,
         ];
-    }
-
-    /**
-     * @param  Builder<JournalEntry>  $query
-     */
-    #[Scope]
-    protected function newestFirst(Builder $query): void
-    {
-        $query->latest()->orderByDesc('id');
     }
 }
