@@ -5,6 +5,7 @@ import {
     putConfig,
 } from '@inertiaui/modal-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { NuqsAdapter, enableHistorySync } from 'nuqs/adapters/react';
 import type { ComponentType } from 'react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -12,6 +13,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import '../css/app.css';
+
+enableHistorySync();
 
 putConfig('navigate', true);
 putConfig(
@@ -37,12 +40,14 @@ void createInertiaApp({
 
         root.render(
             <StrictMode>
-                <ModalStackProvider>
-                    <TooltipProvider delayDuration={0}>
-                        <App {...props} />
-                        <Toaster />
-                    </TooltipProvider>
-                </ModalStackProvider>
+                <NuqsAdapter serverSearch={window.location.search}>
+                    <ModalStackProvider>
+                        <TooltipProvider delayDuration={0}>
+                            <App {...props} />
+                            <Toaster />
+                        </TooltipProvider>
+                    </ModalStackProvider>
+                </NuqsAdapter>
             </StrictMode>,
         );
     },

@@ -1,7 +1,8 @@
-import { Form, Head, Link, router, setLayoutProps } from '@inertiajs/react';
+import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { cn } from 'cn';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useState } from 'react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
@@ -28,7 +29,11 @@ import { formatSessionRow } from '@/lib/local-date-time';
 import { index, show } from '@/routes/games';
 import type { Game, JournalEntry, OpenPlaySession, PlaySession } from '@/types';
 
-type GameTab = 'sessions' | 'journal';
+const gameTabs = ['sessions', 'journal'] as const;
+
+type GameTab = (typeof gameTabs)[number];
+
+const gameTabParser = parseAsStringLiteral(gameTabs).withDefault('sessions');
 
 function parseGameTab(tab: string): GameTab {
     return tab === 'journal' ? 'journal' : 'sessions';
@@ -50,7 +55,6 @@ export default function Show({
     openPlaySession,
     totalPlayedMinutes,
     totalPlayedLabel,
-    tab,
 }: {
     game: Game;
     journalEntries: JournalEntry[];
@@ -58,10 +62,9 @@ export default function Show({
     openPlaySession: OpenPlaySession | null;
     totalPlayedMinutes: number | null;
     totalPlayedLabel: string;
-    tab: GameTab;
 }) {
     const [deleteOpen, setDeleteOpen] = useState(false);
-    const activeTab = parseGameTab(tab);
+    const [activeTab, setActiveTab] = useQueryState('tab', gameTabParser);
     const [sessionToDelete, setSessionToDelete] = useState<PlaySession | null>(
         null,
     );
@@ -70,24 +73,7 @@ export default function Show({
         openPlaySession !== null && openPlaySession.gameId !== game.id;
 
     const selectTab = (next: string): void => {
-        const value = parseGameTab(next);
-
-        if (value === activeTab) {
-            return;
-        }
-
-        router.get(
-            show.url(
-                game.id,
-                value === 'journal' ? { query: { tab: 'journal' } } : {},
-            ),
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
+        void setActiveTab(parseGameTab(next));
     };
 
     setLayoutProps({

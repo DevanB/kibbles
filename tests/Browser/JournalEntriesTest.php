@@ -11,18 +11,34 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
 
     $this->actingAs($user);
 
-    $page = visit(route('games.show', $game));
+    $page = visit(route('games.index'));
 
     $page->assertSee('Catan')
-        ->assertSee('Journal Entries')
+        ->click('@game-open-'.$game->id)
+        ->assertPathIs('/games/'.$game->id)
         ->assertSee('No play sessions yet')
         ->click('@game-tab-journal')
         ->assertQueryStringHas('tab', 'journal')
         ->assertSee('No journal entries yet')
         ->assertSee('Write what happened the last time you played.')
+        ->refresh()
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertSee('No journal entries yet')
+        ->click('@create-journal-entry-button')
+        ->assertSee('Create Entry')
+        ->click('Close')
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertSee('No journal entries yet')
+        ->back()
+        ->assertPathIs('/games')
+        ->assertSee('Catan')
         ->assertNoJavaScriptErrors();
 
-    $page->click('@create-journal-entry-button')
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']));
+
+    $page->assertQueryStringHas('tab', 'journal')
+        ->assertSee('No journal entries yet')
+        ->click('@create-journal-entry-button')
         ->assertSee('Create Entry')
         ->fill('#compose-body', 'Settled on the ore port.')
         ->click('@add-journal-entry-button')
