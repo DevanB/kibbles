@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('journal_entries', function (Blueprint $table): void {
-            $table->foreignUuid('play_session_id')->nullable()->constrained()->nullOnDelete()->unique();
+            $table->foreignUuid('play_session_id')->nullable()->unique()->constrained()->nullOnDelete();
         });
     }
 
