@@ -2,6 +2,7 @@
 .gitattributes
 .github
 .agents
+deploy
 .claude
 .codex
 .cursor

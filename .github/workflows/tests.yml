@@ -1,5 +1,7 @@
 # Merge gate for PRs and pushes to master.
 # `composer test` = lint + types + type coverage + Pest (Unit, Feature, Browser).
+# On master (push or workflow_dispatch), a passing ci job publishes
+# ghcr.io/devanb/kibbles:{sha,latest} for the NAS to pull.
 # Pest Browser needs Playwright browsers under ~/.cache/ms-playwright.
 # One-time / cache miss: bunx playwright install --with-deps
 # Cache hit: bunx playwright install-deps
@@ -15,6 +17,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -125,3 +128,46 @@ jobs:
         with:
           name: browser-screenshots
           path: tests/Browser/Screenshots
+
+  publish-image:
+    name: Publish image
+    needs: ci
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: |
+            ghcr.io/devanb/kibbles:${{ github.sha }}
+            ghcr.io/devanb/kibbles:latest
+          build-args: |
+            APP_REVISION=${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

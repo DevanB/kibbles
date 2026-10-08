@@ -1,20 +1,29 @@
 # Production stack for kibbles on the UGREEN NAS.
 # Cloudflare already routes https://kibbles.devanb.us to http://app:8080.
 #
+# The NAS pulls ghcr.io/devanb/kibbles (it does not build). See deploy/README.md.
+#
 # Deploy:
 #   1. Copy .env.production.example to .env next to this file.
 #   2. Set APP_KEY (php artisan key:generate --show) and CLOUDFLARE_TUNNEL_TOKEN.
 #   3. CLOUDFLARE_TUNNEL_TOKEN is supplied at deploy time and must not be committed.
 #   4. When updating an existing NAS .env, add new keys from .env.production.example
 #      (including REGISTRATION_ENABLED=false) without overwriting APP_KEY or
-#      CLOUDFLARE_TUNNEL_TOKEN.
-#   5. docker compose up -d --build
+#      CLOUDFLARE_TUNNEL_TOKEN. Do not set APP_REVISION in .env; it is baked into
+#      the image.
+#   5. docker compose pull && docker compose up -d
+#
+# Local image build (optional): APP_REVISION=$(git rev-parse HEAD) docker compose build
 name: kibbles
 
 x-laravel: &laravel
+  image: ghcr.io/devanb/kibbles:latest
+  pull_policy: always
   build:
     context: .
     dockerfile: Dockerfile
+    args:
+      APP_REVISION: ${APP_REVISION:-dev}
   env_file:
     - .env
   volumes:
@@ -22,6 +31,8 @@ x-laravel: &laravel
     - storage:/app/storage
   restart: unless-stopped
   init: true
+  labels:
+    com.centurylinklabs.watchtower.enable: "true"
 
 services:
   app:

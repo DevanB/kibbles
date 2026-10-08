@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Revision
+    |--------------------------------------------------------------------------
+    |
+    | The git commit SHA baked into production images. Local development and
+    | any boot without APP_REVISION set report "dev".
+    |
+    */
+
+    'revision' => env('APP_REVISION', 'dev'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
