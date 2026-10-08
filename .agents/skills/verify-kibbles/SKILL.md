@@ -137,6 +137,7 @@ php artisan test --compact tests/Browser/HomeTest.php
 php artisan test --compact tests/Browser/DashboardTest.php
 php artisan test --compact tests/Browser/GamesTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
+php artisan test --compact tests/Browser/PlaySessionsTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -178,6 +179,23 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `game-art-{id}` | games index linked tile art |
 | `game-art-slot-{id}` | games index placeholder tile |
 | `game-art-slot` | games show box-art placeholder |
+| `game-playing-{id}` | games index Playing badge |
+| `start-play-session-button` | games show / empty play-sessions Start |
+| `stop-play-session-button` | games show header Stop |
+| `stop-play-session-button-{id}` | games show open-row Stop |
+| `add-play-session-button` | games show Add Session |
+| `play-time-total` | games show total time played |
+| `open-session-game-link` | games show other-game banner |
+| `play-session-{id}` | games show session row |
+| `play-session-journal-{id}` | games show Journal chip |
+| `edit-play-session-button-{id}` | games show session Edit |
+| `play-session-actions-button-{id}` | games show session menu |
+| `delete-play-session-button-{id}` | games show session Delete |
+| `confirm-delete-play-session-button-{id}` / `cancel-delete-play-session-button-{id}` | session delete confirm |
+| `play-session-started-at` / `play-session-ended-at` | session create/edit datetime-local |
+| `save-play-session-button` | stop/add Save Session |
+| `save-play-session-changes-button` | session edit Save Changes |
+| `stop-session-body` | stop modal textarea |
 | `create-journal-entry-button` | games show opens create modal |
 | `add-journal-entry-button` | journal create modal submit |
 | `compose-body` | journal create modal textarea |
@@ -201,6 +219,7 @@ php artisan test --compact tests/Feature/Controllers/UserProfileControllerTest.p
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php
 php artisan test --compact tests/Feature/Controllers/GameControllerTest.php
 php artisan test --compact tests/Feature/Controllers/JournalEntryControllerTest.php
+php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
 php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.php
@@ -261,6 +280,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Passkey host | `.agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]` — exit 0 + `passkey:host_ok` when browse host equals APP_URL / RP; exit 1 on mismatch |
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
-| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `GamesTest` + `JournalEntriesTest`. Doctor is logged only. |
+| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest`. Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it.

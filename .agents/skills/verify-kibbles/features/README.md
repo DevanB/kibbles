@@ -42,6 +42,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 | Two-factor | `/settings/two-factor` + challenge | [two-factor.md](./two-factor.md) |
 | Dashboard | `/dashboard` | [dashboard.md](./dashboard.md) |
 | Games | `/games` | [games.md](./games.md) |
+| Play sessions | `/games/{game}` | [play-sessions.md](./play-sessions.md) |
 | Profile settings | `/settings/profile` | [profile-settings.md](./profile-settings.md) |
 | Password settings | `/settings/password` | [password-settings.md](./password-settings.md) |
 | Passkeys | `/settings/passkeys` | [passkeys.md](./passkeys.md) |
@@ -56,6 +57,7 @@ There is **no** welcome / marketing page. `welcome.md` and `tests/Browser/Welcom
 - **Login Browser submit:** `tests/Browser/SessionTest.php` (success → `/dashboard`; invalid password stays `/login` with `auth.failed`; 2FA recovery code → `/dashboard`).
 - **Dashboard logout (Browser):** lands on `/login` immediately (home redirect chain). HTTP logout still `POST logout` → `/`.
 - **Games:** user-owned catalog (`GameController`, unique title per user). **Show is the hub** — create/update redirect to `games.show`; edit is title-only. Drive with `GameControllerTest` + `JournalEntryControllerTest` + `GamesTest` + `JournalEntriesTest` and `bin/prove-games`. Sidebar nav, not `AppHeader`.
+- **Play sessions:** one open session per user on the show hub. Drive with `PlaySessionControllerTest` + `PlaySessionsTest`. Production DB is SQLite (partial unique index, not a MySQL `is_open` column).
 - **Profile delete:** `UserController@destroy` (`user.destroy`); Browser lands on `/login` after the home redirect.
 - **Appearance GET:** `tests/Feature/Controllers/AppearanceTest.php` (guest → login, verified → Inertia `appearance/update`, unverified → `verification.notice`).
 - **Verify-email notice UI:** `tests/Browser/EmailVerificationTest.php` (unverified dashboard visit).
