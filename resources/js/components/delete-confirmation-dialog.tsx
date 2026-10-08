@@ -53,7 +53,13 @@ export default function DeleteConfirmationDialog({
                             Cancel
                         </Button>
                     </DialogClose>
-                    <Form {...form}>
+                    <Form
+                        {...form}
+                        onSuccess={(page) => {
+                            onOpenChange?.(false);
+                            form.onSuccess?.(page);
+                        }}
+                    >
                         {({ processing }) => (
                             <Button
                                 type="submit"
