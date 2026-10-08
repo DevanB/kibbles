@@ -1,46 +1,46 @@
-import { Form, Head, Link, router, setLayoutProps } from "@inertiajs/react";
-import { ModalLink } from "@inertiaui/modal-react";
-import { cn } from "cn";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import GameController from "@/actions/App/Http/Controllers/GameController";
-import JournalEntryController from "@/actions/App/Http/Controllers/JournalEntryController";
+import { Form, Head, Link, router, setLayoutProps } from '@inertiajs/react';
+import { ModalLink } from '@inertiaui/modal-react';
+import { cn } from 'cn';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import GameController from '@/actions/App/Http/Controllers/GameController';
+import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import {
     create as createPlaySession,
     destroy as destroyPlaySession,
     edit as editPlaySession,
-} from "@/actions/App/Http/Controllers/PlaySessionController";
-import StartPlaySession from "@/actions/App/Http/Controllers/StartPlaySessionController";
-import StopPlaySession from "@/actions/App/Http/Controllers/StopPlaySessionController";
-import DeleteConfirmationDialog from "@/components/delete-confirmation-dialog";
-import Heading from "@/components/heading";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+} from '@/actions/App/Http/Controllers/PlaySessionController';
+import StartPlaySession from '@/actions/App/Http/Controllers/StartPlaySessionController';
+import StopPlaySession from '@/actions/App/Http/Controllers/StopPlaySessionController';
+import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
+import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AppLayout from "@/layouts/app-layout";
-import { formatSessionRow } from "@/lib/local-date-time";
-import { index, show } from "@/routes/games";
-import type { Game, JournalEntry, OpenPlaySession, PlaySession } from "@/types";
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AppLayout from '@/layouts/app-layout';
+import { formatSessionRow } from '@/lib/local-date-time';
+import { index, show } from '@/routes/games';
+import type { Game, JournalEntry, OpenPlaySession, PlaySession } from '@/types';
 
-type GameTab = "sessions" | "journal";
+type GameTab = 'sessions' | 'journal';
 
 function parseGameTab(tab: string): GameTab {
-    return tab === "journal" ? "journal" : "sessions";
+    return tab === 'journal' ? 'journal' : 'sessions';
 }
 
 function formatEntryDate(value: string): string {
-    return new Date(value).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        timeZone: "UTC",
+    return new Date(value).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
     });
 }
 
@@ -63,9 +63,12 @@ export default function Show({
 }) {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const activeTab = parseGameTab(tab);
-    const [sessionToDelete, setSessionToDelete] = useState<PlaySession | null>(null);
+    const [sessionToDelete, setSessionToDelete] = useState<PlaySession | null>(
+        null,
+    );
     const openOnThisGame = openPlaySession?.gameId === game.id;
-    const openOnAnotherGame = openPlaySession !== null && openPlaySession.gameId !== game.id;
+    const openOnAnotherGame =
+        openPlaySession !== null && openPlaySession.gameId !== game.id;
 
     const selectTab = (next: string): void => {
         const value = parseGameTab(next);
@@ -75,7 +78,10 @@ export default function Show({
         }
 
         router.get(
-            show.url(game.id, value === "journal" ? { query: { tab: "journal" } } : {}),
+            show.url(
+                game.id,
+                value === 'journal' ? { query: { tab: 'journal' } } : {},
+            ),
             {},
             {
                 preserveState: true,
@@ -88,7 +94,7 @@ export default function Show({
     setLayoutProps({
         breadcrumbs: [
             {
-                title: "Games",
+                title: 'Games',
                 href: index(),
             },
             {
@@ -105,7 +111,9 @@ export default function Show({
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-start justify-between gap-4">
                     <header className="mb-8 flex min-w-0 flex-wrap items-center gap-3">
-                        <h2 className="text-xl font-semibold tracking-tight">{game.title}</h2>
+                        <h2 className="text-xl font-semibold tracking-tight">
+                            {game.title}
+                        </h2>
                         <Badge variant="secondary" data-test="game-status">
                             {game.statusLabel}
                         </Badge>
@@ -139,7 +147,12 @@ export default function Show({
                             </Form>
                         ) : null}
                         <div className="inline-flex">
-                            <Button variant="outline" size="sm" asChild className="rounded-r-none">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="rounded-r-none"
+                            >
                                 <ModalLink
                                     href={GameController.edit.url(game.id)}
                                     navigate
@@ -218,7 +231,9 @@ export default function Show({
                     <p
                         data-test="play-time-total"
                         data-minutes={
-                            totalPlayedMinutes === null ? undefined : String(totalPlayedMinutes)
+                            totalPlayedMinutes === null
+                                ? undefined
+                                : String(totalPlayedMinutes)
                         }
                     >
                         {totalPlayedLabel}
@@ -227,7 +242,7 @@ export default function Show({
 
                 {openOnAnotherGame ? (
                     <p className="rounded-xl border border-sidebar-border/70 px-4 py-3 text-sm dark:border-sidebar-border">
-                        You&apos;re playing{" "}
+                        You&apos;re playing{' '}
                         <Link
                             href={show(openPlaySession.gameId)}
                             className="font-medium underline"
@@ -249,29 +264,38 @@ export default function Show({
                 >
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <TabsList>
-                            <TabsTrigger value="sessions" data-test="game-tab-sessions">
+                            <TabsTrigger
+                                value="sessions"
+                                data-test="game-tab-sessions"
+                            >
                                 Play Sessions
                             </TabsTrigger>
-                            <TabsTrigger value="journal" data-test="game-tab-journal">
+                            <TabsTrigger
+                                value="journal"
+                                data-test="game-tab-journal"
+                            >
                                 Journal Entries
                             </TabsTrigger>
                         </TabsList>
 
-                        {activeTab === "sessions" && playSessions.length > 0 ? (
+                        {activeTab === 'sessions' && playSessions.length > 0 ? (
                             <ModalLink
                                 href={createPlaySession.url(game.id)}
                                 navigate
-                                className={cn(buttonVariants({ size: "sm" }))}
+                                className={cn(buttonVariants({ size: 'sm' }))}
                                 data-test="add-play-session-button"
                             >
                                 Add Session
                             </ModalLink>
                         ) : null}
-                        {activeTab === "journal" && journalEntries.length > 0 ? (
+                        {activeTab === 'journal' &&
+                        journalEntries.length > 0 ? (
                             <ModalLink
-                                href={JournalEntryController.create.url(game.id)}
+                                href={JournalEntryController.create.url(
+                                    game.id,
+                                )}
                                 navigate
-                                className={cn(buttonVariants({ size: "sm" }))}
+                                className={cn(buttonVariants({ size: 'sm' }))}
                                 data-test="create-journal-entry-button"
                             >
                                 Create Entry
@@ -279,16 +303,23 @@ export default function Show({
                         ) : null}
                     </div>
 
-                    <TabsContent value="sessions" className="flex flex-1 flex-col space-y-4">
+                    <TabsContent
+                        value="sessions"
+                        className="flex flex-1 flex-col space-y-4"
+                    >
                         {playSessions.length === 0 ? (
                             <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border">
-                                <p className="text-lg font-medium">No play sessions yet</p>
+                                <p className="text-lg font-medium">
+                                    No play sessions yet
+                                </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Log a session after you play.
                                 </p>
                                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                                     {!openPlaySession ? (
-                                        <Form {...StartPlaySession.form(game.id)}>
+                                        <Form
+                                            {...StartPlaySession.form(game.id)}
+                                        >
                                             <Button
                                                 type="submit"
                                                 data-test="start-play-session-button"
@@ -329,12 +360,19 @@ export default function Show({
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 {isOpen ? (
-                                                    <Button variant="outline" size="sm" asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        asChild
+                                                    >
                                                         <ModalLink
-                                                            href={StopPlaySession.url({
-                                                                game: game.id,
-                                                                play_session: session.id,
-                                                            })}
+                                                            href={StopPlaySession.url(
+                                                                {
+                                                                    game: game.id,
+                                                                    play_session:
+                                                                        session.id,
+                                                                },
+                                                            )}
                                                             navigate
                                                             data-test={`stop-play-session-button-${session.id}`}
                                                         >
@@ -354,10 +392,13 @@ export default function Show({
                                                                 )}
                                                                 navigate
                                                                 className={cn(
-                                                                    buttonVariants({
-                                                                        variant: "secondary",
-                                                                        size: "sm",
-                                                                    }),
+                                                                    buttonVariants(
+                                                                        {
+                                                                            variant:
+                                                                                'secondary',
+                                                                            size: 'sm',
+                                                                        },
+                                                                    ),
                                                                 )}
                                                                 data-test={`play-session-journal-${session.id}`}
                                                             >
@@ -365,15 +406,19 @@ export default function Show({
                                                             </ModalLink>
                                                         ) : null}
                                                         <ModalLink
-                                                            href={editPlaySession.url({
-                                                                game: game.id,
-                                                                play_session: session.id,
-                                                            })}
+                                                            href={editPlaySession.url(
+                                                                {
+                                                                    game: game.id,
+                                                                    play_session:
+                                                                        session.id,
+                                                                },
+                                                            )}
                                                             navigate
                                                             className={cn(
                                                                 buttonVariants({
-                                                                    variant: "outline",
-                                                                    size: "sm",
+                                                                    variant:
+                                                                        'outline',
+                                                                    size: 'sm',
                                                                 }),
                                                             )}
                                                             data-test={`edit-play-session-button-${session.id}`}
@@ -381,7 +426,9 @@ export default function Show({
                                                             Edit
                                                         </ModalLink>
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
@@ -397,7 +444,9 @@ export default function Show({
                                                                     variant="destructive"
                                                                     data-test={`delete-play-session-button-${session.id}`}
                                                                     onSelect={() => {
-                                                                        setSessionToDelete(session);
+                                                                        setSessionToDelete(
+                                                                            session,
+                                                                        );
                                                                     }}
                                                                 >
                                                                     Delete
@@ -433,17 +482,25 @@ export default function Show({
                         ) : null}
                     </TabsContent>
 
-                    <TabsContent value="journal" className="flex flex-1 flex-col space-y-4">
+                    <TabsContent
+                        value="journal"
+                        className="flex flex-1 flex-col space-y-4"
+                    >
                         {journalEntries.length === 0 ? (
                             <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border">
-                                <p className="text-lg font-medium">No journal entries yet</p>
+                                <p className="text-lg font-medium">
+                                    No journal entries yet
+                                </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Write what happened the last time you played.
+                                    Write what happened the last time you
+                                    played.
                                 </p>
                                 <ModalLink
-                                    href={JournalEntryController.create.url(game.id)}
+                                    href={JournalEntryController.create.url(
+                                        game.id,
+                                    )}
                                     navigate
-                                    className={cn(buttonVariants(), "mt-4")}
+                                    className={cn(buttonVariants(), 'mt-4')}
                                     data-test="create-journal-entry-button"
                                 >
                                     Create Entry
@@ -454,10 +511,12 @@ export default function Show({
                                 {journalEntries.map((entry) => (
                                     <li key={entry.id}>
                                         <ModalLink
-                                            href={JournalEntryController.show.url({
-                                                game: game.id,
-                                                journal_entry: entry.id,
-                                            })}
+                                            href={JournalEntryController.show.url(
+                                                {
+                                                    game: game.id,
+                                                    journal_entry: entry.id,
+                                                },
+                                            )}
                                             navigate
                                             className="flex w-full items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
                                             data-test={`journal-entry-${entry.id}`}
@@ -466,7 +525,9 @@ export default function Show({
                                                 dateTime={entry.createdAt}
                                                 className="text-sm font-medium"
                                             >
-                                                {formatEntryDate(entry.createdAt)}
+                                                {formatEntryDate(
+                                                    entry.createdAt,
+                                                )}
                                             </time>
                                             <ChevronRight
                                                 aria-hidden
