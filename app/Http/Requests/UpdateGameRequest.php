@@ -8,6 +8,7 @@ use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
 use App\Rules\UniqueOwnedGameTitle;
+use App\Rules\UniqueOwnedRawgId;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -47,6 +48,7 @@ final class UpdateGameRequest extends FormRequest
                 'nullable',
                 'integer',
                 'min:1',
+                new UniqueOwnedRawgId($owner, $game),
             ],
         ];
     }
@@ -70,6 +72,7 @@ final class UpdateGameRequest extends FormRequest
             'status.enum' => 'The status must be Backlog, In Progress, Abandoned, or Finished.',
             'rawg_id.integer' => 'The RAWG id must be an integer.',
             'rawg_id.min' => 'The RAWG id must be an integer.',
+            'rawg_id.unique' => UniqueOwnedRawgId::message(),
         ];
     }
 }

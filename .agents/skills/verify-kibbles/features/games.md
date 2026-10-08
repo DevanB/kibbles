@@ -33,7 +33,7 @@ Preconditions:
 ## Gotchas
 
 - `games.show` is the detail hub — do not expect create/update to land on edit
-- Titles must be unique **per user**, not globally
+- Titles must be unique **per user**, not globally. A linked RAWG id is also unique per user (`You already have this game.`); unlinked games may share a null `rawg_id`.
 - Index has no row delete. The Browser happy path deletes from **show** (`@game-actions-button` then `@delete-game-button` then `@confirm-delete-game-button`). Edit is title + status in a modal.
 - Same `auth` + `verified` middleware group as dashboard
 - Local `DatabaseSeeder` calls `DemoSeeder` (`devan@localhost.test` + five unlinked video-game titles) for reviewing show. Tests do not use that seeder

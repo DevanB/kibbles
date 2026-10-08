@@ -7,6 +7,7 @@ namespace App\Http\Requests;
 use App\Models\Game;
 use App\Models\User;
 use App\Rules\UniqueOwnedGameTitle;
+use App\Rules\UniqueOwnedRawgId;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -36,6 +37,7 @@ final class CreateGameRequest extends FormRequest
                 'nullable',
                 'integer',
                 'min:1',
+                new UniqueOwnedRawgId($owner),
             ],
         ];
     }
@@ -57,6 +59,7 @@ final class CreateGameRequest extends FormRequest
             'title.unique' => UniqueOwnedGameTitle::message(),
             'rawg_id.integer' => 'The RAWG id must be an integer.',
             'rawg_id.min' => 'The RAWG id must be an integer.',
+            'rawg_id.unique' => UniqueOwnedRawgId::message(),
         ];
     }
 }

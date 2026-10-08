@@ -63,6 +63,27 @@ it('saves a typed title with no catalog pick as an unlinked game', function (): 
         ->and($game->description)->toBeNull();
 });
 
+it('rejects picking a catalog game the user already linked under another title', function (): void {
+    fakeHadesCatalog();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    Game::factory()->recycle($user)->catalogLinked()->create(['title' => 'Supergiant Rerun']);
+
+    $this->actingAs($user);
+
+    $page = visit(route('games.index'));
+
+    $page->click('@create-game-button')
+        ->fill('title', 'hades')
+        ->assertSee('Hades')
+        ->click('@game-catalog-result-274755')
+        ->click('@save-game-button')
+        ->assertSee('You already have this game.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Game::query()->whereBelongsTo($user)->count())->toBe(1);
+});
+
 it('links an existing game from the edit modal', function (): void {
     fakeHadesCatalog();
 
