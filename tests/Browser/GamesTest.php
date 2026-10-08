@@ -86,8 +86,8 @@ it('persists a status change from the edit modal', function (): void {
         ->assertSee('Edit Game')
         ->select('status', GameStatus::Finished->value)
         ->click('@save-game-button')
-        ->assertSee('Game updated.')
         ->assertSee('Finished')
+        ->assertSee('Game updated.')
         ->assertPathIs('/games/'.$game->id)
         ->screenshot(filename: 'game-show-finished-status')
         ->assertNoJavaScriptErrors();
