@@ -233,7 +233,8 @@ it('captures demo play session screens for review', function (): void {
     $show = visit(route('games.show', $hades));
 
     $show->click('@add-play-session-button')
-        ->assertSee('Add Session')
+        ->assertVisible('@play-session-started-at')
+        ->assertVisible('@play-session-ended-at')
         ->screenshot(filename: 'pr-b-add-session-modal')
         ->assertNoJavaScriptErrors();
 
