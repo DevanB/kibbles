@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 use Pest\Rector\Set\PestSetList;
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
-use Rector\CodingStyle\Rector\ClassMethod\MakeInheritedMethodVisibilitySameAsParentRector;
 use Rector\Config\RectorConfig;
-use Rector\Php85\Rector\Property\AddOverrideAttributeToOverriddenPropertiesRector;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
@@ -39,10 +37,6 @@ return RectorConfig::configure()
         __DIR__.'/public',
         __DIR__.'/routes',
         __DIR__.'/tests',
-    ])
-    ->withSkip([
-        MakeInheritedMethodVisibilitySameAsParentRector::class,
-        AddOverrideAttributeToOverriddenPropertiesRector::class,
     ])
     ->withPreparedSets(
         deadCode: true,

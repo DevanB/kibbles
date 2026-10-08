@@ -50,9 +50,9 @@ final class Game extends Model
     /**
      * @return array<string, string>
      */
-    public function casts(): array
+    public function getCasts(): array
     {
-        return [
+        return array_merge(parent::getCasts(), [
             'id' => 'string',
             'user_id' => 'string',
             'title' => 'string',
@@ -60,7 +60,7 @@ final class Game extends Model
             'rawg_id' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
-        ];
+        ]);
     }
 
     /**

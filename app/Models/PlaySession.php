@@ -118,9 +118,9 @@ final class PlaySession extends Model
     /**
      * @return array<string, string>
      */
-    public function casts(): array
+    public function getCasts(): array
     {
-        return [
+        return array_merge(parent::getCasts(), [
             'id' => 'string',
             'user_id' => 'string',
             'game_id' => 'string',
@@ -128,7 +128,7 @@ final class PlaySession extends Model
             'ended_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
-        ];
+        ]);
     }
 
     /**

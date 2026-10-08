@@ -41,16 +41,16 @@ final class JournalEntry extends Model
     /**
      * @return array<string, string>
      */
-    public function casts(): array
+    public function getCasts(): array
     {
-        return [
+        return array_merge(parent::getCasts(), [
             'id' => 'string',
             'game_id' => 'string',
             'play_session_id' => 'string',
             'body' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
-        ];
+        ]);
     }
 
     /**
