@@ -82,6 +82,11 @@ RUN mkdir -p \
     && chmod +x /usr/local/bin/entrypoint \
     && rm -f /tmp/build.sqlite
 
+ARG APP_REVISION=dev
+ENV APP_REVISION=${APP_REVISION}
+LABEL org.opencontainers.image.revision="${APP_REVISION}" \
+    org.opencontainers.image.source="https://github.com/DevanB/kibbles"
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
