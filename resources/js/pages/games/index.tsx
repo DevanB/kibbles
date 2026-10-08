@@ -17,7 +17,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Index({ games }: { games: Game[] }) {
+export default function Index({
+    games,
+    openPlaySessionGameId,
+}: {
+    games: Game[];
+    openPlaySessionGameId: string | null;
+}) {
     setLayoutProps({ breadcrumbs });
 
     return (
@@ -82,6 +88,14 @@ export default function Index({ games }: { games: Game[] }) {
                                                 data-test={`game-art-slot-${game.id}`}
                                                 className="block aspect-[3/4] w-full bg-muted"
                                             />
+                                        )}
+                                        {openPlaySessionGameId === game.id && (
+                                            <Badge
+                                                data-test={`game-playing-${game.id}`}
+                                                className="absolute top-2 left-2"
+                                            >
+                                                Playing
+                                            </Badge>
                                         )}
                                         <Badge
                                             variant="secondary"
