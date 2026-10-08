@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FinishPlaySessionController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\PlaySessionController;
 use App\Http\Controllers\RawgGameSearchController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\StartPlaySessionController;
+use App\Http\Controllers\StopPlaySessionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserEmailResetNotificationController;
 use App\Http\Controllers\UserEmailVerificationController;
@@ -31,15 +34,15 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->only(['create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->scoped();
     Route::scopeBindings()->group(function (): void {
-        Route::post('games/{game}/play-sessions/start', [PlaySessionController::class, 'start'])
+        Route::post('games/{game}/play-sessions/start', StartPlaySessionController::class)
             ->name('games.play-sessions.start');
         Route::get('games/{game}/play-sessions/create', [PlaySessionController::class, 'create'])
             ->name('games.play-sessions.create');
         Route::post('games/{game}/play-sessions', [PlaySessionController::class, 'store'])
             ->name('games.play-sessions.store');
-        Route::get('games/{game}/play-sessions/{play_session}/stop', [PlaySessionController::class, 'stop'])
+        Route::get('games/{game}/play-sessions/{play_session}/stop', StopPlaySessionController::class)
             ->name('games.play-sessions.stop');
-        Route::post('games/{game}/play-sessions/{play_session}/stop', [PlaySessionController::class, 'finish'])
+        Route::post('games/{game}/play-sessions/{play_session}/stop', FinishPlaySessionController::class)
             ->name('games.play-sessions.finish');
         Route::get('games/{game}/play-sessions/{play_session}/edit', [PlaySessionController::class, 'edit'])
             ->name('games.play-sessions.edit');

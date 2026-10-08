@@ -7,13 +7,13 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\PlaySessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -40,6 +40,11 @@ final class PlaySession extends Model
     use HasFactory;
 
     use HasUuids;
+
+    public static function fromBrowserLocal(string $local, string $timezone): CarbonInterface
+    {
+        return Date::parse($local, $timezone)->utc();
+    }
 
     public static function openConflictMessage(string $title): string
     {
@@ -173,8 +178,7 @@ final class PlaySession extends Model
      * @param  Builder<PlaySession>  $query
      * @return Builder<PlaySession>
      */
-    #[Scope]
-    protected function open(Builder $query): Builder
+    public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNull('ended_at');
     }
@@ -183,8 +187,7 @@ final class PlaySession extends Model
      * @param  Builder<PlaySession>  $query
      * @return Builder<PlaySession>
      */
-    #[Scope]
-    protected function closed(Builder $query): Builder
+    public function scopeClosed(Builder $query): Builder
     {
         return $query->whereNotNull('ended_at');
     }
@@ -193,8 +196,7 @@ final class PlaySession extends Model
      * @param  Builder<PlaySession>  $query
      * @return Builder<PlaySession>
      */
-    #[Scope]
-    protected function newestFirst(Builder $query): Builder
+    public function scopeNewestFirst(Builder $query): Builder
     {
         return $query->latest('started_at')->orderByDesc('id');
     }

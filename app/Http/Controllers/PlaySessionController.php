@@ -6,13 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreatePlaySession;
 use App\Actions\DeletePlaySession;
-use App\Actions\FinishPlaySession;
-use App\Actions\StartPlaySession;
 use App\Actions\UpdatePlaySession;
 use App\Http\Requests\DeletePlaySessionRequest;
-use App\Http\Requests\FinishPlaySessionRequest;
-use App\Http\Requests\StartPlaySessionRequest;
-use App\Http\Requests\StopPlaySessionRequest;
 use App\Http\Requests\StorePlaySessionRequest;
 use App\Http\Requests\UpdatePlaySessionRequest;
 use App\Models\Game;
@@ -24,42 +19,6 @@ use InertiaUI\Modal\Modal;
 
 final readonly class PlaySessionController
 {
-    public function start(StartPlaySessionRequest $request, Game $game, StartPlaySession $action): RedirectResponse
-    {
-        $action->handle($game);
-
-        Inertia::flash('toast', [
-            'type' => 'success',
-            'message' => __('Session started.'),
-        ]);
-
-        return to_route('games.show', $game);
-    }
-
-    public function stop(StopPlaySessionRequest $request, Game $game, PlaySession $playSession): Modal
-    {
-        return Inertia::modal('games/play-sessions/stop', [
-            'game' => $game->toWire(),
-            'playSession' => $playSession->toWire(),
-        ])->baseRoute('games.show', $game);
-    }
-
-    public function finish(
-        FinishPlaySessionRequest $request,
-        Game $game,
-        PlaySession $playSession,
-        FinishPlaySession $action,
-    ): RedirectResponse {
-        $action->handle($playSession, $request->body());
-
-        Inertia::flash('toast', [
-            'type' => 'success',
-            'message' => __('Session saved.'),
-        ]);
-
-        return to_route('games.show', $game);
-    }
-
     public function create(Game $game): Modal
     {
         Gate::authorize('create', [PlaySession::class, $game]);

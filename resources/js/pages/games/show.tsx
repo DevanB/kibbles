@@ -9,9 +9,9 @@ import {
     create as createPlaySession,
     destroy as destroyPlaySession,
     edit as editPlaySession,
-    start,
-    stop,
 } from '@/actions/App/Http/Controllers/PlaySessionController';
+import StartPlaySession from '@/actions/App/Http/Controllers/StartPlaySessionController';
+import StopPlaySession from '@/actions/App/Http/Controllers/StopPlaySessionController';
 import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
@@ -92,7 +92,7 @@ export default function Show({
                         {openOnThisGame ? (
                             <Button variant="outline" size="sm" asChild>
                                 <ModalLink
-                                    href={stop.url({
+                                    href={StopPlaySession.url({
                                         game: game.id,
                                         play_session: openPlaySession.id,
                                     })}
@@ -104,7 +104,7 @@ export default function Show({
                             </Button>
                         ) : null}
                         {!openPlaySession ? (
-                            <Form {...start.form(game.id)}>
+                            <Form {...StartPlaySession.form(game.id)}>
                                 <Button
                                     type="submit"
                                     variant="outline"
@@ -251,7 +251,7 @@ export default function Show({
                             </p>
                             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                                 {!openPlaySession ? (
-                                    <Form {...start.form(game.id)}>
+                                    <Form {...StartPlaySession.form(game.id)}>
                                         <Button
                                             type="submit"
                                             data-test="start-play-session-button"
@@ -315,11 +315,13 @@ export default function Show({
                                                     asChild
                                                 >
                                                     <ModalLink
-                                                        href={stop.url({
-                                                            game: game.id,
-                                                            play_session:
-                                                                session.id,
-                                                        })}
+                                                        href={StopPlaySession.url(
+                                                            {
+                                                                game: game.id,
+                                                                play_session:
+                                                                    session.id,
+                                                            },
+                                                        )}
                                                         navigate
                                                         data-test={`stop-play-session-button-${session.id}`}
                                                     >
