@@ -16,13 +16,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property-read string $id
  * @property-read string $game_id
+ * @property-read string|null $play_session_id
  * @property-read string $body
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read Game $game
+ * @property-read PlaySession|null $playSession
  */
 #[Fillable([
     'body',
+    'play_session_id',
 ])]
 final class JournalEntry extends Model
 {
@@ -39,6 +42,7 @@ final class JournalEntry extends Model
         return [
             'id' => 'string',
             'game_id' => 'string',
+            'play_session_id' => 'string',
             'body' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -54,6 +58,14 @@ final class JournalEntry extends Model
     }
 
     /**
+     * @return BelongsTo<PlaySession, $this>
+     */
+    public function playSession(): BelongsTo
+    {
+        return $this->belongsTo(PlaySession::class);
+    }
+
+    /**
      * @param  Builder<JournalEntry>  $query
      * @return Builder<JournalEntry>
      */
@@ -63,7 +75,7 @@ final class JournalEntry extends Model
     }
 
     /**
-     * @return array{id: string, body: string, createdAt: string, updatedAt: string}
+     * @return array{id: string, body: string, createdAt: string, updatedAt: string, playSessionId: string|null}
      */
     public function toWire(): array
     {
@@ -72,6 +84,7 @@ final class JournalEntry extends Model
             'body' => $this->body,
             'createdAt' => $this->created_at->toIso8601String(),
             'updatedAt' => $this->updated_at->toIso8601String(),
+            'playSessionId' => $this->play_session_id,
         ];
     }
 }

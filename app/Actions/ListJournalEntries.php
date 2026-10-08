@@ -10,7 +10,7 @@ use App\Models\JournalEntry;
 final readonly class ListJournalEntries
 {
     /**
-     * @return array<int, array{id: string, body: string, createdAt: string, updatedAt: string}>
+     * @return array<int, array{id: string, body: string, createdAt: string, updatedAt: string, playSessionId: string|null}>
      */
     public function handle(Game $game): array
     {

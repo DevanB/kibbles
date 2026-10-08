@@ -31,6 +31,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Game> $games
+ * @property-read Collection<int, PlaySession> $playSessions
  */
 #[Hidden([
     'password',
@@ -74,5 +75,13 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function games(): HasMany
     {
         return $this->hasMany(Game::class);
+    }
+
+    /**
+     * @return HasMany<PlaySession, $this>
+     */
+    public function playSessions(): HasMany
+    {
+        return $this->hasMany(PlaySession::class);
     }
 }
