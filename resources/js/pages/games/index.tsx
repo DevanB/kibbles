@@ -1,7 +1,7 @@
 import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { cn } from 'cn';
-import { ChevronRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
@@ -60,44 +60,43 @@ export default function Index({ games }: { games: Game[] }) {
                         </ModalLink>
                     </div>
                 ) : (
-                    <ul className="divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                    <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
                         {games.map((game) => (
                             <li key={game.id}>
                                 <Link
                                     href={show(game)}
-                                    className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
+                                    className="group flex flex-col gap-2"
+                                    data-test={`game-open-${game.id}`}
                                 >
-                                    <span className="flex min-w-0 items-center gap-3">
+                                    <span className="relative block overflow-hidden rounded-xl">
                                         {game.imageUrl ? (
                                             <img
                                                 src={game.imageUrl}
                                                 alt=""
-                                                className="size-10 shrink-0 rounded-md object-cover"
+                                                className="aspect-[3/4] w-full object-cover"
+                                                data-test={`game-art-${game.id}`}
                                             />
                                         ) : (
                                             <span
-                                                aria-hidden
-                                                className="size-10 shrink-0 rounded-md bg-muted"
+                                                aria-label="Box art"
+                                                data-test={`game-art-slot-${game.id}`}
+                                                className="block aspect-[3/4] w-full bg-muted"
                                             />
                                         )}
-                                        <span
-                                            className="font-medium"
-                                            data-test={`game-title-${game.id}`}
-                                        >
-                                            {game.title}
-                                        </span>
                                         <Badge
                                             variant="secondary"
                                             data-test={`game-status-${game.id}`}
+                                            className="absolute right-2 bottom-2"
                                         >
                                             {game.statusLabel}
                                         </Badge>
                                     </span>
-                                    <ChevronRight
-                                        aria-hidden
-                                        className="size-4 text-muted-foreground"
-                                        data-test={`game-open-${game.id}`}
-                                    />
+                                    <span
+                                        className="font-medium"
+                                        data-test={`game-title-${game.id}`}
+                                    >
+                                        {game.title}
+                                    </span>
                                 </Link>
                             </li>
                         ))}
