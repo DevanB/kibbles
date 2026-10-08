@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\PlaySessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -176,28 +177,28 @@ final class PlaySession extends Model
 
     /**
      * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
      */
-    public function scopeOpen(Builder $query): Builder
+    #[Scope]
+    protected function open(Builder $query): void
     {
-        return $query->whereNull('ended_at');
+        $query->whereNull('ended_at');
     }
 
     /**
      * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
      */
-    public function scopeClosed(Builder $query): Builder
+    #[Scope]
+    protected function closed(Builder $query): void
     {
-        return $query->whereNotNull('ended_at');
+        $query->whereNotNull('ended_at');
     }
 
     /**
      * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
      */
-    public function scopeNewestFirst(Builder $query): Builder
+    #[Scope]
+    protected function newestFirst(Builder $query): void
     {
-        return $query->latest('started_at')->orderByDesc('id');
+        $query->latest('started_at')->orderByDesc('id');
     }
 }
