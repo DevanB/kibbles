@@ -159,6 +159,8 @@ it('keeps a linked journal after the session is deleted', function (): void {
         ->click('@confirm-delete-play-session-button-'.$session->id)
         ->assertSee('Session deleted.')
         ->assertSee('No play sessions yet')
+        ->click('@game-tab-journal')
+        ->assertVisible('@journal-entry-'.$entry->id)
         ->click('@journal-entry-'.$entry->id)
         ->assertSee('Duo boon finally clicked.')
         ->assertNoJavaScriptErrors();
