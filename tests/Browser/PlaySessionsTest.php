@@ -72,6 +72,9 @@ it('starts, stops, and journals a session from the show page', function (): void
         ->and($open->refresh()->ended_at)->not->toBeNull();
 
     $page->assertVisible('@journal-entry-'.$entry->id)
+        ->refresh()
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertVisible('@journal-entry-'.$entry->id)
         ->screenshot(filename: 'pr-b-show-journal-tab')
         ->click('@game-tab-sessions')
         ->assertVisible('@play-session-journal-'.$open->id)
@@ -89,6 +92,11 @@ it('adds, edits, and deletes a past session', function (): void {
 
     $page->click('@add-play-session-button')
         ->assertSee('Add Session')
+        ->click('Close')
+        ->assertSee('No play sessions yet')
+        ->assertQueryStringMissing('tab')
+        ->click('@add-play-session-button')
+        ->assertSee('Add Session')
         ->assertVisible('@play-session-started-at')
         ->assertVisible('@play-session-ended-at')
         ->screenshot(filename: 'pr-b-add-session-modal')
@@ -97,6 +105,7 @@ it('adds, edits, and deletes a past session', function (): void {
         ->click('@save-play-session-button')
         ->assertSee('Session saved.')
         ->assertSee('Jan 15, 10:30 AM – 12:44 PM · 2h 14m')
+        ->assertQueryStringMissing('tab')
         ->assertNoJavaScriptErrors();
 
     $session = $game->playSessions()->first();
