@@ -32,7 +32,7 @@ final class StorePlaySessionRequest extends FormRequest
 
     public function startedAt(): CarbonInterface
     {
-        return BrowserLocalDateTime::toUtc(
+        return PlaySession::fromBrowserLocal(
             $this->string('started_at')->value(),
             $this->string('timezone')->value(),
         );
@@ -40,7 +40,7 @@ final class StorePlaySessionRequest extends FormRequest
 
     public function endedAt(): CarbonInterface
     {
-        return BrowserLocalDateTime::toUtc(
+        return PlaySession::fromBrowserLocal(
             $this->string('ended_at')->value(),
             $this->string('timezone')->value(),
         );

@@ -1,6 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { Modal } from '@inertiaui/modal-react';
-import { finish } from '@/actions/App/Http/Controllers/PlaySessionController';
+import FinishPlaySession from '@/actions/App/Http/Controllers/FinishPlaySessionController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ export default function Stop({
                 </h2>
 
                 <Form
-                    {...finish.form({
+                    {...FinishPlaySession.form({
                         game: game.id,
                         play_session: playSession.id,
                     })}

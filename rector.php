@@ -45,9 +45,11 @@ return RectorConfig::configure()
         AddOverrideAttributeToOverriddenPropertiesRector::class,
         MakeModelAttributesAndScopesProtectedRector::class => [
             __DIR__.'/app/Models/JournalEntry.php',
+            __DIR__.'/app/Models/PlaySession.php',
         ],
         ScopeNamedClassMethodToScopeAttributedClassMethodRector::class => [
             __DIR__.'/app/Models/JournalEntry.php',
+            __DIR__.'/app/Models/PlaySession.php',
         ],
     ])
     ->withPreparedSets(
