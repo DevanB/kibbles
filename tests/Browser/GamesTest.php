@@ -100,3 +100,28 @@ it('persists a status change from the edit modal', function (): void {
         ->screenshot(filename: 'games-index-finished-status')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the games list as artwork tiles with status on the art', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $linked = Game::factory()->recycle($user)->catalogLinked()->create(['title' => 'Hades']);
+    $unlinked = Game::factory()->recycle($user)->create(['title' => 'Celeste']);
+
+    $this->actingAs($user);
+
+    $page = visit(route('games.index'));
+
+    $page->assertSee('Hades')
+        ->assertSee('Celeste')
+        ->assertSee('Backlog')
+        ->assertAttribute('@game-art-'.$linked->id, 'src', HADES_IMAGE_URL)
+        ->assertVisible('@game-art-slot-'.$unlinked->id)
+        ->assertVisible('@game-status-'.$linked->id)
+        ->assertVisible('@game-title-'.$unlinked->id)
+        ->screenshot(filename: 'games-index-artwork-grid')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('@game-open-'.$linked->id)
+        ->assertPathIs('/games/'.$linked->id)
+        ->assertSee('Hades')
+        ->assertNoJavaScriptErrors();
+});
