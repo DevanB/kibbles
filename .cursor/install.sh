@@ -22,4 +22,9 @@ php artisan migrate --force --no-interaction
 
 bun install
 bun run build
+
+mkdir -p "${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
 bunx playwright install chromium
+if [[ -n "${PLAYWRIGHT_BROWSERS_PATH:-}" && -d "$PLAYWRIGHT_BROWSERS_PATH" ]]; then
+    chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH"
+fi
