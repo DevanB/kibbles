@@ -34,13 +34,7 @@ final readonly class UniqueOwnedRawgId implements ValidationRule
 
     public static function fromConstraint(UniqueConstraintViolationException $exception): ValidationException
     {
-        $detail = $exception->errorInfo[2] ?? null;
-        $driverMessage = is_string($detail)
-            ? $detail
-            : ($exception->getPrevious()?->getMessage() ?? '');
-
-        return str_contains($driverMessage, 'rawg_id')
-            || str_contains($driverMessage, 'games_user_id_rawg_id_unique')
+        return str_contains($exception->getPrevious()?->getMessage() ?? '', 'rawg_id')
             ? self::conflict()
             : UniqueOwnedGameTitle::conflict();
     }
