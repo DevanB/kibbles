@@ -10,11 +10,6 @@ use App\Models\User;
 
 final class PlaySessionPolicy
 {
-    public function viewAny(): bool
-    {
-        return true;
-    }
-
     public function view(User $user, PlaySession $playSession): bool
     {
         return $playSession->game->user()->is($user);
