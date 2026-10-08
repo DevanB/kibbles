@@ -17,6 +17,7 @@ use App\Models\PlaySession;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -69,7 +70,7 @@ final readonly class GameController
         return to_route('games.show', $game);
     }
 
-    public function show(Game $game, #[CurrentUser] User $user, ListJournalEntries $list): Response
+    public function show(Request $request, Game $game, #[CurrentUser] User $user, ListJournalEntries $list): Response
     {
         Gate::authorize('view', $game);
 
@@ -93,6 +94,7 @@ final readonly class GameController
             ] : null,
             'totalPlayedMinutes' => $totalPlayedMinutes,
             'totalPlayedLabel' => PlaySession::totalPlayedLabel($totalPlayedMinutes),
+            'tab' => $request->query('tab') === 'journal' ? 'journal' : 'sessions',
         ]);
     }
 

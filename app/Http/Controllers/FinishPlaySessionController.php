@@ -19,13 +19,17 @@ final readonly class FinishPlaySessionController
         PlaySession $playSession,
         FinishPlaySession $action,
     ): RedirectResponse {
-        $action->handle($playSession, $request->body());
+        $body = $request->body();
+        $action->handle($playSession, $body);
 
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => __('Session saved.'),
         ]);
 
-        return to_route('games.show', $game);
+        return to_route('games.show', $body === null ? $game : [
+            'game' => $game,
+            'tab' => 'journal',
+        ]);
     }
 }

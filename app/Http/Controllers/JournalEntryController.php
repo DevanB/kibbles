@@ -26,7 +26,7 @@ final readonly class JournalEntryController
 
         return Inertia::modal('games/journal-entries/create', [
             'game' => $game->toWire(),
-        ])->baseRoute('games.show', $game);
+        ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
     public function store(
@@ -41,7 +41,7 @@ final readonly class JournalEntryController
             'message' => __('Journal entry added.'),
         ]);
 
-        return to_route('games.show', $game);
+        return to_route('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
     public function show(
@@ -52,7 +52,7 @@ final readonly class JournalEntryController
         return Inertia::modal('games/journal-entries/show', [
             'game' => $game->toWire(),
             'journalEntry' => $journalEntry->toWire(),
-        ])->baseRoute('games.show', $game);
+        ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
     public function edit(Game $game, JournalEntry $journalEntry): Modal
@@ -62,7 +62,7 @@ final readonly class JournalEntryController
         return Inertia::modal('games/journal-entries/edit', [
             'game' => $game->toWire(),
             'journalEntry' => $journalEntry->toWire(),
-        ])->baseRoute('games.show', $game);
+        ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
     public function update(
@@ -78,7 +78,7 @@ final readonly class JournalEntryController
             'message' => __('Journal entry updated.'),
         ]);
 
-        return to_route('games.show', $game);
+        return to_route('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
     public function destroy(
@@ -94,6 +94,6 @@ final readonly class JournalEntryController
             'message' => __('Journal entry deleted.'),
         ]);
 
-        return to_route('games.show', $game);
+        return to_route('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 }

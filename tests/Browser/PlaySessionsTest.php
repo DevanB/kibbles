@@ -38,8 +38,9 @@ it('starts, stops, and journals a session from the show page', function (): void
         ->fill('#stop-session-body', 'Cleared Tartarus.')
         ->click('@save-play-session-button')
         ->assertSee('Session saved.')
-        ->assertSee('Journal')
         ->assertSee('0m')
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertSee('Journal Entries')
         ->assertNoJavaScriptErrors();
 
     $entry = $game->journalEntries()->first();
@@ -47,6 +48,11 @@ it('starts, stops, and journals a session from the show page', function (): void
     expect($entry)->not->toBeNull()
         ->and($entry->play_session_id)->toBe($session->id)
         ->and($session->refresh()->ended_at)->not->toBeNull();
+
+    $page->assertVisible('@journal-entry-'.$entry->id)
+        ->click('@game-tab-sessions')
+        ->assertVisible('@play-session-journal-'.$session->id)
+        ->assertNoJavaScriptErrors();
 });
 
 it('adds, edits, and deletes a past session', function (): void {
@@ -223,6 +229,10 @@ it('captures demo play session screens for review', function (): void {
         ->assertVisible('@play-session-journal-'.$closed->id)
         ->screenshot(filename: 'pr-b-show-open-session')
         ->screenshot(filename: 'pr-b-show-history-journal-chip')
+        ->click('@game-tab-journal')
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertVisible('@journal-entry-'.$hades->journalEntries()->newestFirst()->firstOrFail()->id)
+        ->screenshot(filename: 'pr-b-show-journal-tab')
         ->assertNoJavaScriptErrors();
 
     $show->click('@stop-play-session-button')
