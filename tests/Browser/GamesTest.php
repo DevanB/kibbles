@@ -125,3 +125,35 @@ it('shows the games list as artwork tiles with status on the art', function (): 
         ->assertSee('Hades')
         ->assertNoJavaScriptErrors();
 });
+
+it('captures artwork grid screens for review', function (): void {
+    $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
+
+    $user = User::query()->where('email', 'devan@localhost.test')->firstOrFail();
+    $hades = $user->games()->where('title', 'Hades')->firstOrFail();
+
+    $this->actingAs($user);
+
+    visit(route('games.index'))
+        ->assertSee('Hades')
+        ->assertVisible('@game-art-'.$hades->id)
+        ->screenshot(filename: 'pr-a-games-index-light')
+        ->assertNoJavaScriptErrors();
+
+    visit(route('games.index'))
+        ->inDarkMode()
+        ->assertSee('Hades')
+        ->screenshot(filename: 'pr-a-games-index-dark')
+        ->assertNoJavaScriptErrors();
+});
+
+it('captures the empty games index for review', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    visit(route('games.index'))
+        ->assertSee('No games yet')
+        ->screenshot(filename: 'pr-a-games-index-empty')
+        ->assertNoJavaScriptErrors();
+});
