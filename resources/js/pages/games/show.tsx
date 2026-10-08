@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { formatDuration, formatSessionDateTime } from '@/lib/local-date-time';
+import { formatSessionRow } from '@/lib/local-date-time';
 import { index, show } from '@/routes/games';
 import type { Game, JournalEntry, OpenPlaySession, PlaySession } from '@/types';
 
@@ -282,30 +282,13 @@ export default function Show({
                                         data-test={`play-session-${session.id}`}
                                     >
                                         <div className="min-w-0">
-                                            {isOpen ? (
-                                                <p>
-                                                    {formatSessionDateTime(
-                                                        session.startedAt,
-                                                    )}{' '}
-                                                    – now · Open
-                                                </p>
-                                            ) : (
-                                                <p>
-                                                    {formatSessionDateTime(
-                                                        session.startedAt,
-                                                    )}{' '}
-                                                    –{' '}
-                                                    {session.endedAt
-                                                        ? formatSessionDateTime(
-                                                              session.endedAt,
-                                                          )
-                                                        : ''}
-                                                    {session.durationMinutes !==
-                                                    null
-                                                        ? ` · ${formatDuration(session.durationMinutes)}`
-                                                        : ''}
-                                                </p>
-                                            )}
+                                            <p>
+                                                {formatSessionRow(
+                                                    session.startedAt,
+                                                    session.endedAt,
+                                                    session.durationMinutes,
+                                                )}
+                                            </p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2">
                                             {isOpen ? (
