@@ -14,11 +14,8 @@ use Illuminate\Validation\ValidationException;
 it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
     $this->{$method}(route($route, $parameters))->assertRedirectToRoute('login');
 })->with([
-    'start' => ['post', 'games.play-sessions.start', ['game' => '00000000-0000-0000-0000-000000000001']],
     'create' => ['get', 'games.play-sessions.create', ['game' => '00000000-0000-0000-0000-000000000001']],
     'store' => ['post', 'games.play-sessions.store', ['game' => '00000000-0000-0000-0000-000000000001']],
-    'stop' => ['get', 'games.play-sessions.stop', ['game' => '00000000-0000-0000-0000-000000000001', 'play_session' => '00000000-0000-0000-0000-000000000002']],
-    'finish' => ['post', 'games.play-sessions.finish', ['game' => '00000000-0000-0000-0000-000000000001', 'play_session' => '00000000-0000-0000-0000-000000000002']],
     'edit' => ['get', 'games.play-sessions.edit', ['game' => '00000000-0000-0000-0000-000000000001', 'play_session' => '00000000-0000-0000-0000-000000000002']],
     'update' => ['put', 'games.play-sessions.update', ['game' => '00000000-0000-0000-0000-000000000001', 'play_session' => '00000000-0000-0000-0000-000000000002']],
     'destroy' => ['delete', 'games.play-sessions.destroy', ['game' => '00000000-0000-0000-0000-000000000001', 'play_session' => '00000000-0000-0000-0000-000000000002']],
@@ -29,7 +26,7 @@ it('redirects unverified users to the verification notice', function (): void {
     $game = Game::factory()->recycle($user)->create();
 
     $this->actingAs($user)
-        ->post(route('games.play-sessions.start', $game))
+        ->post(route('games.play-sessions.store', $game))
         ->assertRedirectToRoute('verification.notice');
 });
 
@@ -43,15 +40,11 @@ it('forbids another user from starting or viewing play session modals', function
     ]);
 
     $this->actingAs($intruder)
-        ->post(route('games.play-sessions.start', $game))
+        ->post(route('games.play-sessions.store', $game))
         ->assertForbidden();
 
     $this->actingAs($intruder)
         ->get(route('games.play-sessions.create', $game))
-        ->assertForbidden();
-
-    $this->actingAs($intruder)
-        ->get(route('games.play-sessions.stop', [$game, $session]))
         ->assertForbidden();
 
     $this->actingAs($intruder)
@@ -103,10 +96,6 @@ it('returns 404 when a session is addressed under a different owned game', funct
     ]);
 
     $this->actingAs($user)
-        ->get(route('games.play-sessions.stop', [$otherGame, $session]))
-        ->assertNotFound();
-
-    $this->actingAs($user)
         ->get(route('games.play-sessions.edit', [$otherGame, $session]))
         ->assertNotFound();
 
@@ -147,7 +136,7 @@ it('rejects starting a second session while another game is open', function (): 
 
     $this->actingAs($user)
         ->fromRoute('games.show', $other)
-        ->post(route('games.play-sessions.start', $other))
+        ->post(route('games.play-sessions.store', $other))
         ->assertRedirectToRoute('games.show', $other)
         ->assertSessionHasErrors(['play_session' => 'Stop your session on Hades first.']);
 
@@ -187,12 +176,13 @@ it('requires start and end times when storing a past session', function (): void
 
     $this->actingAs($user)
         ->fromRoute('games.play-sessions.create', $game)
-        ->post(route('games.play-sessions.store', $game), [])
+        ->post(route('games.play-sessions.store', $game), [
+            'timezone' => 'UTC',
+        ])
         ->assertRedirectToRoute('games.play-sessions.create', $game)
         ->assertSessionHasErrors([
             'started_at' => 'A start time is required.',
             'ended_at' => 'An end time is required.',
-            'timezone' => 'A timezone is required.',
         ]);
 });
 
@@ -223,7 +213,9 @@ it('rejects stopping an already closed session', function (): void {
 
     $this->actingAs($user)
         ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.finish', [$game, $session]))
+        ->put(route('games.play-sessions.update', [$game, $session]), [
+            'body' => 'Done.',
+        ])
         ->assertRedirectToRoute('games.show', $game)
         ->assertSessionHasErrors(['play_session' => 'This session is already stopped.']);
 });
@@ -295,7 +287,7 @@ it('rejects a stop journal body longer than 10000 characters', function (): void
 
     $this->actingAs($user)
         ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.finish', [$game, $session]), [
+        ->put(route('games.play-sessions.update', [$game, $session]), [
             'body' => str_repeat('a', 10001),
         ])
         ->assertRedirectToRoute('games.show', $game)

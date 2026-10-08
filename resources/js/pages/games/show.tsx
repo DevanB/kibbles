@@ -9,9 +9,8 @@ import {
     create as createPlaySession,
     destroy as destroyPlaySession,
     edit as editPlaySession,
+    store as storePlaySession,
 } from '@/actions/App/Http/Controllers/PlaySessionController';
-import StartPlaySession from '@/actions/App/Http/Controllers/StartPlaySessionController';
-import StopPlaySession from '@/actions/App/Http/Controllers/StopPlaySessionController';
 import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
@@ -123,7 +122,7 @@ export default function Show({
                         {openOnThisGame ? (
                             <Button variant="outline" size="sm" asChild>
                                 <ModalLink
-                                    href={StopPlaySession.url({
+                                    href={editPlaySession.url({
                                         game: game.id,
                                         play_session: openPlaySession.id,
                                     })}
@@ -135,7 +134,7 @@ export default function Show({
                             </Button>
                         ) : null}
                         {!openPlaySession ? (
-                            <Form {...StartPlaySession.form(game.id)}>
+                            <Form {...storePlaySession.form(game.id)}>
                                 <Button
                                     type="submit"
                                     variant="outline"
@@ -318,7 +317,7 @@ export default function Show({
                                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                                     {!openPlaySession ? (
                                         <Form
-                                            {...StartPlaySession.form(game.id)}
+                                            {...storePlaySession.form(game.id)}
                                         >
                                             <Button
                                                 type="submit"
@@ -366,7 +365,7 @@ export default function Show({
                                                         asChild
                                                     >
                                                         <ModalLink
-                                                            href={StopPlaySession.url(
+                                                            href={editPlaySession.url(
                                                                 {
                                                                     game: game.id,
                                                                     play_session:
