@@ -33,6 +33,15 @@ it('does not expose application configuration besides the revision', function ()
         ->not->toContain('production');
 });
 
+it('does not start a session', function (): void {
+    config(['app.revision' => '0123456789abcdef0123456789abcdef01234567']);
+
+    $response = $this->get(route('version'));
+
+    $response->assertOk()
+        ->assertCookieMissing((string) config('session.cookie'));
+});
+
 it('falls back to dev when the revision is unset', function (mixed $revision): void {
     config(['app.revision' => $revision]);
 
