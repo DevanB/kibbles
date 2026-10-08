@@ -16,6 +16,7 @@ it('may create, update, and delete a game', function (): void {
     $page->assertSee('Games')
         ->assertSee('No games yet')
         ->assertSee('Add Game')
+        ->screenshot(filename: 'pr-a-games-index-empty')
         ->assertNoJavaScriptErrors();
 
     $page->click('@create-game-button')
@@ -117,43 +118,18 @@ it('shows the games list as artwork tiles with status on the art', function (): 
         ->assertVisible('@game-art-slot-'.$unlinked->id)
         ->assertVisible('@game-status-'.$linked->id)
         ->assertVisible('@game-title-'.$unlinked->id)
-        ->screenshot(filename: 'games-index-artwork-grid')
-        ->assertNoJavaScriptErrors();
-
-    $page->click('@game-open-'.$linked->id)
-        ->assertPathIs('/games/'.$linked->id)
-        ->assertSee('Hades')
-        ->assertNoJavaScriptErrors();
-});
-
-it('captures artwork grid screens for review', function (): void {
-    $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
-
-    $user = User::query()->where('email', 'devan@localhost.test')->firstOrFail();
-    $hades = $user->games()->where('title', 'Hades')->firstOrFail();
-
-    $this->actingAs($user);
-
-    visit(route('games.index'))
-        ->assertSee('Hades')
-        ->assertVisible('@game-art-'.$hades->id)
         ->screenshot(filename: 'pr-a-games-index-light')
         ->assertNoJavaScriptErrors();
 
     visit(route('games.index'))
         ->inDarkMode()
         ->assertSee('Hades')
+        ->assertVisible('@game-art-'.$linked->id)
         ->screenshot(filename: 'pr-a-games-index-dark')
         ->assertNoJavaScriptErrors();
-});
 
-it('captures the empty games index for review', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $this->actingAs($user);
-
-    visit(route('games.index'))
-        ->assertSee('No games yet')
-        ->screenshot(filename: 'pr-a-games-index-empty')
+    $page->click('@game-open-'.$linked->id)
+        ->assertPathIs('/games/'.$linked->id)
+        ->assertSee('Hades')
         ->assertNoJavaScriptErrors();
 });

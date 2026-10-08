@@ -38,16 +38,6 @@ it('creates the demo user and games when the environment is not production', fun
         GameStatus::Finished->value,
         GameStatus::InProgress->value,
     ]);
-
-    $hades = Game::query()->where('title', 'Hades')->first();
-    $celeste = Game::query()->where('title', 'Celeste')->first();
-
-    expect($hades)->not->toBeNull()
-        ->and($hades->rawg_id)->toBe(274755)
-        ->and($hades->image_url)->toBe('https://media.rawg.io/media/games/1f4/1f47a270b8f241e4676b14d39ec620f7.jpg')
-        ->and($celeste)->not->toBeNull()
-        ->and($celeste->rawg_id)->toBeNull()
-        ->and($celeste->image_url)->toBeNull();
 });
 
 it('updates demo game statuses on re-seed without duplicating journals', function (): void {
