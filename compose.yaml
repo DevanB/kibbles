@@ -8,7 +8,7 @@
 #   2. Set APP_KEY (php artisan key:generate --show) and CLOUDFLARE_TUNNEL_TOKEN.
 #   3. CLOUDFLARE_TUNNEL_TOKEN is supplied at deploy time and must not be committed.
 #   4. When updating an existing NAS .env, add new keys from .env.production.example
-#      (including REGISTRATION_ENABLED=false) without overwriting APP_KEY or
+#      (including REGISTRATION_ENABLED=false and RAWG_API_KEY) without overwriting APP_KEY or
 #      CLOUDFLARE_TUNNEL_TOKEN. Do not set APP_REVISION in .env; it is baked into
 #      the image.
 #   5. docker compose pull && docker compose up -d
