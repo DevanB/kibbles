@@ -25,6 +25,7 @@ it('starts, stops, and journals a session from the show page', function (): void
         ->assertSee('Session started.')
         ->assertSee('In Progress')
         ->assertSee('now · Open')
+        ->screenshot(filename: 'pr-b-show-open-session')
         ->assertNoJavaScriptErrors();
 
     expect($game->refresh()->status)->toBe(GameStatus::InProgress);
@@ -35,10 +36,30 @@ it('starts, stops, and journals a session from the show page', function (): void
 
     $page->click('@stop-play-session-button')
         ->assertSee('Stop Session')
-        ->fill('#stop-session-body', 'Cleared Tartarus.')
+        ->screenshot(filename: 'pr-b-stop-modal')
         ->click('@save-play-session-button')
         ->assertSee('Session saved.')
         ->assertSee('0m')
+        ->assertVisible('@play-session-'.$session->id)
+        ->assertNoJavaScriptErrors();
+
+    expect($session->refresh()->ended_at)->not->toBeNull()
+        ->and($game->journalEntries()->count())->toBe(0);
+
+    $page->click('@start-play-session-button')
+        ->assertSee('Session started.')
+        ->assertSee('now · Open')
+        ->assertNoJavaScriptErrors();
+
+    $open = $game->playSessions()->open()->first();
+
+    expect($open)->not->toBeNull();
+
+    $page->click('@stop-play-session-button')
+        ->assertSee('Stop Session')
+        ->fill('#stop-session-body', 'Cleared Tartarus.')
+        ->click('@save-play-session-button')
+        ->assertSee('Session saved.')
         ->assertQueryStringHas('tab', 'journal')
         ->assertSee('Journal Entries')
         ->assertNoJavaScriptErrors();
@@ -46,12 +67,15 @@ it('starts, stops, and journals a session from the show page', function (): void
     $entry = $game->journalEntries()->first();
 
     expect($entry)->not->toBeNull()
-        ->and($entry->play_session_id)->toBe($session->id)
-        ->and($session->refresh()->ended_at)->not->toBeNull();
+        ->and($entry->play_session_id)->toBe($open->id)
+        ->and($entry->playSession?->is($open))->toBeTrue()
+        ->and($open->refresh()->ended_at)->not->toBeNull();
 
     $page->assertVisible('@journal-entry-'.$entry->id)
+        ->screenshot(filename: 'pr-b-show-journal-tab')
         ->click('@game-tab-sessions')
-        ->assertVisible('@play-session-journal-'.$session->id)
+        ->assertVisible('@play-session-journal-'.$open->id)
+        ->screenshot(filename: 'pr-b-show-history-journal-chip')
         ->assertNoJavaScriptErrors();
 });
 
@@ -65,6 +89,9 @@ it('adds, edits, and deletes a past session', function (): void {
 
     $page->click('@add-play-session-button')
         ->assertSee('Add Session')
+        ->assertVisible('@play-session-started-at')
+        ->assertVisible('@play-session-ended-at')
+        ->screenshot(filename: 'pr-b-add-session-modal')
         ->fill('#play-session-started-at', '2026-01-15T10:30')
         ->fill('#play-session-ended-at', '2026-01-15T12:44')
         ->click('@save-play-session-button')
@@ -82,6 +109,7 @@ it('adds, edits, and deletes a past session', function (): void {
         ->assertSee('Edit Session')
         ->assertValue('#play-session-started-at', '2026-01-15T10:30')
         ->assertValue('#play-session-ended-at', '2026-01-15T12:44')
+        ->screenshot(filename: 'pr-b-edit-session-modal')
         ->fill('#play-session-ended-at', '2026-01-15T10:44')
         ->click('@save-play-session-changes-button')
         ->assertSee('Session updated.')
@@ -92,6 +120,7 @@ it('adds, edits, and deletes a past session', function (): void {
         ->click('@delete-play-session-button-'.$session->id)
         ->assertSee('Delete Session?')
         ->assertSee('This will permanently delete this play session. Linked journal entries are kept.')
+        ->screenshot(filename: 'pr-b-delete-session-confirm')
         ->click('@confirm-delete-play-session-button-'.$session->id)
         ->assertSee('Session deleted.')
         ->assertSee('No play sessions yet')
@@ -104,6 +133,12 @@ it('shows a playing badge and an other-game banner', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $hades = Game::factory()->recycle($user)->catalogLinked()->create(['title' => 'Hades']);
     $celeste = Game::factory()->recycle($user)->create(['title' => 'Celeste']);
+    PlaySession::factory()->create([
+        'game_id' => $hades->id,
+        'user_id' => $user->id,
+        'started_at' => '2026-01-15 15:00:00',
+        'ended_at' => '2026-01-15 17:00:00',
+    ]);
     PlaySession::factory()->open()->create([
         'game_id' => $hades->id,
         'user_id' => $user->id,
@@ -115,16 +150,19 @@ it('shows a playing badge and an other-game banner', function (): void {
 
     $index->assertSee('Playing')
         ->assertVisible('@game-playing-'.$hades->id)
+        ->screenshot(filename: 'pr-b-index-playing-badge')
         ->assertNoJavaScriptErrors();
 
     $show = visit(route('games.show', $celeste));
 
     $show->assertSee("You're playing Hades.")
         ->assertVisible('@open-session-game-link')
+        ->screenshot(filename: 'pr-b-other-game-banner')
         ->click('@open-session-game-link')
         ->assertPathIs('/games/'.$hades->id)
         ->assertSee('Hades')
         ->assertSee('now · Open')
+        ->assertSeeIn('@play-time-total', '2h')
         ->assertNoJavaScriptErrors();
 });
 
@@ -198,70 +236,5 @@ it('formats session ranges by local day and year', function (): void {
         ->assertSee('Jan 15, 10:30 AM – 12:44 PM · 2h 14m')
         ->assertSee('Jan 14, 11:00 PM – Jan 15, 1:12 AM · 2h 12m')
         ->assertSee('Oct 5, 2025, 11:00 PM – Oct 6, 2025, 1:14 AM · 2h 14m')
-        ->assertNoJavaScriptErrors();
-});
-
-it('captures demo play session screens for review', function (): void {
-    $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
-
-    $user = User::query()->where('email', 'devan@localhost.test')->firstOrFail();
-    $hades = $user->games()->where('title', 'Hades')->firstOrFail();
-    $celeste = $user->games()->where('title', 'Celeste')->firstOrFail();
-    $closed = $hades->playSessions()->closed()->firstOrFail();
-
-    $this->actingAs($user);
-
-    visit(route('games.index'))
-        ->assertVisible('@game-playing-'.$hades->id)
-        ->assertVisible('@game-art-'.$hades->id)
-        ->screenshot(filename: 'pr-b-index-playing-badge')
-        ->assertNoJavaScriptErrors();
-
-    visit(route('games.show', $celeste))
-        ->assertSee("You're playing Hades.")
-        ->assertVisible('@open-session-game-link')
-        ->screenshot(filename: 'pr-b-other-game-banner')
-        ->assertNoJavaScriptErrors();
-
-    $show = visit(route('games.show', $hades));
-
-    $show->assertSee('In Progress')
-        ->assertSeeIn('@play-time-total', '2h')
-        ->assertSee('now · Open')
-        ->assertVisible('@play-session-journal-'.$closed->id)
-        ->screenshot(filename: 'pr-b-show-open-session')
-        ->screenshot(filename: 'pr-b-show-history-journal-chip')
-        ->click('@game-tab-journal')
-        ->assertQueryStringHas('tab', 'journal')
-        ->assertVisible('@journal-entry-'.$hades->journalEntries()->newestFirst()->firstOrFail()->id)
-        ->screenshot(filename: 'pr-b-show-journal-tab')
-        ->assertNoJavaScriptErrors();
-
-    $show->click('@stop-play-session-button')
-        ->assertSee('Stop Session')
-        ->screenshot(filename: 'pr-b-stop-modal')
-        ->assertNoJavaScriptErrors();
-
-    $show = visit(route('games.show', $hades));
-
-    $show->click('@add-play-session-button')
-        ->assertVisible('@play-session-started-at')
-        ->assertVisible('@play-session-ended-at')
-        ->screenshot(filename: 'pr-b-add-session-modal')
-        ->assertNoJavaScriptErrors();
-
-    $show = visit(route('games.show', $hades));
-
-    $show->click('@edit-play-session-button-'.$closed->id)
-        ->assertSee('Edit Session')
-        ->screenshot(filename: 'pr-b-edit-session-modal')
-        ->assertNoJavaScriptErrors();
-
-    $show = visit(route('games.show', $hades));
-
-    $show->click('@play-session-actions-button-'.$closed->id)
-        ->click('@delete-play-session-button-'.$closed->id)
-        ->assertSee('Delete Session?')
-        ->screenshot(filename: 'pr-b-delete-session-confirm')
         ->assertNoJavaScriptErrors();
 });

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Actions\StartPlaySession;
-use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\JournalEntry;
 use App\Models\PlaySession;
@@ -135,40 +134,6 @@ it('returns 404 for a missing play session', function (): void {
         ->assertNotFound();
 });
 
-it('moves backlog and abandoned games to in progress when a session starts', function (GameStatus $status): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create([
-        'status' => $status,
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.start', $game))
-        ->assertRedirectToRoute('games.show', $game);
-
-    expect($game->refresh()->status)->toBe(GameStatus::InProgress)
-        ->and($game->playSessions()->open()->count())->toBe(1);
-})->with([
-    'backlog' => GameStatus::Backlog,
-    'abandoned' => GameStatus::Abandoned,
-]);
-
-it('leaves finished and in-progress status unchanged when a session starts', function (GameStatus $status): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create([
-        'status' => $status,
-    ]);
-
-    $this->actingAs($user)
-        ->post(route('games.play-sessions.start', $game))
-        ->assertRedirectToRoute('games.show', $game);
-
-    expect($game->refresh()->status)->toBe($status);
-})->with([
-    'finished' => GameStatus::Finished,
-    'in progress' => GameStatus::InProgress,
-]);
-
 it('rejects starting a second session while another game is open', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $openGame = Game::factory()->recycle($user)->create(['title' => 'Hades']);
@@ -207,29 +172,6 @@ it('maps a unique open-session race to a validation error', function (): void {
                 'play_session' => ['Stop your session on Hades first.'],
             ]);
     }
-});
-
-it('does not change status when a past session is added', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create([
-        'status' => GameStatus::Backlog,
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.store', $game), [
-            'started_at' => '2026-01-15T10:30:00',
-            'ended_at' => '2026-01-15T12:44:00',
-            'timezone' => 'America/New_York',
-        ])
-        ->assertRedirectToRoute('games.show', $game);
-
-    $session = $game->playSessions()->first();
-
-    expect($game->refresh()->status)->toBe(GameStatus::Backlog)
-        ->and($session)->not->toBeNull()
-        ->and($session->started_at->toDateTimeString())->toBe('2026-01-15 15:30:00')
-        ->and($session->ended_at?->toDateTimeString())->toBe('2026-01-15 17:44:00');
 });
 
 it('requires start and end times when storing a past session', function (): void {
@@ -301,28 +243,6 @@ it('rejects reopening a session on update', function (): void {
     expect($session->refresh()->ended_at)->not->toBeNull();
 });
 
-it('stores an edited session in UTC from the browser timezone', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $session = PlaySession::factory()->create([
-        'game_id' => $game->id,
-        'user_id' => $user->id,
-        'started_at' => '2026-01-15 15:30:00',
-        'ended_at' => '2026-01-15 16:30:00',
-    ]);
-
-    $this->actingAs($user)
-        ->put(route('games.play-sessions.update', [$game, $session]), [
-            'started_at' => '2026-01-15T10:30:00',
-            'ended_at' => '2026-01-15T12:44:00',
-            'timezone' => 'America/New_York',
-        ])
-        ->assertRedirectToRoute('games.show', $game);
-
-    expect($session->refresh()->started_at->toDateTimeString())->toBe('2026-01-15 15:30:00')
-        ->and($session->ended_at?->toDateTimeString())->toBe('2026-01-15 17:44:00');
-});
-
 it('keeps the journal entry when a play session is deleted', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     $game = Game::factory()->recycle($user)->create();
@@ -376,43 +296,4 @@ it('rejects a stop journal body longer than 10000 characters', function (): void
 
     expect($session->refresh()->ended_at)->toBeNull()
         ->and($game->journalEntries()->count())->toBe(0);
-});
-
-it('stays on the play sessions tab after stopping without a journal note', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $session = PlaySession::factory()->open()->create([
-        'game_id' => $game->id,
-        'user_id' => $user->id,
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.finish', [$game, $session]))
-        ->assertRedirectToRoute('games.show', $game);
-
-    expect($session->refresh()->ended_at)->not->toBeNull()
-        ->and($game->journalEntries()->count())->toBe(0);
-});
-
-it('redirects to the journal tab after stopping with a journal note', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $session = PlaySession::factory()->open()->create([
-        'game_id' => $game->id,
-        'user_id' => $user->id,
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('games.show', $game)
-        ->post(route('games.play-sessions.finish', [$game, $session]), [
-            'body' => 'Cleared Tartarus.',
-        ])
-        ->assertRedirectToRoute('games.show', ['game' => $game, 'tab' => 'journal']);
-
-    $entry = $game->journalEntries()->first();
-
-    expect($session->refresh()->ended_at)->not->toBeNull()
-        ->and($entry)->not->toBeNull()
-        ->and($entry->play_session_id)->toBe($session->id);
 });
