@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Builders\PlaySessionBuilder;
 use Carbon\CarbonInterface;
 use Database\Factories\PlaySessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +28,8 @@ use Illuminate\Validation\ValidationException;
  * @property-read User $user
  * @property-read Game $game
  * @property-read JournalEntry|null $journalEntry
+ *
+ * @method static PlaySessionBuilder query()
  */
 #[Fillable([
     'user_id',
@@ -35,6 +37,7 @@ use Illuminate\Validation\ValidationException;
     'started_at',
     'ended_at',
 ])]
+#[UseEloquentBuilder(PlaySessionBuilder::class)]
 final class PlaySession extends Model
 {
     /** @use HasFactory<PlaySessionFactory> */
@@ -173,32 +176,5 @@ final class PlaySession extends Model
             'durationMinutes' => $this->durationMinutes(),
             'journalEntryId' => $this->journalEntry?->id,
         ];
-    }
-
-    /**
-     * @param  Builder<PlaySession>  $query
-     */
-    #[Scope]
-    protected function open(Builder $query): void
-    {
-        $query->whereNull('ended_at');
-    }
-
-    /**
-     * @param  Builder<PlaySession>  $query
-     */
-    #[Scope]
-    protected function closed(Builder $query): void
-    {
-        $query->whereNotNull('ended_at');
-    }
-
-    /**
-     * @param  Builder<PlaySession>  $query
-     */
-    #[Scope]
-    protected function newestFirst(Builder $query): void
-    {
-        $query->latest('started_at')->orderByDesc('id');
     }
 }
