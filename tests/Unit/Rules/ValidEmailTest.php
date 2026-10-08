@@ -66,6 +66,18 @@ it('works with valid email', function (string $email): void {
     'team@startup.tech',
 ]);
 
+it('fails when the value is not a string', function (): void {
+    $rule = new ValidEmail;
+
+    $failed = false;
+
+    $rule->validate('email', ['not-a-string'], function () use (&$failed): void {
+        $failed = true;
+    });
+
+    expect($failed)->toBeTrue();
+});
+
 it('fails with invalid email', function (string $email): void {
     $rule = new ValidEmail;
 
