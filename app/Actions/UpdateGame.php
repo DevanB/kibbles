@@ -6,7 +6,7 @@ namespace App\Actions;
 
 use App\Enums\GameStatus;
 use App\Models\Game;
-use App\Rules\UniqueOwnedGameTitle;
+use App\Rules\UniqueOwnedRawgId;
 use App\Services\RawgClient;
 use Illuminate\Database\UniqueConstraintViolationException;
 
@@ -30,8 +30,8 @@ final readonly class UpdateGame
 
         try {
             $game->update($attributes);
-        } catch (UniqueConstraintViolationException) {
-            throw UniqueOwnedGameTitle::conflict();
+        } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
+            throw UniqueOwnedRawgId::fromConstraint($uniqueConstraintViolationException);
         }
 
         return $game;
