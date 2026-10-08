@@ -13,6 +13,10 @@ php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Bro
 
 If Pest Browser errors about missing or outdated browsers: `bunx playwright install`. CI (`.github/workflows/tests.yml`) runs `composer test` on PRs and fails on red; that is the merge gate, not a substitute for a local verify run. Always-applied Cursor rule: `.cursor/rules/verify-kibbles.mdc`.
 
+## Cursor Cloud environment
+
+Cloud Agents boot from `.cursor/Dockerfile` + `.cursor/environment.json`. PHP 8.5, Composer, bun, SQLite, and Playwright Chromium are already installed — do not reinstall those toolchains. Run `composer install` / `bun install` only when lockfiles change.
+
 <laravel-boost-guidelines>
 === .ai/app.actions rules ===
 
