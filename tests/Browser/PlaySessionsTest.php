@@ -90,7 +90,7 @@ it('adds, edits, and deletes a past session', function (): void {
 
     $page = visit(route('games.show', $game))->withTimezone('America/New_York');
 
-    $page        ->click('@add-play-session-button')
+    $page->click('@add-play-session-button')
         ->assertSee('Add Session')
         ->click('.im-close-button')
         ->assertSee('No play sessions yet')
