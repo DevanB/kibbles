@@ -26,7 +26,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertSee('No journal entries yet')
         ->click('@create-journal-entry-button')
         ->assertSee('Create Entry')
-        ->click('Close')
+        ->click('.im-close-button')
         ->assertQueryStringHas('tab', 'journal')
         ->assertSee('No journal entries yet')
         ->back()
