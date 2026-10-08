@@ -61,4 +61,17 @@ final class JournalEntry extends Model
     {
         return $query->latest()->orderByDesc('id');
     }
+
+    /**
+     * @return array{id: string, body: string, createdAt: string, updatedAt: string}
+     */
+    public function toWire(): array
+    {
+        return [
+            'id' => $this->id,
+            'body' => $this->body,
+            'createdAt' => $this->created_at->toIso8601String(),
+            'updatedAt' => $this->updated_at->toIso8601String(),
+        ];
+    }
 }
