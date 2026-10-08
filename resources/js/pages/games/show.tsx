@@ -24,10 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import {
-    formatDuration,
-    formatSessionDateTime,
-} from '@/lib/local-date-time';
+import { formatDuration, formatSessionDateTime } from '@/lib/local-date-time';
 import { index, show } from '@/routes/games';
 import type { Game, JournalEntry, OpenPlaySession, PlaySession } from '@/types';
 
