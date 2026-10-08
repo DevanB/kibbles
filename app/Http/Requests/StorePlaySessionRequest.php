@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use LogicException;
 
 final class StorePlaySessionRequest extends FormRequest
 {
@@ -85,7 +86,8 @@ final class StorePlaySessionRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $user = $this->user();
-                assert($user instanceof User);
+
+                throw_unless($user instanceof User, LogicException::class, 'The authenticated user must be an '.User::class.' instance.');
 
                 $open = PlaySession::openFor($user);
 

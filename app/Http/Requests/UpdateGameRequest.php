@@ -12,6 +12,7 @@ use App\Rules\UniqueOwnedRawgId;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use LogicException;
 
 final class UpdateGameRequest extends FormRequest
 {
@@ -28,10 +29,12 @@ final class UpdateGameRequest extends FormRequest
     public function rules(): array
     {
         $owner = $this->user();
-        assert($owner instanceof User);
+
+        throw_unless($owner instanceof User, LogicException::class, 'The authenticated user must be an '.User::class.' instance.');
 
         $game = $this->route('game');
-        assert($game instanceof Game);
+
+        throw_unless($game instanceof Game, LogicException::class, 'The game route parameter must be a '.Game::class.' instance.');
 
         return [
             'title' => [

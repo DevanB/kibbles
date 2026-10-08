@@ -6,7 +6,6 @@ namespace App\Http\Requests;
 
 use App\Models\Game;
 use App\Models\JournalEntry;
-use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class CreateJournalEntryRequest extends FormRequest
@@ -23,12 +22,6 @@ final class CreateJournalEntryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $owner = $this->user();
-        assert($owner instanceof User);
-
-        $game = $this->route('game');
-        assert($game instanceof Game);
-
         return [
             'body' => ['required', 'string', 'max:10000'],
         ];

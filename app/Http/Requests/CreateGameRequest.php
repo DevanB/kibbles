@@ -10,6 +10,7 @@ use App\Rules\UniqueOwnedGameTitle;
 use App\Rules\UniqueOwnedRawgId;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use LogicException;
 
 final class CreateGameRequest extends FormRequest
 {
@@ -24,7 +25,8 @@ final class CreateGameRequest extends FormRequest
     public function rules(): array
     {
         $owner = $this->user();
-        assert($owner instanceof User);
+
+        throw_unless($owner instanceof User, LogicException::class, 'The authenticated user must be an '.User::class.' instance.');
 
         return [
             'title' => [
