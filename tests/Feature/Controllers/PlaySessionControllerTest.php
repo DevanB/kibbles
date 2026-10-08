@@ -7,6 +7,7 @@ use App\Models\Game;
 use App\Models\JournalEntry;
 use App\Models\PlaySession;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -162,6 +163,12 @@ it('maps a unique open-session race to a validation error', function (): void {
         'user_id' => $user->id,
         'ended_at' => null,
     ]);
+
+    expect(fn (): PlaySession => PlaySession::factory()->create([
+        'game_id' => $other->id,
+        'user_id' => $user->id,
+        'ended_at' => null,
+    ]))->toThrow(UniqueConstraintViolationException::class);
 
     try {
         resolve(StartPlaySession::class)->handle($other);
