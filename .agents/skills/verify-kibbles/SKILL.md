@@ -173,8 +173,10 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `game-actions-button` | games show split-button chevron (Delete lives in the menu) |
 | `delete-game-button` | games show menu / edit delete |
 | `confirm-delete-game-button` / `cancel-delete-game-button` | games show delete dialog |
-| `game-title-{id}` | games index title → show |
-| `game-open-{id}` | games index disclosure chevron → show |
+| `game-title-{id}` | games index title under the tile |
+| `game-open-{id}` | games index artwork tile → show |
+| `game-art-{id}` | games index linked tile art |
+| `game-art-slot-{id}` | games index placeholder tile |
 | `game-art-slot` | games show box-art placeholder |
 | `create-journal-entry-button` | games show opens create modal |
 | `add-journal-entry-button` | journal create modal submit |
