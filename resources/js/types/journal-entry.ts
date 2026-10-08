@@ -3,4 +3,5 @@ export type JournalEntry = {
     body: string;
     createdAt: string;
     updatedAt: string;
+    playSessionId: string | null;
 };
