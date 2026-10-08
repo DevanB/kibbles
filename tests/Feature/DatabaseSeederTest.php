@@ -53,5 +53,6 @@ it('updates demo game statuses on re-seed without duplicating journals', functio
 
     expect($hades->refresh()->status)->toBe(GameStatus::InProgress)
         ->and($hades->journalEntries)->toHaveCount(2)
+        ->and($hades->playSessions)->toHaveCount(2)
         ->and(Game::query()->count())->toBe(5);
 });

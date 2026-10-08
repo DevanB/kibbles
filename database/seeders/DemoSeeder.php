@@ -83,5 +83,53 @@ final class DemoSeeder extends Seeder
                 'body' => 'Duo boon with Aphrodite finally clicked; made it to Elysium.',
             ]);
         }
+
+        if ($user->playSessions()->doesntExist()) {
+            $this->seedPlaySessions($user);
+        }
+    }
+
+    private function seedPlaySessions(User $user): void
+    {
+        $hades = $user->games()->where('title', 'Hades')->first();
+        $hollowKnight = $user->games()->where('title', 'Hollow Knight')->first();
+        $baldursGate = $user->games()->where('title', "Baldur's Gate 3")->first();
+
+        if ($hades instanceof Game) {
+            $closed = $hades->playSessions()->create([
+                'user_id' => $user->id,
+                'started_at' => now()->subHours(3),
+                'ended_at' => now()->subHour(),
+            ]);
+
+            $hades->playSessions()->create([
+                'user_id' => $user->id,
+                'started_at' => now()->subMinutes(20),
+            ]);
+
+            $newerJournal = $hades->journalEntries()->newestFirst()->first();
+
+            if ($newerJournal !== null) {
+                $newerJournal->update([
+                    'play_session_id' => $closed->id,
+                ]);
+            }
+        }
+
+        if ($hollowKnight instanceof Game) {
+            $hollowKnight->playSessions()->create([
+                'user_id' => $user->id,
+                'started_at' => now()->subHours(5),
+                'ended_at' => now()->subHours(4)->subMinutes(10),
+            ]);
+        }
+
+        if ($baldursGate instanceof Game) {
+            $baldursGate->playSessions()->create([
+                'user_id' => $user->id,
+                'started_at' => now()->subDays(2),
+                'ended_at' => now()->subDays(2)->addMinutes(40),
+            ]);
+        }
     }
 }
