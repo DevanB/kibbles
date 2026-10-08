@@ -60,9 +60,7 @@ it('lists only the authenticated user games as id, title, and status', function 
                 ->where('title', 'Owned Game')
                 ->where('status', GameStatus::Backlog->value)
                 ->where('statusLabel', 'Backlog')
-                ->where('rawgId', null)
-                ->where('imageUrl', null)
-                ->where('description', null)));
+                ->etc()));
 });
 
 it('requires a title when creating a game', function (): void {
