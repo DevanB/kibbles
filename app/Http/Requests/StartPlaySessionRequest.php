@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\Game;
 use App\Models\PlaySession;
+use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -34,10 +35,7 @@ final class StartPlaySessionRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $user = $this->user();
-
-                if ($user === null) {
-                    return;
-                }
+                assert($user instanceof User);
 
                 $open = PlaySession::openFor($user);
 
