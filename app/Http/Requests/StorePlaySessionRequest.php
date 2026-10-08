@@ -6,7 +6,9 @@ namespace App\Http\Requests;
 
 use App\Models\Game;
 use App\Models\PlaySession;
+use App\Models\User;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePlaySessionRequest extends FormRequest
@@ -23,11 +25,20 @@ final class StorePlaySessionRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->isStart()) {
+            return [];
+        }
+
         return [
             'started_at' => ['required', 'date'],
             'ended_at' => ['required', 'date', 'after_or_equal:started_at'],
             'timezone' => ['required', 'timezone:all'],
         ];
+    }
+
+    public function isStart(): bool
+    {
+        return ! $this->filled('started_at') && ! $this->filled('ended_at') && ! $this->filled('timezone');
     }
 
     public function startedAt(): CarbonInterface
@@ -59,6 +70,29 @@ final class StorePlaySessionRequest extends FormRequest
             'ended_at.after_or_equal' => 'The end time must be at or after the start time.',
             'timezone.required' => 'A timezone is required.',
             'timezone.timezone' => 'The timezone must be a valid timezone.',
+        ];
+    }
+
+    /**
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        if (! $this->isStart()) {
+            return [];
+        }
+
+        return [
+            function (Validator $validator): void {
+                $user = $this->user();
+                assert($user instanceof User);
+
+                $open = PlaySession::openFor($user);
+
+                if ($open instanceof PlaySession) {
+                    $validator->errors()->add('play_session', PlaySession::openConflictMessage($open->game->title));
+                }
+            },
         ];
     }
 }

@@ -22,11 +22,28 @@ final class UpdatePlaySessionRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->isFinish()) {
+            return [
+                'body' => ['nullable', 'string', 'max:10000'],
+            ];
+        }
+
         return [
             'started_at' => ['required', 'date'],
             'ended_at' => ['required', 'date', 'after_or_equal:started_at'],
             'timezone' => ['required', 'timezone:all'],
         ];
+    }
+
+    public function isFinish(): bool
+    {
+        $session = $this->route('play_session');
+
+        if ($session instanceof PlaySession && $session->ended_at === null) {
+            return true;
+        }
+
+        return $this->exists('body') && ! $this->filled('started_at');
     }
 
     public function startedAt(): CarbonInterface
@@ -45,6 +62,11 @@ final class UpdatePlaySessionRequest extends FormRequest
         );
     }
 
+    public function body(): ?string
+    {
+        return $this->filled('body') ? $this->string('body')->value() : null;
+    }
+
     /**
      * @return array<string, string>
      */
@@ -58,6 +80,8 @@ final class UpdatePlaySessionRequest extends FormRequest
             'ended_at.after_or_equal' => 'The end time must be at or after the start time.',
             'timezone.required' => 'A timezone is required.',
             'timezone.timezone' => 'The timezone must be a valid timezone.',
+            'body.string' => 'The body must be a string.',
+            'body.max' => 'The body may not be greater than 10000 characters.',
         ];
     }
 }
