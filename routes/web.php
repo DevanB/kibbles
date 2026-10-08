@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
+use App\Http\Controllers\PlaySessionController;
 use App\Http\Controllers\RawgGameSearchController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\UserController;
@@ -29,6 +30,24 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('games.journal-entries', JournalEntryController::class)
         ->only(['create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->scoped();
+    Route::scopeBindings()->group(function (): void {
+        Route::post('games/{game}/play-sessions/start', [PlaySessionController::class, 'start'])
+            ->name('games.play-sessions.start');
+        Route::get('games/{game}/play-sessions/create', [PlaySessionController::class, 'create'])
+            ->name('games.play-sessions.create');
+        Route::post('games/{game}/play-sessions', [PlaySessionController::class, 'store'])
+            ->name('games.play-sessions.store');
+        Route::get('games/{game}/play-sessions/{play_session}/stop', [PlaySessionController::class, 'stop'])
+            ->name('games.play-sessions.stop');
+        Route::post('games/{game}/play-sessions/{play_session}/stop', [PlaySessionController::class, 'finish'])
+            ->name('games.play-sessions.finish');
+        Route::get('games/{game}/play-sessions/{play_session}/edit', [PlaySessionController::class, 'edit'])
+            ->name('games.play-sessions.edit');
+        Route::put('games/{game}/play-sessions/{play_session}', [PlaySessionController::class, 'update'])
+            ->name('games.play-sessions.update');
+        Route::delete('games/{game}/play-sessions/{play_session}', [PlaySessionController::class, 'destroy'])
+            ->name('games.play-sessions.destroy');
+    });
 });
 
 Route::middleware('auth')->group(function (): void {

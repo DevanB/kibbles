@@ -13,6 +13,7 @@ use App\Http\Requests\CreateGameRequest;
 use App\Http\Requests\DeleteGameRequest;
 use App\Http\Requests\UpdateGameRequest;
 use App\Models\Game;
+use App\Models\PlaySession;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +35,10 @@ final readonly class GameController
                 ->map(fn (Game $game): array => $game->toWire())
                 ->values()
                 ->all(),
+            'openPlaySessionGameId' => PlaySession::query()
+                ->whereBelongsTo($user)
+                ->open()
+                ->value('game_id'),
         ]);
     }
 
@@ -64,13 +69,30 @@ final readonly class GameController
         return to_route('games.show', $game);
     }
 
-    public function show(Game $game, ListJournalEntries $list): Response
+    public function show(Game $game, #[CurrentUser] User $user, ListJournalEntries $list): Response
     {
         Gate::authorize('view', $game);
+
+        $open = PlaySession::openFor($user);
+        $totalPlayedMinutes = PlaySession::totalPlayedMinutesFor($game);
 
         return Inertia::render('games/show', [
             'game' => $game->toWire(),
             'journalEntries' => $list->handle($game),
+            'playSessions' => $game->playSessions()
+                ->newestFirst()
+                ->with('journalEntry')
+                ->get()
+                ->map(fn (PlaySession $session): array => $session->toWire())
+                ->values()
+                ->all(),
+            'openPlaySession' => $open === null ? null : [
+                ...$open->toWire(),
+                'gameId' => $open->game_id,
+                'gameTitle' => $open->game->title,
+            ],
+            'totalPlayedMinutes' => $totalPlayedMinutes,
+            'totalPlayedLabel' => PlaySession::totalPlayedLabel($totalPlayedMinutes),
         ]);
     }
 
