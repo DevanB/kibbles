@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read CarbonInterface $updated_at
  * @property-read User $user
  * @property-read Collection<int, JournalEntry> $journalEntries
+ * @property-read Collection<int, PlaySession> $playSessions
  */
 #[Fillable([
     'title',
@@ -76,6 +77,14 @@ final class Game extends Model
     public function journalEntries(): HasMany
     {
         return $this->hasMany(JournalEntry::class);
+    }
+
+    /**
+     * @return HasMany<PlaySession, $this>
+     */
+    public function playSessions(): HasMany
+    {
+        return $this->hasMany(PlaySession::class);
     }
 
     /**
