@@ -1,46 +1,23 @@
+import { format, isSameDay, isSameYear } from 'date-fns';
+
 export function browserTimeZone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
 export function toDateTimeLocalValue(iso: string): string {
-    const date = new Date(iso);
-    const pad = (value: number): string => String(value).padStart(2, '0');
-
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return format(new Date(iso), "yyyy-MM-dd'T'HH:mm");
 }
 
-function isSameLocalDay(left: Date, right: Date): boolean {
-    return (
-        left.getFullYear() === right.getFullYear() &&
-        left.getMonth() === right.getMonth() &&
-        left.getDate() === right.getDate()
-    );
-}
-
-function meridem(date: Date): 'AM' | 'PM' {
-    return date.getHours() < 12 ? 'AM' : 'PM';
+function meridem(date: Date): string {
+    return format(date, 'a');
 }
 
 function formatDate(date: Date, now: Date): string {
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        ...(date.getFullYear() === now.getFullYear()
-            ? {}
-            : { year: 'numeric' }),
-    });
+    return format(date, isSameYear(date, now) ? 'MMM d' : 'MMM d, yyyy');
 }
 
 function formatTime(date: Date, includeMeridem: boolean): string {
-    const hour12 = date.getHours() % 12 === 0 ? 12 : date.getHours() % 12;
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const time = `${hour12}:${minutes}`;
-
-    if (!includeMeridem) {
-        return time;
-    }
-
-    return `${time} ${meridem(date)}`;
+    return format(date, includeMeridem ? 'h:mm a' : 'h:mm');
 }
 
 export function formatSessionRange(
@@ -55,7 +32,7 @@ export function formatSessionRange(
     }
 
     const end = new Date(endedAt);
-    const sameDay = isSameLocalDay(start, end);
+    const sameDay = isSameDay(start, end);
     const sameMeridem = meridem(start) === meridem(end);
 
     if (sameDay) {
