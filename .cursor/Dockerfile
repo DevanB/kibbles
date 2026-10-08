@@ -4,7 +4,8 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 
 # git + sudo are required for Cloud Agent checkout. The remaining libraries
 # are Playwright Chromium deps from playwright-core 1.63 (Ubuntu 24.04).
@@ -80,4 +81,6 @@ RUN install -d -m 0755 /etc/apt/keyrings \
 RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
 
 RUN printf '%s\n' 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu \
-    && chmod 0440 /etc/sudoers.d/ubuntu
+    && chmod 0440 /etc/sudoers.d/ubuntu \
+    && mkdir -p /opt/ms-playwright \
+    && chmod 0777 /opt/ms-playwright
