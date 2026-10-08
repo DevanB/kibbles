@@ -86,11 +86,11 @@ final readonly class GameController
                 ->map(fn (PlaySession $session): array => $session->toWire())
                 ->values()
                 ->all(),
-            'openPlaySession' => $open === null ? null : [
+            'openPlaySession' => $open instanceof PlaySession ? [
                 ...$open->toWire(),
                 'gameId' => $open->game_id,
                 'gameTitle' => $open->game->title,
-            ],
+            ] : null,
             'totalPlayedMinutes' => $totalPlayedMinutes,
             'totalPlayedLabel' => PlaySession::totalPlayedLabel($totalPlayedMinutes),
         ]);
