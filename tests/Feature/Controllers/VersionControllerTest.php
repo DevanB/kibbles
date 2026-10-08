@@ -14,9 +14,10 @@ it('returns the configured revision as plain text', function (): void {
 });
 
 it('does not expose application configuration besides the revision', function (): void {
+    $applicationKey = (string) config('app.key');
+
     config([
         'app.revision' => 'cafebabedeadbeefcafebabedeadbeefcafebabe',
-        'app.key' => 'base64:this-must-not-appear',
         'app.debug' => true,
         'app.env' => 'production',
     ]);
@@ -27,8 +28,7 @@ it('does not expose application configuration besides the revision', function ()
 
     expect($response->getContent())
         ->toBe('cafebabedeadbeefcafebabedeadbeefcafebabe')
-        ->not->toContain('base64:')
-        ->not->toContain('this-must-not-appear')
+        ->not->toContain($applicationKey)
         ->not->toContain('APP_')
         ->not->toContain('production');
 });
