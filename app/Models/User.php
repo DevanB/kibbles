@@ -52,9 +52,9 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     /**
      * @return array<string, string>
      */
-    public function casts(): array
+    public function getCasts(): array
     {
-        return [
+        return array_merge(parent::getCasts(), [
             'id' => 'string',
             'name' => 'string',
             'email' => 'string',
@@ -66,7 +66,7 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'two_factor_confirmed_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
-        ];
+        ]);
     }
 
     /**
