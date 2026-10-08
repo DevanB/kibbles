@@ -20,7 +20,10 @@ final class PlaySessionFactory extends Factory
     {
         return [
             'game_id' => Game::factory(),
-            'user_id' => fn (array $attributes): string => Game::query()->findOrFail($attributes['game_id'])->user_id,
+            'user_id' => fn (array $attributes): string => Game::query()
+                ->whereKey($attributes['game_id'])
+                ->firstOrFail()
+                ->user_id,
             'started_at' => now()->subHours(2),
             'ended_at' => now()->subHour(),
         ];
