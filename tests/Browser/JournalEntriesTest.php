@@ -14,8 +14,11 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
     $page = visit(route('games.show', $game));
 
     $page->assertSee('Catan')
-        ->assertSee('No journal entries yet')
         ->assertSee('Journal Entries')
+        ->assertSee('No play sessions yet')
+        ->click('@game-tab-journal')
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertSee('No journal entries yet')
         ->assertSee('Write what happened the last time you played.')
         ->assertNoJavaScriptErrors();
 
@@ -24,6 +27,8 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->fill('#compose-body', 'Settled on the ore port.')
         ->click('@add-journal-entry-button')
         ->assertSee('Journal entry added.')
+        ->assertQueryStringHas('tab', 'journal')
+        ->assertSee('Journal Entries')
         ->assertNoJavaScriptErrors();
 
     $older = $game->journalEntries()->first();
@@ -41,7 +46,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
 
     expect($newer)->not->toBeNull();
 
-    $page = visit(route('games.show', $game));
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']));
 
     $rowOrder = $page->script(<<<'JS'
         (() => [...document.querySelectorAll('[data-test^="journal-entry-"]')]
@@ -61,7 +66,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertSee('Journal entry updated.')
         ->assertNoJavaScriptErrors();
 
-    $page = visit(route('games.show', $game));
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']));
 
     $page->click('@journal-entry-'.$older->id)
         ->assertSee('Settled on the brick port.')
@@ -87,6 +92,7 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->click('@delete-journal-entry-button-'.$newer->id)
         ->click('@confirm-delete-journal-entry-button-'.$newer->id)
         ->assertSee('Journal entry deleted.')
+        ->assertQueryStringHas('tab', 'journal')
         ->assertSee('No journal entries yet')
         ->assertNoJavaScriptErrors();
 

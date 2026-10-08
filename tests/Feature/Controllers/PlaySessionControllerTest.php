@@ -377,3 +377,42 @@ it('rejects a stop journal body longer than 10000 characters', function (): void
     expect($session->refresh()->ended_at)->toBeNull()
         ->and($game->journalEntries()->count())->toBe(0);
 });
+
+it('stays on the play sessions tab after stopping without a journal note', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $session = PlaySession::factory()->open()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.show', $game)
+        ->post(route('games.play-sessions.finish', [$game, $session]))
+        ->assertRedirectToRoute('games.show', $game);
+
+    expect($session->refresh()->ended_at)->not->toBeNull()
+        ->and($game->journalEntries()->count())->toBe(0);
+});
+
+it('redirects to the journal tab after stopping with a journal note', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $session = PlaySession::factory()->open()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.show', $game)
+        ->post(route('games.play-sessions.finish', [$game, $session]), [
+            'body' => 'Cleared Tartarus.',
+        ])
+        ->assertRedirectToRoute('games.show', ['game' => $game, 'tab' => 'journal']);
+
+    $entry = $game->journalEntries()->first();
+
+    expect($session->refresh()->ended_at)->not->toBeNull()
+        ->and($entry)->not->toBeNull()
+        ->and($entry->play_session_id)->toBe($session->id);
+});

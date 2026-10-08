@@ -180,6 +180,7 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `game-art-slot-{id}` | games index placeholder tile |
 | `game-art-slot` | games show box-art placeholder |
 | `game-playing-{id}` | games index Playing badge |
+| `game-tab-sessions` / `game-tab-journal` | games show Play Sessions / Journal Entries tabs |
 | `start-play-session-button` | games show / empty play-sessions Start |
 | `stop-play-session-button` | games show header Stop |
 | `stop-play-session-button-{id}` | games show open-row Stop |

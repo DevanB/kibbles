@@ -529,3 +529,27 @@ it('clears catalog details when a game is unlinked', function (): void {
         ->and($game->image_url)->toBeNull()
         ->and($game->description)->toBeNull();
 });
+
+it('defaults the show hub to the play sessions tab', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('games.show', $game))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/show')
+            ->where('tab', 'sessions'));
+});
+
+it('opens the journal tab when the tab query is journal', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('games.show', ['game' => $game, 'tab' => 'journal']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('games/show')
+            ->where('tab', 'journal'));
+});
