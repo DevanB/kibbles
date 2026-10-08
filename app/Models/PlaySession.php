@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\PlaySessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -145,33 +146,6 @@ final class PlaySession extends Model
         return $this->hasOne(JournalEntry::class);
     }
 
-    /**
-     * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
-     */
-    public function scopeOpen(Builder $query): Builder
-    {
-        return $query->whereNull('ended_at');
-    }
-
-    /**
-     * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
-     */
-    public function scopeClosed(Builder $query): Builder
-    {
-        return $query->whereNotNull('ended_at');
-    }
-
-    /**
-     * @param  Builder<PlaySession>  $query
-     * @return Builder<PlaySession>
-     */
-    public function scopeNewestFirst(Builder $query): Builder
-    {
-        return $query->latest('started_at')->orderByDesc('id');
-    }
-
     public function durationMinutes(): ?int
     {
         if ($this->ended_at === null) {
@@ -193,5 +167,35 @@ final class PlaySession extends Model
             'durationMinutes' => $this->durationMinutes(),
             'journalEntryId' => $this->journalEntry?->id,
         ];
+    }
+
+    /**
+     * @param  Builder<PlaySession>  $query
+     * @return Builder<PlaySession>
+     */
+    #[Scope]
+    protected function open(Builder $query): Builder
+    {
+        return $query->whereNull('ended_at');
+    }
+
+    /**
+     * @param  Builder<PlaySession>  $query
+     * @return Builder<PlaySession>
+     */
+    #[Scope]
+    protected function closed(Builder $query): Builder
+    {
+        return $query->whereNotNull('ended_at');
+    }
+
+    /**
+     * @param  Builder<PlaySession>  $query
+     * @return Builder<PlaySession>
+     */
+    #[Scope]
+    protected function newestFirst(Builder $query): Builder
+    {
+        return $query->latest('started_at')->orderByDesc('id');
     }
 }
