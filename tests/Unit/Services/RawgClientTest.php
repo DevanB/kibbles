@@ -20,7 +20,7 @@ it('returns nothing when the catalog request fails', function (): void {
 
     $rawg = resolve(RawgClient::class);
 
-    expect($rawg->search('hades'))->toBe([])
+    expect($rawg->search('hades'))->toBeArray()->toBeEmpty()
         ->and($rawg->find(HADES_RAWG_ID))->toBeNull();
 });
 
