@@ -17,21 +17,8 @@ final readonly class ListJournalEntries
         return $game->journalEntries()
             ->newestFirst()
             ->get()
-            ->map($this->toWire(...))
+            ->map(fn (JournalEntry $entry): array => $entry->toWire())
             ->values()
             ->all();
-    }
-
-    /**
-     * @return array{id: string, body: string, createdAt: string, updatedAt: string}
-     */
-    public function toWire(JournalEntry $entry): array
-    {
-        return [
-            'id' => $entry->id,
-            'body' => $entry->body,
-            'createdAt' => $entry->created_at->toIso8601String(),
-            'updatedAt' => $entry->updated_at->toIso8601String(),
-        ];
     }
 }

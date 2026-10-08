@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateJournalEntry;
 use App\Actions\DeleteJournalEntry;
-use App\Actions\ListJournalEntries;
 use App\Actions\UpdateJournalEntry;
 use App\Http\Requests\CreateJournalEntryRequest;
 use App\Http\Requests\DeleteJournalEntryRequest;
@@ -49,21 +48,20 @@ final readonly class JournalEntryController
         ShowJournalEntryRequest $request,
         Game $game,
         JournalEntry $journalEntry,
-        ListJournalEntries $list,
     ): Modal {
         return Inertia::modal('games/journal-entries/show', [
             'game' => $game->toWire(),
-            'journalEntry' => $list->toWire($journalEntry),
+            'journalEntry' => $journalEntry->toWire(),
         ])->baseRoute('games.show', $game);
     }
 
-    public function edit(Game $game, JournalEntry $journalEntry, ListJournalEntries $list): Modal
+    public function edit(Game $game, JournalEntry $journalEntry): Modal
     {
         Gate::authorize('update', $journalEntry);
 
         return Inertia::modal('games/journal-entries/edit', [
             'game' => $game->toWire(),
-            'journalEntry' => $list->toWire($journalEntry),
+            'journalEntry' => $journalEntry->toWire(),
         ])->baseRoute('games.show', $game);
     }
 
