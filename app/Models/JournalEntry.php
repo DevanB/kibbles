@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\JournalEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -66,15 +67,6 @@ final class JournalEntry extends Model
     }
 
     /**
-     * @param  Builder<JournalEntry>  $query
-     * @return Builder<JournalEntry>
-     */
-    public function scopeNewestFirst(Builder $query): Builder
-    {
-        return $query->latest()->orderByDesc('id');
-    }
-
-    /**
      * @return array{id: string, body: string, createdAt: string, updatedAt: string, playSessionId: string|null}
      */
     public function toWire(): array
@@ -86,5 +78,14 @@ final class JournalEntry extends Model
             'updatedAt' => $this->updated_at->toIso8601String(),
             'playSessionId' => $this->play_session_id,
         ];
+    }
+
+    /**
+     * @param  Builder<JournalEntry>  $query
+     */
+    #[Scope]
+    protected function newestFirst(Builder $query): void
+    {
+        $query->latest()->orderByDesc('id');
     }
 }
