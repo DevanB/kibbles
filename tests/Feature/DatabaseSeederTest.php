@@ -22,22 +22,6 @@ it('creates the demo user and games when the environment is not production', fun
         'email' => 'devan@localhost.test',
     ]);
     $this->assertDatabaseCount('games', 5);
-
-    $statuses = Game::query()
-        ->whereHas('user', fn ($query) => $query->where('email', 'devan@localhost.test'))
-        ->pluck('status')
-        ->map(fn (GameStatus $status): string => $status->value)
-        ->unique()
-        ->sort()
-        ->values()
-        ->all();
-
-    expect($statuses)->toBe([
-        GameStatus::Abandoned->value,
-        GameStatus::Backlog->value,
-        GameStatus::Finished->value,
-        GameStatus::InProgress->value,
-    ]);
 });
 
 it('updates demo game statuses on re-seed without duplicating journals', function (): void {

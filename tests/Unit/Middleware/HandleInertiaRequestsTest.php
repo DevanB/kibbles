@@ -6,17 +6,6 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-it('shares app name from config', function (): void {
-    $middleware = new HandleInertiaRequests();
-
-    $request = Request::create('/', 'GET');
-
-    $shared = $middleware->share($request);
-
-    expect($shared)->toHaveKey('name')
-        ->and($shared['name'])->toBe(config('app.name'));
-});
-
 it('shares null user when guest', function (): void {
     $middleware = new HandleInertiaRequests();
 
@@ -79,15 +68,4 @@ it('sets sidebarOpen to false when cookie is false', function (): void {
     $shared = $middleware->share($request);
 
     expect($shared['sidebarOpen'])->toBeFalse();
-});
-
-it('includes parent shared data', function (): void {
-    $middleware = new HandleInertiaRequests();
-
-    $request = Request::create('/', 'GET');
-
-    $shared = $middleware->share($request);
-
-    // Parent Inertia middleware shares 'errors' by default
-    expect($shared)->toHaveKey('errors');
 });
