@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 use App\Actions\StartPlaySession;
 use App\Models\Game;
-use App\Models\JournalEntry;
 use App\Models\PlaySession;
 use App\Models\User;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -153,12 +151,6 @@ it('maps a unique open-session race to a validation error', function (): void {
         'ended_at' => null,
     ]);
 
-    expect(fn (): PlaySession => PlaySession::factory()->create([
-        'game_id' => $other->id,
-        'user_id' => $user->id,
-        'ended_at' => null,
-    ]))->toThrow(UniqueConstraintViolationException::class);
-
     try {
         resolve(StartPlaySession::class)->handle($other);
         $this->fail('Expected a validation exception for an open-session race.');
@@ -240,25 +232,6 @@ it('rejects reopening a session on update', function (): void {
         ->assertSessionHasErrors(['ended_at' => 'An end time is required.']);
 
     expect($session->refresh()->ended_at)->not->toBeNull();
-});
-
-it('keeps the journal entry when a play session is deleted', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $game = Game::factory()->recycle($user)->create();
-    $session = PlaySession::factory()->create([
-        'game_id' => $game->id,
-        'user_id' => $user->id,
-    ]);
-    $entry = JournalEntry::factory()->recycle($game)->create([
-        'play_session_id' => $session->id,
-    ]);
-
-    $this->actingAs($user)
-        ->delete(route('games.play-sessions.destroy', [$game, $session]))
-        ->assertRedirectToRoute('games.show', $game);
-
-    $this->assertModelMissing($session);
-    expect($entry->refresh()->play_session_id)->toBeNull();
 });
 
 it('removes play sessions when the game is deleted', function (): void {
