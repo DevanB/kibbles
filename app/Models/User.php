@@ -50,26 +50,6 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use TwoFactorAuthenticatable;
 
     /**
-     * @return array<string, string>
-     */
-    public function getCasts(): array
-    {
-        return array_merge(parent::getCasts(), [
-            'id' => 'string',
-            'name' => 'string',
-            'email' => 'string',
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'remember_token' => 'string',
-            'two_factor_secret' => 'string',
-            'two_factor_recovery_codes' => 'string',
-            'two_factor_confirmed_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ]);
-    }
-
-    /**
      * @return HasMany<Game, $this>
      */
     public function games(): HasMany
@@ -83,5 +63,25 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function playSessions(): HasMany
     {
         return $this->hasMany(PlaySession::class);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'id' => 'string',
+            'name' => 'string',
+            'email' => 'string',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'remember_token' => 'string',
+            'two_factor_secret' => 'string',
+            'two_factor_recovery_codes' => 'string',
+            'two_factor_confirmed_at' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
     }
 }

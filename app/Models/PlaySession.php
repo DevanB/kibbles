@@ -116,22 +116,6 @@ final class PlaySession extends Model
     }
 
     /**
-     * @return array<string, string>
-     */
-    public function getCasts(): array
-    {
-        return array_merge(parent::getCasts(), [
-            'id' => 'string',
-            'user_id' => 'string',
-            'game_id' => 'string',
-            'started_at' => 'datetime',
-            'ended_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ]);
-    }
-
-    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -175,6 +159,22 @@ final class PlaySession extends Model
             'endedAt' => $this->ended_at?->toIso8601String(),
             'durationMinutes' => $this->durationMinutes(),
             'journalEntryId' => $this->journalEntry?->id,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'id' => 'string',
+            'user_id' => 'string',
+            'game_id' => 'string',
+            'started_at' => 'datetime',
+            'ended_at' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 }
