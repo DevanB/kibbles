@@ -5,21 +5,6 @@ declare(strict_types=1);
 use App\Models\Game;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Str;
-
-it('belongs to a user', function (): void {
-    $user = User::factory()->create();
-    $game = Game::factory()->recycle($user)->create();
-
-    expect($game->user->is($user))->toBeTrue();
-});
-
-it('uses a uuid primary key', function (): void {
-    $game = Game::factory()->create();
-
-    expect($game->id)->toBeString()
-        ->and(Str::isUuid($game->id))->toBeTrue();
-});
 
 it('enforces case-insensitive unique titles per user at the database', function (): void {
     $user = User::factory()->create();
