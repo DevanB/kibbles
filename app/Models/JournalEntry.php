@@ -39,21 +39,6 @@ final class JournalEntry extends Model
     use HasUuids;
 
     /**
-     * @return array<string, string>
-     */
-    public function getCasts(): array
-    {
-        return array_merge(parent::getCasts(), [
-            'id' => 'string',
-            'game_id' => 'string',
-            'play_session_id' => 'string',
-            'body' => 'string',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ]);
-    }
-
-    /**
      * @return BelongsTo<Game, $this>
      */
     public function game(): BelongsTo
@@ -80,6 +65,21 @@ final class JournalEntry extends Model
             'createdAt' => $this->created_at->toIso8601String(),
             'updatedAt' => $this->updated_at->toIso8601String(),
             'playSessionId' => $this->play_session_id,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'id' => 'string',
+            'game_id' => 'string',
+            'play_session_id' => 'string',
+            'body' => 'string',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 }

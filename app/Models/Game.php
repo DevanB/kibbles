@@ -48,22 +48,6 @@ final class Game extends Model
     use HasUuids;
 
     /**
-     * @return array<string, string>
-     */
-    public function getCasts(): array
-    {
-        return array_merge(parent::getCasts(), [
-            'id' => 'string',
-            'user_id' => 'string',
-            'title' => 'string',
-            'status' => GameStatus::class,
-            'rawg_id' => 'integer',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ]);
-    }
-
-    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -100,6 +84,22 @@ final class Game extends Model
             'rawgId' => $this->rawg_id,
             'imageUrl' => $this->image_url,
             'description' => $this->description,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'id' => 'string',
+            'user_id' => 'string',
+            'title' => 'string',
+            'status' => GameStatus::class,
+            'rawg_id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 }
