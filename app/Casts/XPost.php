@@ -14,7 +14,7 @@ use JsonException;
 /**
  * @implements CastsAttributes<XPostValue|null, mixed>
  */
-final class XPost implements CastsAttributes
+final readonly class XPost implements CastsAttributes
 {
     public function __construct(private XMedia $media = new XMedia) {}
 
@@ -50,7 +50,7 @@ final class XPost implements CastsAttributes
             authorAvatarUrl: is_string($authorAvatarUrl) ? $authorAvatarUrl : null,
             text: is_string($text) ? $text : '',
             postedAt: is_string($postedAt) ? Date::parse($postedAt) : Date::now(),
-            media: $this->media->get($model, 'media', json_encode(data_get($decoded, 'media') ?? [], JSON_THROW_ON_ERROR), $attributes),
+            media: $this->media->get($model, 'media', json_encode(data_get($decoded, 'media', []), JSON_THROW_ON_ERROR), $attributes),
             url: is_string($url) ? $url : '',
         );
     }
@@ -64,9 +64,7 @@ final class XPost implements CastsAttributes
             return null;
         }
 
-        if (! $value instanceof XPostValue) {
-            throw new InvalidArgumentException('Quoted posts must be '.XPostValue::class.' instances.');
-        }
+        throw_unless($value instanceof XPostValue, InvalidArgumentException::class, 'Quoted posts must be '.XPostValue::class.' instances.');
 
         return json_encode([
             'author_name' => $value->authorName,

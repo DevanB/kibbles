@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Jobs\SyncXBookmarks;
 use App\Models\User;
 use App\Models\XConnection;
+use Illuminate\Support\Facades\Queue;
 
 it('redirects guests to login', function (): void {
     $this->post(route('bookmark-syncs.store'))

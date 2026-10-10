@@ -44,9 +44,7 @@ final class XMedia implements CastsAttributes
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): string
     {
-        if (! is_array($value)) {
-            throw new InvalidArgumentException('X media must be a list of '.XMediaValue::class.' instances.');
-        }
+        throw_unless(is_array($value), InvalidArgumentException::class, 'X media must be a list of '.XMediaValue::class.' instances.');
 
         return json_encode(array_map($this->toStored(...), $value), JSON_THROW_ON_ERROR);
     }
@@ -76,9 +74,7 @@ final class XMedia implements CastsAttributes
      */
     private function toStored(mixed $item): array
     {
-        if (! $item instanceof XMediaValue) {
-            throw new InvalidArgumentException('X media items must be '.XMediaValue::class.' instances.');
-        }
+        throw_unless($item instanceof XMediaValue, InvalidArgumentException::class, 'X media items must be '.XMediaValue::class.' instances.');
 
         return [
             'type' => $item->type->value,

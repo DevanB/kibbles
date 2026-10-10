@@ -9,12 +9,12 @@ use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\UniqueFor;
 
+#[UniqueFor(3600)]
 final class SyncXBookmarks implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
-
-    public int $uniqueFor = 3600;
 
     public function __construct(
         public string $userId,

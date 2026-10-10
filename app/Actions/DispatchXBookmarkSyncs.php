@@ -12,7 +12,7 @@ final readonly class DispatchXBookmarkSyncs
     public function handle(bool $full = false): void
     {
         XConnection::query()->each(
-            fn (XConnection $connection): mixed => SyncXBookmarks::dispatch($connection->user_id, $full),
+            fn (XConnection $connection): mixed => dispatch(new SyncXBookmarks($connection->user_id, $full)),
         );
     }
 }

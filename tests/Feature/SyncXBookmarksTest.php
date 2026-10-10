@@ -232,7 +232,7 @@ it('skips work when the user has no X connection', function (): void {
 });
 
 it('skips work when the queued user no longer exists', function (): void {
-    (new SyncXBookmarksJob('00000000-0000-0000-0000-000000000099'))->handle(resolve(SyncXBookmarks::class));
+    new SyncXBookmarksJob('00000000-0000-0000-0000-000000000099')->handle(resolve(SyncXBookmarks::class));
 
     expect(XBookmark::query()->count())->toBe(0);
 });
@@ -241,7 +241,7 @@ it('dispatches a unique incremental job per user', function (): void {
     $job = new SyncXBookmarksJob('user-1', false);
 
     expect($job->uniqueId())->toBe('user-1:incremental')
-        ->and((new SyncXBookmarksJob('user-1', true))->uniqueId())->toBe('user-1:full');
+        ->and(new SyncXBookmarksJob('user-1', true)->uniqueId())->toBe('user-1:full');
 });
 
 it('dispatches scheduled syncs for each connection', function (): void {
@@ -255,7 +255,7 @@ it('dispatches scheduled syncs for each connection', function (): void {
 
     Queue::assertPushed(SyncXBookmarksJob::class, 4);
     Queue::assertPushed(SyncXBookmarksJob::class, fn (SyncXBookmarksJob $job): bool => $job->userId === $first->user_id && $job->full === false);
-    Queue::assertPushed(SyncXBookmarksJob::class, fn (SyncXBookmarksJob $job): bool => $job->userId === $second->user_id && $job->full === true);
+    Queue::assertPushed(SyncXBookmarksJob::class, fn (SyncXBookmarksJob $job): bool => $job->userId === $second->user_id && $job->full);
 });
 
 it('schedules incremental bookmark syncs every six hours and a weekly full sync', function (): void {
