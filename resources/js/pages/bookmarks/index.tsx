@@ -119,16 +119,7 @@ export default function Index({
                                 <BookmarkCard
                                     bookmark={bookmark}
                                     actions={
-                                        <div className="flex items-center justify-between gap-3">
-                                            <a
-                                                href={bookmark.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-                                                data-test={`open-on-x-${bookmark.id}`}
-                                            >
-                                                Open ↗
-                                            </a>
+                                        <div className="flex items-center justify-end">
                                             <ModalLink
                                                 href={show.url(bookmark)}
                                                 navigate
