@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\BookmarkSyncController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\UserPasskeyController;
 use App\Http\Controllers\UserPasswordController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserTwoFactorAuthenticationController;
+use App\Http\Controllers\XConnectionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -33,6 +35,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('games.play-sessions', PlaySessionController::class)
         ->only(['create', 'store', 'edit', 'update', 'destroy'])
         ->scoped();
+    Route::singleton('x-connection', XConnectionController::class)
+        ->creatable()
+        ->only(['create', 'destroy']);
+    Route::get('x-connection/callback', [XConnectionController::class, 'store'])->name('x-connection.store');
+    Route::resource('bookmark-syncs', BookmarkSyncController::class)->only(['store']);
 });
 
 Route::middleware('auth')->group(function (): void {
