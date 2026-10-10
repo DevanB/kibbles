@@ -128,7 +128,7 @@
         },
         "policy": {
             "cooldown": {
-                "period": "3 days",
+                "period": "1 day",
                 "block": true
             }
         }
