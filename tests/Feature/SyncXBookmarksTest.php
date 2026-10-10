@@ -43,7 +43,7 @@ it('upserts bookmarks from X and records first_seen_at', function (): void {
         ->and($connection->last_full_synced_at)->toBeNull();
 });
 
-it('updates an existing bookmark without changing first_seen_at', function (): void {
+it('does not rewrite an existing bookmark during an incremental sync that stops on a known id', function (): void {
     configureX();
 
     $user = User::factory()->create();
@@ -61,9 +61,9 @@ it('updates an existing bookmark without changing first_seen_at', function (): v
         )),
     ]);
 
-    resolve(SyncXBookmarks::class)->handle($user, true);
+    resolve(SyncXBookmarks::class)->handle($user);
 
-    expect($existing->refresh()->text)->toBe('Updated text')
+    expect($existing->refresh()->text)->toBe('Old text')
         ->and($existing->first_seen_at->toDateTimeString())->toBe(now()->subDay()->toDateTimeString());
 });
 
@@ -96,7 +96,7 @@ it('stops an incremental sync at the first already-known post', function (): voi
     Http::assertSentCount(1);
 });
 
-it('pages a full sync and deletes local bookmarks X no longer returns', function (): void {
+it('pages a full sync without expansions and deletes local bookmarks X no longer returns', function (): void {
     configureX();
 
     $user = User::factory()->create();
@@ -105,24 +105,85 @@ it('pages a full sync and deletes local bookmarks X no longer returns', function
     XBookmark::factory()->recycle($user)->create(['x_post_id' => 'gone']);
 
     Http::fake(function (Request $request) {
-        if (($request->data()['pagination_token'] ?? null) === 'page-2') {
+        if (str_contains($request->url(), '/tweets')) {
             return Http::response(xBookmarksPayload(
-                [xTweet('keep')],
-                ['users' => [xAuthor('author-keep')]],
+                [xTweet('fresh')],
+                ['users' => [xAuthor('author-fresh')]],
             ));
         }
 
+        if (! array_key_exists('expansions', $request->data())) {
+            if (($request->data()['pagination_token'] ?? null) === 'page-2') {
+                return Http::response(xBookmarksPayload([xTweet('keep')]));
+            }
+
+            return Http::response(xBookmarksPayload([xTweet('fresh')], nextToken: 'page-2'));
+        }
+
         return Http::response(xBookmarksPayload(
-            [xTweet('fresh')],
-            ['users' => [xAuthor('author-fresh')]],
-            'page-2',
+            [xTweet('fresh'), xTweet('keep')],
+            ['users' => [xAuthor('author-fresh'), xAuthor('author-keep')]],
         ));
     });
 
     resolve(SyncXBookmarks::class)->handle($user, true);
 
+    $fresh = $user->xBookmarks()->where('x_post_id', 'fresh')->first();
+
     expect($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['fresh', 'keep'])
+        ->and($fresh?->author_username)->toBe('devan')
         ->and($connection->refresh()->last_full_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString());
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/users/42/bookmarks')
+        && ! array_key_exists('expansions', $request->data())
+        && ! array_key_exists('tweet.fields', $request->data())
+        && ! array_key_exists('user.fields', $request->data())
+        && ! array_key_exists('media.fields', $request->data()));
+});
+
+it('looks up a new bookmark that incremental sync cannot reach after a full id window', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    $known = XBookmark::factory()->recycle($user)->create([
+        'x_post_id' => 'known',
+        'text' => 'Kept locally',
+    ]);
+
+    Http::fake(function (Request $request) {
+        if (str_contains($request->url(), '/tweets')) {
+            expect($request->data()['ids'] ?? null)->toBe('hole')
+                ->and($request->data())->toHaveKey('expansions');
+
+            return Http::response(xBookmarksPayload(
+                [
+                    xTweet(''),
+                    xTweet('hole', ['text' => 'Hole text']),
+                    xTweet('known', ['text' => 'Should not overwrite']),
+                ],
+                ['users' => [xAuthor('author-hole', 'holeuser', 'Hole'), xAuthor('author-known')]],
+            ));
+        }
+
+        if (! array_key_exists('expansions', $request->data())) {
+            return Http::response(xBookmarksPayload([xTweet('known'), xTweet('hole')]));
+        }
+
+        return Http::response(xBookmarksPayload(
+            [xTweet('known'), xTweet('hole')],
+            ['users' => [xAuthor('author-known'), xAuthor('author-hole')]],
+        ));
+    });
+
+    resolve(SyncXBookmarks::class)->handle($user, true);
+
+    $hole = $user->xBookmarks()->where('x_post_id', 'hole')->first();
+
+    expect($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['known', 'hole'])
+        ->and($hole?->text)->toBe('Hole text')
+        ->and($hole?->author_username)->toBe('holeuser')
+        ->and($known->refresh()->text)->toBe('Kept locally');
 });
 
 it('does not delete local bookmarks when a full sync errors before the window completes', function (): void {
@@ -134,14 +195,31 @@ it('does not delete local bookmarks when a full sync errors before the window co
 
     Http::fake([
         'https://api.x.com/2/users/42/bookmarks*' => Http::sequence()
-            ->push(xBookmarksPayload([xTweet('fresh')], ['users' => [xAuthor('author-fresh')]], 'page-2'))
+            ->push(xBookmarksPayload([xTweet('fresh')], nextToken: 'page-2'))
             ->push(['title' => 'upstream error'], 500),
     ]);
 
     expect(fn () => resolve(SyncXBookmarks::class)->handle($user, true))
         ->toThrow(XClientException::class)
-        ->and($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['fresh', 'local'])
+        ->and($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['local'])
         ->and($user->xConnection?->last_full_synced_at)->toBeNull();
+});
+
+it('deletes every local bookmark when a completed full-sync window is empty', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    XBookmark::factory()->recycle($user)->create(['x_post_id' => 'stale']);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([])),
+    ]);
+
+    resolve(SyncXBookmarks::class)->handle($user, true);
+
+    expect($user->xBookmarks()->count())->toBe(0)
+        ->and($user->xConnection?->last_full_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
 it('refreshes and persists a rotated token before calling X', function (): void {

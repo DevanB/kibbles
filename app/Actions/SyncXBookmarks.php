@@ -23,8 +23,18 @@ final readonly class SyncXBookmarks
             return;
         }
 
+        if ($full) {
+            $this->reconcile($user, $connection);
+        } else {
+            $this->pullNew($user, $connection);
+        }
+
+        $this->markSynced($connection, $full);
+    }
+
+    private function pullNew(User $user, XConnection $connection): void
+    {
         $known = XBookmark::query()->whereBelongsTo($user)->xPostIds();
-        $seen = [];
         $paginationToken = null;
 
         do {
@@ -35,27 +45,74 @@ final readonly class SyncXBookmarks
                     continue;
                 }
 
-                if (! $full && $known->contains($bookmark->xPostId)) {
-                    $this->markSynced($connection, false);
-
+                if ($known->contains($bookmark->xPostId)) {
                     return;
                 }
 
                 $this->upsert($user, $bookmark);
-                $seen[] = $bookmark->xPostId;
+            }
+
+            $paginationToken = $page->nextToken;
+        } while ($paginationToken !== null);
+    }
+
+    private function reconcile(User $user, XConnection $connection): void
+    {
+        $known = XBookmark::query()->whereBelongsTo($user)->xPostIds();
+        $seen = [];
+        $paginationToken = null;
+
+        do {
+            $page = $this->x->bookmarkIds($connection, $paginationToken);
+
+            foreach ($page->ids as $id) {
+                $seen[] = $id;
             }
 
             $paginationToken = $page->nextToken;
         } while ($paginationToken !== null);
 
-        if ($full) {
-            XBookmark::query()
-                ->whereBelongsTo($user)
-                ->whereNotIn('x_post_id', $seen)
-                ->delete();
+        $seen = array_values(array_unique($seen));
+        $local = XBookmark::query()->whereBelongsTo($user);
+
+        if ($seen === []) {
+            $local->delete();
+        } else {
+            $local->whereNotIn('x_post_id', $seen)->delete();
         }
 
-        $this->markSynced($connection, $full);
+        $unknown = array_values(array_filter(
+            $seen,
+            fn (string $id): bool => ! $known->contains($id),
+        ));
+
+        if ($unknown !== []) {
+            $this->hydrate($user, $connection, $unknown);
+        }
+    }
+
+    /**
+     * @param  list<string>  $unknown
+     */
+    private function hydrate(User $user, XConnection $connection, array $unknown): void
+    {
+        $this->pullNew($user, $connection);
+
+        $stored = XBookmark::query()->whereBelongsTo($user)->xPostIds();
+        $missing = array_values(array_filter(
+            $unknown,
+            fn (string $id): bool => ! $stored->contains($id),
+        ));
+
+        foreach (array_chunk($missing, 100) as $chunk) {
+            foreach ($this->x->tweets($connection, $chunk) as $bookmark) {
+                if ($bookmark->xPostId === '') {
+                    continue;
+                }
+
+                $this->upsert($user, $bookmark);
+            }
+        }
     }
 
     private function upsert(User $user, FetchedXBookmark $fetched): void
@@ -65,13 +122,17 @@ final readonly class SyncXBookmarks
             'x_post_id' => $fetched->xPostId,
         ]);
 
+        if ($bookmark->exists) {
+            return;
+        }
+
         $bookmark->fill([
             'author_name' => $fetched->authorName,
             'author_username' => $fetched->authorUsername,
             'author_avatar_url' => $fetched->authorAvatarUrl,
             'text' => $fetched->text,
             'posted_at' => $fetched->postedAt,
-            'first_seen_at' => $bookmark->exists ? $bookmark->first_seen_at : Date::now(),
+            'first_seen_at' => Date::now(),
             'media' => $fetched->media,
             'quoted_post' => $fetched->quotedPost,
         ])->save();

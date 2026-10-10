@@ -64,19 +64,7 @@ final readonly class XClient
 
     public function bookmarks(XConnection $connection, ?string $paginationToken = null): XBookmarksPage
     {
-        $query = [
-            'max_results' => 100,
-            'expansions' => implode(',', self::EXPANSIONS),
-            'tweet.fields' => implode(',', self::TWEET_FIELDS),
-            'user.fields' => implode(',', self::USER_FIELDS),
-            'media.fields' => implode(',', self::MEDIA_FIELDS),
-        ];
-
-        if ($paginationToken !== null) {
-            $query['pagination_token'] = $paginationToken;
-        }
-
-        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $query);
+        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $this->bookmarkQuery($paginationToken, true));
         $includes = $this->objectFromJson($response->json('includes'));
 
         return new XBookmarksPage(
@@ -85,6 +73,47 @@ final readonly class XClient
                 $this->listFromJson($response->json('data')),
             ),
             nextToken: $this->stringOrNull($response->json('meta.next_token')),
+        );
+    }
+
+    public function bookmarkIds(XConnection $connection, ?string $paginationToken = null): XBookmarkIdsPage
+    {
+        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $this->bookmarkQuery($paginationToken, false));
+        $ids = [];
+
+        foreach ($this->listFromJson($response->json('data')) as $tweet) {
+            $id = $this->stringOrEmpty(data_get($tweet, 'id'));
+
+            if ($id !== '') {
+                $ids[] = $id;
+            }
+        }
+
+        return new XBookmarkIdsPage(
+            ids: $ids,
+            nextToken: $this->stringOrNull($response->json('meta.next_token')),
+        );
+    }
+
+    /**
+     * @param  list<string>  $ids
+     * @return list<FetchedXBookmark>
+     */
+    public function tweets(XConnection $connection, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $response = $this->send($connection, 'get', '/tweets', [
+            'ids' => implode(',', $ids),
+            ...$this->expansionQuery(),
+        ]);
+        $includes = $this->objectFromJson($response->json('includes'));
+
+        return array_map(
+            fn (mixed $tweet): FetchedXBookmark => $this->bookmarkFromTweet($tweet, $includes),
+            $this->listFromJson($response->json('data')),
         );
     }
 
@@ -134,6 +163,39 @@ final readonly class XClient
             'refresh_token' => $refreshToken,
             'expires_at' => Date::now()->addSeconds(is_int($expiresIn) ? $expiresIn : 7200),
         ])->save();
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function bookmarkQuery(?string $paginationToken, bool $expanded): array
+    {
+        $query = [
+            'max_results' => 100,
+        ];
+
+        if ($expanded) {
+            $query = [...$query, ...$this->expansionQuery()];
+        }
+
+        if ($paginationToken !== null) {
+            $query['pagination_token'] = $paginationToken;
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function expansionQuery(): array
+    {
+        return [
+            'expansions' => implode(',', self::EXPANSIONS),
+            'tweet.fields' => implode(',', self::TWEET_FIELDS),
+            'user.fields' => implode(',', self::USER_FIELDS),
+            'media.fields' => implode(',', self::MEDIA_FIELDS),
+        ];
     }
 
     /**
