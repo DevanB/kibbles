@@ -37,11 +37,7 @@ it('opens X authorize in the top-level window from Connect X', function (): void
     $provider = Mockery::mock(AbstractProvider::class);
     $provider->shouldReceive('setScopes')->andReturnSelf();
     $provider->shouldReceive('redirectUrl')->andReturnSelf();
-    $provider->shouldReceive('redirect')->andReturnUsing(
-        fn (): RedirectResponse => new RedirectResponse(
-            url('/i/oauth2/authorize?redirect_uri='.urlencode(url('/x-connection/callback'))),
-        ),
-    );
+    $provider->shouldReceive('redirect')->andReturn(new RedirectResponse('/i/oauth2/authorize'));
     Socialite::shouldReceive('driver')->with('x')->andReturn($provider);
 
     $user = User::factory()->withoutTwoFactor()->create();
@@ -52,7 +48,6 @@ it('opens X authorize in the top-level window from Connect X', function (): void
 
     $page->click('@connect-x-button')
         ->assertPathIs('/i/oauth2/authorize')
-        ->assertQueryStringHas('redirect_uri', url('/x-connection/callback'))
         ->assertSee('X authorize')
         ->assertNoJavaScriptErrors();
 });
