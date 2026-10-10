@@ -34,7 +34,7 @@ it('returns 404 for a missing bookmark', function (): void {
 
 it('lists only the authenticated user bookmarks and connection', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
-    $connection = XConnection::factory()->recycle($user)->create(['username' => 'devan']);
+    $connection = XConnection::factory()->recycle($user)->synced()->create(['username' => 'devan']);
     $owned = XBookmark::factory()->recycle($user)->create(['text' => 'Mine']);
     XBookmark::factory()->create(['text' => 'Someone else']);
 
@@ -49,7 +49,8 @@ it('lists only the authenticated user bookmarks and connection', function (): vo
                 ->where('text', 'Mine')
                 ->where('url', $owned->url())
                 ->etc())
-            ->where('xConnection.username', $connection->username));
+            ->where('xConnection.username', $connection->username)
+            ->where('xConnection.lastSyncedAt', $connection->last_synced_at?->toIso8601String()));
 });
 
 it('lists bookmarks newest first', function (): void {

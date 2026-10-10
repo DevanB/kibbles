@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { useState, type ReactNode } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,10 @@ const PREVIEW_LENGTH = 240;
 
 export function formatBookmarkTime(value: string): string {
     return format(new Date(value), 'MMM d, yyyy');
+}
+
+export function formatSyncedAt(value: string): string {
+    return `Synced ${formatDistanceToNow(new Date(value), { addSuffix: true })}`;
 }
 
 function initials(name: string): string {
@@ -37,30 +41,22 @@ function BookmarkMediaList({
                 const key = `${item.type}-${item.url}-${index}`;
                 const src = item.previewUrl ?? item.url;
 
-                if (item.type === 'video' && item.mp4Url) {
+                if (
+                    (item.type === 'video' || item.type === 'gif') &&
+                    item.mp4Url
+                ) {
                     return (
                         <video
                             key={key}
                             className="w-full rounded-lg bg-muted"
-                            controls
+                            controls={item.type === 'video'}
+                            autoPlay={item.type === 'gif'}
+                            loop={item.type === 'gif'}
+                            muted={item.type === 'gif'}
                             playsInline
                             poster={src || undefined}
                             src={item.mp4Url}
-                        />
-                    );
-                }
-
-                if (item.type === 'gif' && item.mp4Url) {
-                    return (
-                        <video
-                            key={key}
-                            className="w-full rounded-lg bg-muted"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            poster={src || undefined}
-                            src={item.mp4Url}
+                            data-test={`bookmark-${item.type}-${bookmarkId}`}
                         />
                     );
                 }
@@ -78,6 +74,7 @@ function BookmarkMediaList({
                         key={key}
                         src={src}
                         alt=""
+                        referrerPolicy="no-referrer"
                         className="w-full rounded-lg object-cover"
                     />
                 );
@@ -94,12 +91,9 @@ function QuotedCard({
     bookmarkId: string;
 }) {
     return (
-        <a
-            href={quoted.url}
-            target="_blank"
-            rel="noreferrer"
+        <div
             data-test={`bookmark-quoted-${bookmarkId}`}
-            className="block space-y-2 rounded-xl border border-sidebar-border/70 p-3 text-left hover:bg-muted/40 dark:border-sidebar-border"
+            className="space-y-2 rounded-xl border border-sidebar-border/70 p-3 dark:border-sidebar-border"
         >
             <p className="text-sm font-medium">
                 {quoted.authorName}{' '}
@@ -114,7 +108,16 @@ function QuotedCard({
                 media={quoted.media}
                 bookmarkId={`${bookmarkId}-quoted`}
             />
-        </a>
+            <a
+                href={quoted.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex text-sm text-muted-foreground underline-offset-4 hover:underline"
+                data-test={`open-quoted-${bookmarkId}`}
+            >
+                Open ↗
+            </a>
+        </div>
     );
 }
 
@@ -140,7 +143,11 @@ export function BookmarkCard({
             <div className="flex items-start gap-3">
                 <Avatar className="size-10">
                     {bookmark.authorAvatarUrl ? (
-                        <AvatarImage src={bookmark.authorAvatarUrl} alt="" />
+                        <AvatarImage
+                            src={bookmark.authorAvatarUrl}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                        />
                     ) : null}
                     <AvatarFallback>
                         {initials(
@@ -155,6 +162,12 @@ export function BookmarkCard({
                     <p className="truncate text-sm text-muted-foreground">
                         @{bookmark.authorUsername} ·{' '}
                         {formatBookmarkTime(bookmark.postedAt)}
+                    </p>
+                    <p
+                        className="text-sm text-muted-foreground"
+                        data-test={`bookmark-saved-${bookmark.id}`}
+                    >
+                        Saved {formatBookmarkTime(bookmark.firstSeenAt)}
                     </p>
                 </div>
             </div>

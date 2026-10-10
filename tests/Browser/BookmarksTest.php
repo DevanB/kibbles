@@ -22,27 +22,70 @@ it('renders the empty bookmarks page and the connect action', function (): void 
         ->assertNoJavaScriptErrors();
 });
 
-it('shows saved posts, expands long text, and removes a bookmark', function (): void {
+it('shows saved posts, media, expands long text, and removes a bookmark', function (): void {
     configureX();
 
     $user = User::factory()->withoutTwoFactor()->create();
     XConnection::factory()->recycle($user)->synced()->create(['username' => 'devan']);
-    $photo = XBookmark::factory()->recycle($user)->create([
+    $photo = XBookmark::factory()->recycle($user)->hotlinkedPhoto(
+        'https://placehold.co/800x531/1d4ed8/ffffff/jpeg',
+        800,
+        531,
+    )->create([
         'author_name' => 'Taylor Otwell',
         'author_username' => 'taylorotwell',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/463230?s=96&v=4',
         'text' => 'Laravel 13 is out.',
-        'first_seen_at' => now(),
+        'first_seen_at' => now()->subMinutes(5),
     ]);
-    $quoted = XBookmark::factory()->recycle($user)->quoted()->create([
+    $quoted = XBookmark::factory()->recycle($user)->quotedWithMedia()->create([
         'author_name' => 'Nuno Maduro',
         'author_username' => 'enunomaduro',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/5457236?s=96&v=4',
         'text' => 'Pest 5 browser testing is the good stuff.',
         'first_seen_at' => now()->subHour(),
     ]);
-    $long = XBookmark::factory()->recycle($user)->longText()->create([
+    $video = XBookmark::factory()->recycle($user)->hotlinkedVideo()->create([
+        'author_name' => 'X Engineering',
+        'author_username' => 'xeng',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/9919?s=96&v=4',
+        'text' => 'A short clip from the lab.',
+        'first_seen_at' => now()->subHours(3),
+    ]);
+    $long = XBookmark::factory()->recycle($user)->longText()->withoutMedia()->create([
         'author_name' => 'Devan',
         'author_username' => 'devan',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/354652?s=96&v=4',
         'first_seen_at' => now()->subDay(),
+    ]);
+    XBookmark::factory()->recycle($user)->hotlinkedPhoto(
+        'https://placehold.co/480x720/0f172a/ffffff/jpeg',
+        480,
+        720,
+    )->create([
+        'author_name' => 'Jess Archer',
+        'author_username' => 'jessarchercodes',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/1794495?s=96&v=4',
+        'text' => 'Portrait tiles make the masonry columns actually stagger.',
+        'first_seen_at' => now()->subHours(6),
+    ]);
+    XBookmark::factory()->recycle($user)->hotlinkedPhoto(
+        'https://placehold.co/960x360/155e75/ffffff/jpeg',
+        960,
+        360,
+    )->create([
+        'author_name' => 'Canary',
+        'author_username' => 'canary',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/18133?s=96&v=4',
+        'text' => 'Wide shot.',
+        'first_seen_at' => now()->subHours(8),
+    ]);
+    XBookmark::factory()->recycle($user)->withoutMedia()->create([
+        'author_name' => 'Ada',
+        'author_username' => 'ada',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/1024025?s=96&v=4',
+        'text' => "Two lines.\nThen a bit more copy so this card sits taller than a one-liner.",
+        'first_seen_at' => now()->subHours(12),
     ]);
 
     Http::fake([
@@ -54,12 +97,20 @@ it('shows saved posts, expands long text, and removes a bookmark', function (): 
     $page = visit(route('bookmarks.index'));
 
     $page->assertSee('Saved posts from @devan')
+        ->assertSee('Synced')
+        ->assertSee('ago')
         ->assertSee('Taylor Otwell')
+        ->assertSee('@taylorotwell')
         ->assertSee('Laravel 13 is out.')
+        ->assertSee('Saved')
         ->assertSee('Nuno Maduro')
-        ->assertSee('The quoted post.')
-        ->assertSee('Open on X')
+        ->assertSee('The quoted post with a photo.')
+        ->assertSee('Open ↗')
         ->assertSee('Show full post')
+        ->assertPresent('@bookmark-media-'.$photo->id)
+        ->assertPresent('@bookmark-video-'.$video->id)
+        ->assertPresent('@bookmark-media-'.$quoted->id.'-quoted')
+        ->assertPresent('@open-quoted-'.$quoted->id)
         ->screenshot(filename: 'bookmarks-index-grid')
         ->assertNoJavaScriptErrors();
 
@@ -86,5 +137,6 @@ it('shows saved posts, expands long text, and removes a bookmark', function (): 
         ->assertNoJavaScriptErrors();
 
     expect($quoted->fresh())->toBeNull()
-        ->and($photo->fresh())->not->toBeNull();
+        ->and($photo->fresh())->not->toBeNull()
+        ->and($video->fresh())->not->toBeNull();
 });
