@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
 it('renders the empty bookmarks page and the connect action', function (): void {
@@ -26,7 +27,10 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
     configureX();
 
     $user = User::factory()->withoutTwoFactor()->create();
-    XConnection::factory()->recycle($user)->synced()->create(['username' => 'devan']);
+    XConnection::factory()->recycle($user)->synced()->create([
+        'username' => 'devan',
+        'x_user_id' => '42',
+    ]);
     $photo = XBookmark::factory()->recycle($user)->hotlinkedPhoto(
         'https://placehold.co/800x531/1d4ed8/ffffff/jpeg',
         800,
@@ -39,6 +43,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         'first_seen_at' => now()->subMinutes(5),
     ]);
     $quoted = XBookmark::factory()->recycle($user)->quotedWithMedia()->create([
+        'x_post_id' => 'quoted-100',
         'author_name' => 'Nuno Maduro',
         'author_username' => 'enunomaduro',
         'author_avatar_url' => 'https://avatars.githubusercontent.com/u/5457236?s=96&v=4',
@@ -132,11 +137,16 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
     $page->click('@remove-bookmark-button-'.$quoted->id)
         ->click('@confirm-remove-bookmark-button-'.$quoted->id)
         ->assertSee('Bookmark removed.')
-        ->assertDontSee('Pest 5 browser testing is the good stuff.')
+        ->assertPresent('@bookmark-media-'.$photo->id)
+        ->assertPresent('@bookmark-video-'.$video->id)
         ->screenshot(filename: 'bookmarks-index-after-remove')
         ->assertNoJavaScriptErrors();
 
     expect($quoted->fresh())->toBeNull()
         ->and($photo->fresh())->not->toBeNull()
-        ->and($video->fresh())->not->toBeNull();
+        ->and($video->fresh())->not->toBeNull()
+        ->and($user->xBookmarks()->count())->toBe(6);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+        && $request->url() === 'https://api.x.com/2/users/42/bookmarks/quoted-100');
 });

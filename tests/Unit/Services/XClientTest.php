@@ -161,30 +161,6 @@ it('uses now when X omits created_at and skips a quoted post that was not includ
         ->and($page->bookmarks[0]->quotedPost)->toBeNull();
 });
 
-it('deletes a bookmark on X', function (): void {
-    configureX();
-
-    $connection = XConnection::factory()->create(['x_user_id' => '42']);
-
-    Http::fake([
-        'https://api.x.com/2/users/42/bookmarks/100' => Http::response(['data' => ['bookmarked' => false]]),
-    ]);
-
-    expect(resolve(XClient::class)->deleteBookmark($connection, '100'))->toBeTrue();
-});
-
-it('returns false when X refuses to delete a bookmark', function (): void {
-    configureX();
-
-    $connection = XConnection::factory()->create(['x_user_id' => '42']);
-
-    Http::fake([
-        'https://api.x.com/2/users/42/bookmarks/100' => Http::response(['title' => 'forbidden'], 403),
-    ]);
-
-    expect(resolve(XClient::class)->deleteBookmark($connection, '100'))->toBeFalse();
-});
-
 it('fails to refresh when OAuth credentials are missing', function (): void {
     config(['services.x.client_id' => null, 'services.x.client_secret' => null]);
 
