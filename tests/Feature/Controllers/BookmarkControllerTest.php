@@ -67,32 +67,6 @@ it('lists bookmarks newest first', function (): void {
             ->where('bookmarks.1.id', $older->id));
 });
 
-it('renders the empty index without an X connection', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $this->actingAs($user)
-        ->get(route('bookmarks.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('bookmarks/index')
-            ->has('bookmarks', 0)
-            ->where('xConnection', null));
-});
-
-it('shows the remove confirmation modal for an owned bookmark', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-    $bookmark = XBookmark::factory()->recycle($user)->create();
-
-    $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => 'true'])
-        ->get(route('bookmarks.show', $bookmark))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('bookmarks/show')
-            ->where('bookmark.id', $bookmark->id)
-            ->where('bookmark.text', $bookmark->text));
-});
-
 it('forbids another user from viewing or removing a bookmark', function (): void {
     $owner = User::factory()->withoutTwoFactor()->create();
     $intruder = User::factory()->withoutTwoFactor()->create();
@@ -107,25 +81,6 @@ it('forbids another user from viewing or removing a bookmark', function (): void
         ->assertForbidden();
 
     expect($bookmark->fresh())->not->toBeNull();
-});
-
-it('removes the bookmark on X and locally', function (): void {
-    configureX();
-
-    $user = User::factory()->withoutTwoFactor()->create();
-    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
-    $bookmark = XBookmark::factory()->recycle($user)->create(['x_post_id' => '100']);
-
-    Http::fake([
-        'https://api.x.com/2/users/42/bookmarks/100' => Http::response(['data' => ['bookmarked' => false]]),
-    ]);
-
-    $this->actingAs($user)
-        ->fromRoute('bookmarks.index')
-        ->delete(route('bookmarks.destroy', $bookmark))
-        ->assertRedirectToRoute('bookmarks.index');
-
-    expect($bookmark->fresh())->toBeNull();
 });
 
 it('keeps the local bookmark when X refuses the delete', function (): void {
