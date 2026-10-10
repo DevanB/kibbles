@@ -145,7 +145,10 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         ->assertAttribute('@open-quoted-'.$quoted->id, 'href', 'https://x.com/quoted/status/99')
         ->assertSee('Show full post')
         ->assertPresent('@bookmark-media-'.$photo->id)
+        ->assertAttribute('@bookmark-image-'.$photo->id, 'loading', 'lazy')
+        ->assertAttribute('@bookmark-image-'.$photo->id, 'decoding', 'async')
         ->assertPresent('@bookmark-video-'.$video->id)
+        ->assertAttribute('@bookmark-video-'.$video->id, 'preload', 'none')
         ->assertPresent('@bookmark-media-'.$quoted->id.'-quoted')
         ->screenshot(filename: 'bookmarks-index-grid')
         ->assertNoJavaScriptErrors();
@@ -180,4 +183,66 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
         && $request->url() === 'https://api.x.com/2/users/42/bookmarks/quoted-100');
+});
+
+it('loads the next page of bookmarks on scroll and removes a card from that page', function (): void {
+    configureX();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    XConnection::factory()->recycle($user)->synced()->create([
+        'username' => 'devan',
+        'x_user_id' => '42',
+    ]);
+    $bookmarks = XBookmark::factory()
+        ->recycle($user)
+        ->withoutMedia()
+        ->count(25)
+        ->sequence(fn ($sequence): array => [
+            'text' => 'Saved post '.($sequence->index + 1),
+            'first_seen_at' => now()->subMinutes($sequence->index),
+        ])
+        ->create();
+
+    Http::fake([
+        'https://api.x.com/2/users/*/bookmarks/*' => Http::response(['data' => ['bookmarked' => false]]),
+    ]);
+
+    $this->actingAs($user);
+
+    $firstPageLast = $bookmarks[19];
+    $secondPageFirst = $bookmarks[20];
+    $secondPageNext = $bookmarks[21];
+
+    $page = visit(route('bookmarks.index'))
+        ->on()
+        ->iPhoneSE();
+
+    $page->assertSee('Saved post 1')
+        ->assertSee('Saved post 20')
+        ->assertPresent('@bookmark-'.$firstPageLast->id);
+
+    $page->script('window.scrollTo(0, document.body.scrollHeight)');
+
+    $page->assertPresent('@bookmark-'.$secondPageFirst->id)
+        ->assertSee('Saved post 21')
+        ->assertPresent('@bookmark-'.$secondPageNext->id)
+        ->screenshot(filename: 'bookmarks-index-page-two')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="bookmark-'.$secondPageFirst->id.'"] [aria-label="Remove bookmark"]')
+        ->click('@confirm-remove-bookmark-button-'.$secondPageFirst->id)
+        ->assertSee('Bookmark removed.')
+        ->assertMissing('@bookmark-'.$secondPageFirst->id)
+        ->assertPresent('@bookmark-'.$firstPageLast->id)
+        ->assertPresent('@bookmark-'.$secondPageNext->id)
+        ->screenshot(filename: 'bookmarks-index-page-two-after-remove')
+        ->assertNoJavaScriptErrors();
+
+    expect($secondPageFirst->fresh())->toBeNull()
+        ->and($firstPageLast->fresh())->not->toBeNull()
+        ->and($secondPageNext->fresh())->not->toBeNull()
+        ->and($user->xBookmarks()->count())->toBe(24);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+        && $request->url() === 'https://api.x.com/2/users/42/bookmarks/'.$secondPageFirst->x_post_id);
 });

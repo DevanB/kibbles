@@ -25,6 +25,22 @@ function initials(name: string): string {
         .join('');
 }
 
+function mediaFrame(item: BookmarkMedia): {
+    width?: number;
+    height?: number;
+    style?: { aspectRatio: string };
+} {
+    if (item.width === null || item.height === null) {
+        return {};
+    }
+
+    return {
+        width: item.width,
+        height: item.height,
+        style: { aspectRatio: `${item.width} / ${item.height}` },
+    };
+}
+
 function BookmarkMediaList({
     media,
     bookmarkId,
@@ -41,6 +57,7 @@ function BookmarkMediaList({
             {media.map((item, index) => {
                 const key = `${item.type}-${item.url}-${index}`;
                 const src = item.previewUrl ?? item.url;
+                const frame = mediaFrame(item);
 
                 if (
                     (item.type === 'video' || item.type === 'gif') &&
@@ -55,8 +72,14 @@ function BookmarkMediaList({
                             loop={item.type === 'gif'}
                             muted={item.type === 'gif'}
                             playsInline
+                            preload={
+                                item.type === 'video' ? 'none' : 'metadata'
+                            }
                             poster={src || undefined}
                             src={item.mp4Url}
+                            width={frame.width}
+                            height={frame.height}
+                            style={frame.style}
                             data-test={`bookmark-${item.type}-${bookmarkId}`}
                         />
                     );
@@ -75,8 +98,14 @@ function BookmarkMediaList({
                         key={key}
                         src={src}
                         alt=""
+                        width={frame.width}
+                        height={frame.height}
+                        style={frame.style}
+                        loading="lazy"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                         className="w-full rounded-lg object-cover"
+                        data-test={`bookmark-image-${bookmarkId}`}
                     />
                 );
             })}
@@ -162,6 +191,8 @@ export function BookmarkCard({
                         <AvatarImage
                             src={bookmark.authorAvatarUrl}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                         />
                     ) : null}

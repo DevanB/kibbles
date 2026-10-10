@@ -1,4 +1,4 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
+import { Form, Head, InfiniteScroll, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { Bookmark as BookmarkIcon, Plus, Trash2 } from 'lucide-react';
 import { show } from '@/actions/App/Http/Controllers/BookmarkController';
@@ -12,11 +12,12 @@ import {
     bookmarkIconActionClassName,
     formatSyncedAt,
 } from '@/components/bookmark-card';
+import { BookmarkMasonry } from '@/components/bookmark-masonry';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/bookmarks';
-import type { Bookmark, BreadcrumbItem, XConnection } from '@/types';
+import type { BookmarkPage, BreadcrumbItem, XConnection } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -41,7 +42,7 @@ export default function Index({
     bookmarks,
     xConnection,
 }: {
-    bookmarks: Bookmark[];
+    bookmarks: BookmarkPage;
     xConnection: XConnection | null;
 }) {
     setLayoutProps({ breadcrumbs });
@@ -60,7 +61,10 @@ export default function Index({
                     <div className="flex flex-wrap items-center gap-2">
                         {xConnection ? (
                             <>
-                                <Form {...storeBookmarkSync.form()}>
+                                <Form
+                                    {...storeBookmarkSync.form()}
+                                    options={{ preserveScroll: true }}
+                                >
                                     {({ processing }) => (
                                         <Button
                                             type="submit"
@@ -96,7 +100,7 @@ export default function Index({
                     </div>
                 </div>
 
-                {bookmarks.length === 0 ? (
+                {bookmarks.data.length === 0 ? (
                     <div
                         data-test="bookmarks-empty"
                         className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border"
@@ -114,12 +118,20 @@ export default function Index({
                         </p>
                     </div>
                 ) : (
-                    <ul className="columns-1 gap-4 sm:columns-2 xl:columns-3">
-                        {bookmarks.map((bookmark) => (
-                            <li
-                                key={bookmark.id}
-                                className="mb-4 break-inside-avoid"
+                    <InfiniteScroll
+                        data="bookmarks"
+                        buffer={400}
+                        loading={() => (
+                            <p
+                                data-test="bookmarks-load-more"
+                                className="py-4 text-center text-sm text-muted-foreground"
                             >
+                                Loading more…
+                            </p>
+                        )}
+                    >
+                        <BookmarkMasonry bookmarks={bookmarks.data}>
+                            {(bookmark) => (
                                 <BookmarkCard
                                     bookmark={bookmark}
                                     actions={
@@ -136,9 +148,9 @@ export default function Index({
                                         </ModalLink>
                                     }
                                 />
-                            </li>
-                        ))}
-                    </ul>
+                            )}
+                        </BookmarkMasonry>
+                    </InfiniteScroll>
                 )}
             </div>
         </>
