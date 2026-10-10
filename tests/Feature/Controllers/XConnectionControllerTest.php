@@ -6,6 +6,7 @@ use App\Jobs\SyncXBookmarks;
 use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as XOAuthUser;

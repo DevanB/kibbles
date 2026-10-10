@@ -104,9 +104,7 @@ final readonly class XClient
         $clientId = config('services.x.client_id');
         $clientSecret = config('services.x.client_secret');
 
-        if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
-            throw new XClientException('X OAuth credentials are not configured.');
-        }
+        throw_if(! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '', XClientException::class, 'X OAuth credentials are not configured.');
 
         try {
             $response = Http::asForm()
@@ -119,21 +117,17 @@ final readonly class XClient
                     'refresh_token' => $connection->refresh_token,
                     'client_id' => $clientId,
                 ]);
-        } catch (ConnectionException $exception) {
-            throw new XClientException('Unable to refresh the X access token.', previous: $exception);
+        } catch (ConnectionException $connectionException) {
+            throw new XClientException('Unable to refresh the X access token.', $connectionException->getCode(), previous: $connectionException);
         }
 
-        if (! $response->successful()) {
-            throw new XClientException('Unable to refresh the X access token.');
-        }
+        throw_unless($response->successful(), XClientException::class, 'Unable to refresh the X access token.');
 
         $accessToken = $response->json('access_token');
         $refreshToken = $response->json('refresh_token');
         $expiresIn = $response->json('expires_in');
 
-        if (! is_string($accessToken) || $accessToken === '' || ! is_string($refreshToken) || $refreshToken === '') {
-            throw new XClientException('X rotated an incomplete token pair.');
-        }
+        throw_if(! is_string($accessToken) || $accessToken === '' || ! is_string($refreshToken) || $refreshToken === '', XClientException::class, 'X rotated an incomplete token pair.');
 
         $connection->forceFill([
             'access_token' => $accessToken,
@@ -152,8 +146,8 @@ final readonly class XClient
 
         try {
             $response = $this->request($connection)->{$method}($path, $query);
-        } catch (ConnectionException $exception) {
-            throw new XClientException('Unable to reach the X API.', previous: $exception);
+        } catch (ConnectionException $connectionException) {
+            throw new XClientException('Unable to reach the X API.', $connectionException->getCode(), previous: $connectionException);
         }
 
         if ($response->unauthorized()) {
@@ -162,7 +156,7 @@ final readonly class XClient
             try {
                 $response = $this->request($connection)->{$method}($path, $query);
             } catch (ConnectionException $exception) {
-                throw new XClientException('Unable to reach the X API.', previous: $exception);
+                throw new XClientException('Unable to reach the X API.', $exception->getCode(), previous: $exception);
             }
         }
 

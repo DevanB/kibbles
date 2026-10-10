@@ -71,7 +71,7 @@ it('parses photos, videos, gifs, and quoted posts from X', function (): void {
         ->and($page->bookmarks[0]->media[2]->mp4Url)->toBe('https://video.twimg.com/gif.mp4')
         ->and($page->bookmarks[0]->quotedPost?->url)->toBe('https://x.com/quoted/status/9')
         ->and($page->bookmarks[0]->quotedPost?->text)->toBe('Quoted text')
-        ->and($page->bookmarks[1]->xPostId)->toBe('');
+        ->and($page->bookmarks[1]->xPostId)->toBeEmpty();
 
     Http::assertSent(fn (Request $request): bool => ($request->data()['pagination_token'] ?? null) === 'cursor-1');
 });
@@ -96,7 +96,7 @@ it('uses now when X omits created_at and skips a quoted post that was not includ
     $page = resolve(XClient::class)->bookmarks($connection);
 
     expect($page->bookmarks[0]->postedAt->toDateTimeString())->toBe(now()->toDateTimeString())
-        ->and($page->bookmarks[0]->authorUsername)->toBe('')
+        ->and($page->bookmarks[0]->authorUsername)->toBeEmpty()
         ->and($page->bookmarks[0]->quotedPost)->toBeNull();
 });
 
@@ -266,7 +266,7 @@ it('treats a non-object X payload as an empty page', function (): void {
 
     $page = resolve(XClient::class)->bookmarks($connection);
 
-    expect($page->bookmarks)->toBe([])
+    expect($page->bookmarks)->toBeEmpty()
         ->and($page->nextToken)->toBeNull();
 });
 

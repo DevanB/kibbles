@@ -11,6 +11,6 @@ final readonly class CreateBookmarkSync
 {
     public function handle(User $user, bool $full = false): void
     {
-        SyncXBookmarks::dispatch($user->id, $full);
+        dispatch(new SyncXBookmarks($user->id, $full));
     }
 }

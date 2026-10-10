@@ -31,10 +31,10 @@ it('treats invalid stored media and quoted posts as empty', function (): void {
     $media = new XMedia;
     $quoted = new XPost;
 
-    expect($media->get($bookmark, 'media', '', []))->toBe([])
-        ->and($media->get($bookmark, 'media', 'not-json', []))->toBe([])
-        ->and($media->get($bookmark, 'media', '[]', []))->toBe([])
-        ->and($media->get($bookmark, 'media', '"nope"', []))->toBe([])
+    expect($media->get($bookmark, 'media', '', []))->toBeEmpty()
+        ->and($media->get($bookmark, 'media', 'not-json', []))->toBeEmpty()
+        ->and($media->get($bookmark, 'media', '[]', []))->toBeEmpty()
+        ->and($media->get($bookmark, 'media', '"nope"', []))->toBeEmpty()
         ->and($quoted->get($bookmark, 'quoted_post', null, []))->toBeNull()
         ->and($quoted->get($bookmark, 'quoted_post', '', []))->toBeNull()
         ->and($quoted->get($bookmark, 'quoted_post', 'not-json', []))->toBeNull()
@@ -46,11 +46,11 @@ it('treats invalid stored media and quoted posts as empty', function (): void {
 it('rejects values that are not media or post objects', function (): void {
     $bookmark = XBookmark::factory()->create();
 
-    expect(fn () => (new XMedia)->set($bookmark, 'media', 'nope', []))
+    expect(fn (): string => (new XMedia)->set($bookmark, 'media', 'nope', []))
         ->toThrow(InvalidArgumentException::class)
-        ->and(fn () => (new XMedia)->set($bookmark, 'media', ['nope'], []))
+        ->and(fn (): string => (new XMedia)->set($bookmark, 'media', ['nope'], []))
         ->toThrow(InvalidArgumentException::class)
-        ->and(fn () => (new XPost)->set($bookmark, 'quoted_post', 'nope', []))
+        ->and(fn (): ?string => (new XPost)->set($bookmark, 'quoted_post', 'nope', []))
         ->toThrow(InvalidArgumentException::class);
 });
 
@@ -60,5 +60,5 @@ it('hydrates media items with missing fields as a photo', function (): void {
 
     expect($media[0])->toBeInstanceOf(XMediaValue::class)
         ->and($media[0]->type)->toBe(XMediaType::Photo)
-        ->and($media[0]->url)->toBe('');
+        ->and($media[0]->url)->toBeEmpty();
 });
