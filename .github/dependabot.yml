@@ -9,6 +9,10 @@ updates:
       semver-major-days: 1
       semver-minor-days: 1
       semver-patch-days: 1
+    # Temporary until Wayfinder accepts HTTP QUERY (laravel/wayfinder#324).
+    ignore:
+      - dependency-name: "laravel/framework"
+        versions: [">=13.35"]
     groups:
       composer-minor:
         patterns: ["*"]
