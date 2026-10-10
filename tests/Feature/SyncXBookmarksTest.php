@@ -231,6 +231,24 @@ it('skips work when the user has no X connection', function (): void {
     expect($user->xBookmarks()->count())->toBe(0);
 });
 
+it('runs the queued job for an existing user', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+            [xTweet('100')],
+            ['users' => [xAuthor('author-100')]],
+        )),
+    ]);
+
+    new SyncXBookmarksJob($user->id)->handle(resolve(SyncXBookmarks::class));
+
+    expect($user->xBookmarks()->where('x_post_id', '100')->exists())->toBeTrue();
+});
+
 it('skips work when the queued user no longer exists', function (): void {
     new SyncXBookmarksJob('00000000-0000-0000-0000-000000000099')->handle(resolve(SyncXBookmarks::class));
 
