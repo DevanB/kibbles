@@ -29,7 +29,7 @@ const mainNavItems: NavItem[] = [
         icon: Gamepad2,
     },
     {
-        title: 'Bookmarks',
+        title: 'X',
         href: bookmarks(),
         icon: Bookmark,
     },
