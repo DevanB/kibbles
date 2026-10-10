@@ -16,10 +16,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as XOAuthUser;
+use LogicException;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 use Throwable;
 
@@ -104,20 +104,24 @@ final readonly class XConnectionController
             'message' => __('X disconnected.'),
         ]);
 
-        return to_route('dashboard');
+        return to_route('bookmarks.index');
     }
 
-    private function xDriver(): Provider
+    private function xDriver(): AbstractProvider
     {
         $callback = url('/x-connection/callback');
         config(['services.x.redirect' => $callback]);
 
         $driver = Socialite::driver('x');
 
-        if ($driver instanceof AbstractProvider) {
-            $driver->setScopes(self::SCOPES);
-            $driver->redirectUrl($callback);
-        }
+        throw_unless(
+            $driver instanceof AbstractProvider,
+            LogicException::class,
+            'The X Socialite driver must be an OAuth 2 provider.',
+        );
+
+        $driver->setScopes(self::SCOPES);
+        $driver->redirectUrl($callback);
 
         return $driver;
     }
