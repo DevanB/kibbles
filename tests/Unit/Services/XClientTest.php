@@ -73,7 +73,68 @@ it('parses photos, videos, gifs, and quoted posts from X', function (): void {
         ->and($page->bookmarks[0]->quotedPost?->text)->toBe('Quoted text')
         ->and($page->bookmarks[1]->xPostId)->toBeEmpty();
 
-    Http::assertSent(fn (Request $request): bool => ($request->data()['pagination_token'] ?? null) === 'cursor-1');
+    Http::assertSent(fn (Request $request): bool => ($request->data()['pagination_token'] ?? null) === 'cursor-1'
+        && array_key_exists('expansions', $request->data()));
+});
+
+it('requests bookmark ids without expansions or extra fields', function (): void {
+    configureX();
+
+    $connection = XConnection::factory()->create(['x_user_id' => '42']);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+            [xTweet('1'), xTweet(''), xTweet('2')],
+            nextToken: 'next-page',
+        )),
+    ]);
+
+    $page = resolve(XClient::class)->bookmarkIds($connection, 'cursor-1');
+
+    expect($page->ids)->toBe(['1', '2'])
+        ->and($page->nextToken)->toBe('next-page');
+
+    Http::assertSent(fn (Request $request): bool => ($request->data()['pagination_token'] ?? null) === 'cursor-1'
+        && ($request->data()['max_results'] ?? null) === 100
+        && ! array_key_exists('expansions', $request->data())
+        && ! array_key_exists('tweet.fields', $request->data())
+        && ! array_key_exists('user.fields', $request->data())
+        && ! array_key_exists('media.fields', $request->data()));
+});
+
+it('looks up tweets by id with expansions', function (): void {
+    configureX();
+
+    $connection = XConnection::factory()->create(['x_user_id' => '42']);
+
+    Http::fake([
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
+            [xTweet('9', ['text' => 'Looked up'])],
+            ['users' => [xAuthor('author-9', 'lookup', 'Lookup')]],
+        )),
+    ]);
+
+    $tweets = resolve(XClient::class)->tweets($connection, ['9']);
+
+    expect($tweets)->toHaveCount(1)
+        ->and($tweets[0]->text)->toBe('Looked up')
+        ->and($tweets[0]->authorUsername)->toBe('lookup');
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/tweets')
+        && ($request->data()['ids'] ?? null) === '9'
+        && array_key_exists('expansions', $request->data()));
+});
+
+it('returns no tweets when the id list is empty', function (): void {
+    configureX();
+
+    $connection = XConnection::factory()->create(['x_user_id' => '42']);
+
+    Http::fake();
+
+    expect(resolve(XClient::class)->tweets($connection, []))->toBeEmpty();
+
+    Http::assertNothingSent();
 });
 
 it('uses now when X omits created_at and skips a quoted post that was not included', function (): void {
