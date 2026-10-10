@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as XOAuthUser;
@@ -31,15 +32,16 @@ it('redirects unverified users to the verification notice', function (): void {
         ->assertRedirectToRoute('verification.notice');
 });
 
-it('redirects to X to connect', function (): void {
+it('fails loudly when the X driver is not an OAuth 2 provider', function (): void {
     configureX();
-    Socialite::fake('x');
+
+    Socialite::shouldReceive('driver')->with('x')->andReturn(Mockery::mock(Provider::class));
 
     $user = User::factory()->withoutTwoFactor()->create();
 
     $this->actingAs($user)
         ->get(route('x-connection.create'))
-        ->assertRedirect('https://socialite.fake/x/authorize');
+        ->assertInternalServerError();
 });
 
 it('sends X the registered callback and bookmark scopes', function (): void {
@@ -63,7 +65,7 @@ it('sends X the registered callback and bookmark scopes', function (): void {
 it('stores the X connection from the callback and dispatches a sync', function (): void {
     configureX();
     Queue::fake([SyncXBookmarks::class]);
-    Socialite::fake('x', XOAuthUser::fake([
+    fakeXDriver(XOAuthUser::fake([
         'id' => '2244994945',
         'nickname' => 'devan',
         'token' => 'access-from-x',
@@ -92,7 +94,7 @@ it('stores the X connection from the callback and dispatches a sync', function (
 it('updates an existing X connection on reconnect', function (): void {
     configureX();
     Queue::fake([SyncXBookmarks::class]);
-    Socialite::fake('x', XOAuthUser::fake([
+    fakeXDriver(XOAuthUser::fake([
         'id' => '99',
         'nickname' => 'newhandle',
         'token' => 'new-access',
@@ -118,7 +120,7 @@ it('updates an existing X connection on reconnect', function (): void {
 it('defaults the token lifetime when X omits expiresIn', function (): void {
     configureX();
     Queue::fake([SyncXBookmarks::class]);
-    Socialite::fake('x', XOAuthUser::fake([
+    fakeXDriver(XOAuthUser::fake([
         'id' => '7',
         'nickname' => 'devan',
         'token' => 'access',
@@ -137,7 +139,7 @@ it('defaults the token lifetime when X omits expiresIn', function (): void {
 
 it('keeps the user disconnected when X denies the grant', function (): void {
     configureX();
-    Socialite::fake('x', fn () => throw new RuntimeException('denied'));
+    fakeXDriver(new RuntimeException('denied'));
 
     $user = User::factory()->withoutTwoFactor()->create();
 
@@ -150,7 +152,7 @@ it('keeps the user disconnected when X denies the grant', function (): void {
 
 it('keeps the user disconnected when X omits tokens', function (): void {
     configureX();
-    Socialite::fake('x', XOAuthUser::fake([
+    fakeXDriver(XOAuthUser::fake([
         'id' => '7',
         'nickname' => 'devan',
         'token' => '',
@@ -168,7 +170,7 @@ it('keeps the user disconnected when X omits tokens', function (): void {
 
 it('keeps the user disconnected when Socialite returns a user without OAuth tokens', function (): void {
     configureX();
-    Socialite::fake('x', new class implements SocialiteUser
+    fakeXDriver(new class implements SocialiteUser
     {
         public function getId(): string
         {
@@ -220,7 +222,7 @@ it('disconnects X and deletes local bookmarks', function (): void {
 
     $this->actingAs($user)
         ->delete(route('x-connection.destroy'))
-        ->assertRedirectToRoute('dashboard');
+        ->assertRedirectToRoute('bookmarks.index');
 
     expect($user->fresh()->xConnection)->toBeNull()
         ->and($user->xBookmarks()->count())->toBe(0);

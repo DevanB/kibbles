@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use Laravel\Socialite\Two\User as XOAuthUser;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -82,6 +87,24 @@ function configureX(): void
         'services.x.client_secret' => 'test-client-secret',
         'services.x.redirect' => '/x-connection/callback',
     ]);
+}
+
+function fakeXDriver(SocialiteUser|Throwable|null $user = null): void
+{
+    $provider = Mockery::mock(AbstractProvider::class);
+    $provider->shouldReceive('setScopes')->andReturnSelf();
+    $provider->shouldReceive('redirectUrl')->with(url('/x-connection/callback'))->andReturnSelf();
+    $provider->shouldReceive('redirect')->andReturn(new RedirectResponse(
+        'https://x.com/i/oauth2/authorize?client_id=test-client-id&redirect_uri='.urlencode(url('/x-connection/callback')).'&scope=tweet.read%20users.read%20bookmark.read%20bookmark.write%20offline.access',
+    ));
+
+    if ($user instanceof Throwable) {
+        $provider->shouldReceive('user')->andThrow($user);
+    } else {
+        $provider->shouldReceive('user')->andReturn($user ?? XOAuthUser::fake());
+    }
+
+    Socialite::shouldReceive('driver')->with('x')->andReturn($provider);
 }
 
 /**
