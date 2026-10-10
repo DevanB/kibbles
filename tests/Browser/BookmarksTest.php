@@ -13,9 +13,11 @@ it('renders the empty bookmarks page and the connect action', function (): void 
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('dashboard'));
 
-    $page->assertSee('Bookmarks')
+    $page->click('X')
+        ->assertPathIs('/bookmarks')
+        ->assertSee('Bookmarks')
         ->assertSee('Connect X to see saved posts')
         ->assertSee('Connect X')
         ->assertPresent('@connect-x-button')
