@@ -25,9 +25,23 @@ Do this after the first image publish on `master` is green, and after the GHCR p
    docker compose up -d
    ```
 
-   It polls every 3 minutes, updates only containers labeled `com.centurylinklabs.watchtower.enable=true` (`app` and `queue`), and removes old images. `cloudflared` is unlabeled and is left alone.
+   It polls every 3 minutes, updates only containers labeled `com.centurylinklabs.watchtower.enable=true` (`app`, `queue`, and `scheduler`), and removes old images. `cloudflared` is unlabeled and is left alone.
 
-`docker/entrypoint.sh` runs `php artisan migrate --force` only when the command is `frankenphp`. The queue service starts `php artisan queue:work`, so Watchtower restarting both containers does not run migrations twice. SQLite is not migrated concurrently.
+`docker/entrypoint.sh` runs `php artisan migrate --force` only when the command is `frankenphp`. The queue and scheduler services start `php artisan queue:work` and `php artisan schedule:work`, so Watchtower restarting those containers does not run migrations. SQLite is not migrated concurrently.
+
+## Add the scheduler (one-time)
+
+`routes/console.php` schedules X bookmark syncs (`x-bookmarks-incremental` every 6 hours, `x-bookmarks-full` weekly). Watchtower cannot start a service that is not in `compose.yaml`.
+
+1. On the NAS, refresh `compose.yaml` from master. Keep the existing `.env`.
+2. Start the new service:
+
+   ```bash
+   cd /volume1/docker/kibbles
+   docker compose up -d
+   ```
+
+The `scheduler` service reuses the `x-laravel` anchor (same image, env, volumes, restart, init, Watchtower label) and runs `php artisan schedule:work`.
 
 ## GHCR package visibility
 

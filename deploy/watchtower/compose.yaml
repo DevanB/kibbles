@@ -4,7 +4,7 @@
 #
 # Image: nickfedor/watchtower (maintained fork of archived containrrr/watchtower).
 # LABEL_ENABLE keeps this process from touching unlabeled containers (cloudflared
-# is unlabeled). App and queue share one image; only app runs migrations on boot.
+# is unlabeled). App, queue, and scheduler share one image; only app runs migrations on boot.
 name: watchtower
 
 services:
