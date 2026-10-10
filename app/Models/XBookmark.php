@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read User $user
  *
  * @method static XBookmarkBuilder query()
+ * @method static XBookmarkBuilder newestFirst()
  */
 #[Fillable([
     'x_post_id',

@@ -7,6 +7,8 @@ namespace Database\Seeders;
 use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\User;
+use App\Models\XBookmark;
+use App\Models\XConnection;
 use Illuminate\Database\Seeder;
 
 final class DemoSeeder extends Seeder
@@ -87,6 +89,8 @@ final class DemoSeeder extends Seeder
         if ($user->playSessions()->doesntExist()) {
             $this->seedPlaySessions($user);
         }
+
+        $this->seedBookmarks($user);
     }
 
     private function seedPlaySessions(User $user): void
@@ -131,5 +135,42 @@ final class DemoSeeder extends Seeder
                 'ended_at' => now()->subDays(2)->addMinutes(40),
             ]);
         }
+    }
+
+    private function seedBookmarks(User $user): void
+    {
+        if ($user->xConnection === null) {
+            XConnection::factory()->recycle($user)->synced()->create([
+                'username' => 'devan',
+            ]);
+        }
+
+        if ($user->xBookmarks()->exists()) {
+            return;
+        }
+
+        XBookmark::factory()->recycle($user)->create([
+            'author_name' => 'Taylor Otwell',
+            'author_username' => 'taylorotwell',
+            'text' => 'Laravel 13 is out.',
+            'first_seen_at' => now()->subMinutes(5),
+        ]);
+        XBookmark::factory()->recycle($user)->quoted()->create([
+            'author_name' => 'Nuno Maduro',
+            'author_username' => 'enunomaduro',
+            'text' => 'Pest 5 browser testing is the good stuff.',
+            'first_seen_at' => now()->subHour(),
+        ]);
+        XBookmark::factory()->recycle($user)->video()->create([
+            'author_name' => 'X Engineering',
+            'author_username' => 'xeng',
+            'text' => 'A short clip from the lab.',
+            'first_seen_at' => now()->subHours(3),
+        ]);
+        XBookmark::factory()->recycle($user)->longText()->create([
+            'author_name' => 'Devan',
+            'author_username' => 'devan',
+            'first_seen_at' => now()->subDay(),
+        ]);
     }
 }

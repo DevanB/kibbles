@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\BookmarkSyncController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->creatable()
         ->only(['create', 'destroy']);
     Route::get('x-connection/callback', [XConnectionController::class, 'store'])->name('x-connection.store');
+    Route::resource('bookmarks', BookmarkController::class)->only(['index', 'show', 'destroy']);
     Route::resource('bookmark-syncs', BookmarkSyncController::class)->only(['store']);
 });
 

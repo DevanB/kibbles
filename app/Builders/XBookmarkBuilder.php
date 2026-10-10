@@ -13,6 +13,11 @@ use Illuminate\Support\Collection;
  */
 final class XBookmarkBuilder extends Builder
 {
+    public function newestFirst(): static
+    {
+        return $this->latest('first_seen_at')->orderByDesc('id');
+    }
+
     /**
      * @return Collection<int, string>
      */

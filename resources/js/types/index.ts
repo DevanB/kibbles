@@ -1,4 +1,5 @@
 export type * from './auth';
+export type * from './bookmark';
 export type * from './game';
 export type * from './journal-entry';
 export type * from './navigation';

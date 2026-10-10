@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Gamepad2, LayoutGrid } from 'lucide-react';
+import { Bookmark, Gamepad2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as bookmarks } from '@/routes/bookmarks';
 import { index as games } from '@/routes/games';
 import type { NavItem } from '@/types';
 
@@ -26,6 +27,11 @@ const mainNavItems: NavItem[] = [
         title: 'Games',
         href: games(),
         icon: Gamepad2,
+    },
+    {
+        title: 'Bookmarks',
+        href: bookmarks(),
+        icon: Bookmark,
     },
 ];
 

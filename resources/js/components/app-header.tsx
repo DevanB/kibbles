@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { cn } from 'cn';
-import { Gamepad2, LayoutGrid, Menu, Search } from 'lucide-react';
+import { Bookmark, Gamepad2, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -28,6 +28,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes';
+import { index as bookmarks } from '@/routes/bookmarks';
 import { index as games } from '@/routes/games';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
@@ -45,6 +46,11 @@ const mainNavItems: NavItem[] = [
         title: 'Games',
         href: games(),
         icon: Gamepad2,
+    },
+    {
+        title: 'Bookmarks',
+        href: bookmarks(),
+        icon: Bookmark,
     },
 ];
 
