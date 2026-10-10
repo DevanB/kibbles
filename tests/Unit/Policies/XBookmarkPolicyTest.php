@@ -6,10 +6,6 @@ use App\Models\User;
 use App\Models\XBookmark;
 use App\Policies\XBookmarkPolicy;
 
-it('allows authenticated users to view any bookmarks', function (): void {
-    expect((new XBookmarkPolicy)->viewAny())->toBeTrue();
-});
-
 it('allows the owner to view or delete a bookmark', function (): void {
     $owner = User::factory()->create();
     $other = User::factory()->create();

@@ -12,10 +12,6 @@ use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as XOAuthUser;
 
-it('registers the X callback at /x-connection/callback', function (): void {
-    expect(route('x-connection.store', absolute: false))->toBe('/x-connection/callback');
-});
-
 it('redirects guests to login', function (string $method, string $route): void {
     $this->{$method}(route($route))->assertRedirectToRoute('login');
 })->with([

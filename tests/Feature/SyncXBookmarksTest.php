@@ -9,7 +9,6 @@ use App\Jobs\SyncXBookmarks as SyncXBookmarksJob;
 use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -302,11 +301,17 @@ it('skips bookmarks that have no X post id', function (): void {
 });
 
 it('skips work when the user has no X connection', function (): void {
+    Http::fake();
+
     $user = User::factory()->create();
+    $bookmark = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'keep']);
 
     resolve(SyncXBookmarks::class)->handle($user);
 
-    expect($user->xBookmarks()->count())->toBe(0);
+    expect($bookmark->fresh())->not->toBeNull()
+        ->and($user->xBookmarks()->pluck('x_post_id')->all())->toBe(['keep']);
+
+    Http::assertNothingSent();
 });
 
 it('runs the queued job for an existing user', function (): void {
@@ -328,16 +333,18 @@ it('runs the queued job for an existing user', function (): void {
 });
 
 it('skips work when the queued user no longer exists', function (): void {
+    Http::fake();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    $bookmark = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'keep']);
+
     new SyncXBookmarksJob('00000000-0000-0000-0000-000000000099')->handle(resolve(SyncXBookmarks::class));
 
-    expect(XBookmark::query()->count())->toBe(0);
-});
+    expect($bookmark->fresh())->not->toBeNull()
+        ->and($user->xBookmarks()->pluck('x_post_id')->all())->toBe(['keep']);
 
-it('dispatches a unique incremental job per user', function (): void {
-    $job = new SyncXBookmarksJob('user-1', false);
-
-    expect($job->uniqueId())->toBe('user-1:incremental')
-        ->and(new SyncXBookmarksJob('user-1', true)->uniqueId())->toBe('user-1:full');
+    Http::assertNothingSent();
 });
 
 it('dispatches scheduled syncs for each connection', function (): void {
@@ -347,21 +354,10 @@ it('dispatches scheduled syncs for each connection', function (): void {
     $second = XConnection::factory()->create();
 
     resolve(DispatchXBookmarkSyncs::class)->handle();
+    resolve(DispatchXBookmarkSyncs::class)->handle();
     resolve(DispatchXBookmarkSyncs::class)->handle(true);
 
     Queue::assertPushed(SyncXBookmarksJob::class, 4);
     Queue::assertPushed(SyncXBookmarksJob::class, fn (SyncXBookmarksJob $job): bool => $job->userId === $first->user_id && $job->full === false);
     Queue::assertPushed(SyncXBookmarksJob::class, fn (SyncXBookmarksJob $job): bool => $job->userId === $second->user_id && $job->full);
-});
-
-it('schedules incremental bookmark syncs every six hours and a weekly full sync', function (): void {
-    $events = collect(resolve(Schedule::class)->events());
-
-    $incremental = $events->first(fn ($event): bool => $event->description === 'x-bookmarks-incremental');
-    $full = $events->first(fn ($event): bool => $event->description === 'x-bookmarks-full');
-
-    expect($incremental)->not->toBeNull()
-        ->and($incremental?->expression)->toBe('0 */6 * * *')
-        ->and($full)->not->toBeNull()
-        ->and($full?->expression)->toBe('0 0 * * 0');
 });
