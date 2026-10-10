@@ -22,12 +22,12 @@ final readonly class BookmarkController
         Gate::authorize('viewAny', XBookmark::class);
 
         return Inertia::render('bookmarks/index', [
-            'bookmarks' => $user->xBookmarks()
-                ->newestFirst()
-                ->get()
-                ->map(fn (XBookmark $bookmark): array => $bookmark->toWire())
-                ->values()
-                ->all(),
+            'bookmarks' => Inertia::scroll(
+                $user->xBookmarks()
+                    ->newestFirst()
+                    ->cursorPaginate(20)
+                    ->through(fn (XBookmark $bookmark): array => $bookmark->toWire()),
+            ),
             'xConnection' => $user->xConnection?->toWire(),
         ]);
     }
@@ -52,7 +52,9 @@ final readonly class BookmarkController
                 'message' => __('Could not remove the bookmark from X.'),
             ]);
 
-            return to_route('bookmarks.index');
+            return to_route('bookmarks.index')->withErrors([
+                'bookmark' => __('Could not remove the bookmark from X.'),
+            ]);
         }
 
         Inertia::flash('toast', [
