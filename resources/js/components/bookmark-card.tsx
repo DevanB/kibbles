@@ -84,6 +84,9 @@ function BookmarkMediaList({
     );
 }
 
+export const bookmarkIconActionClassName =
+    'inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground';
+
 function OpenOnX({ href, testId }: { href: string; testId: string }) {
     return (
         <a
@@ -91,7 +94,7 @@ function OpenOnX({ href, testId }: { href: string; testId: string }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Open on X"
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className={bookmarkIconActionClassName}
             data-test={testId}
         >
             <ExternalLink className="size-4" />
@@ -183,10 +186,13 @@ export function BookmarkCard({
                         Saved {formatBookmarkTime(bookmark.firstSeenAt)}
                     </p>
                 </div>
-                <OpenOnX
-                    href={bookmark.url}
-                    testId={`open-on-x-${bookmark.id}`}
-                />
+                <div className="flex shrink-0 items-center">
+                    <OpenOnX
+                        href={bookmark.url}
+                        testId={`open-on-x-${bookmark.id}`}
+                    />
+                    {actions}
+                </div>
             </div>
 
             {bookmark.text !== '' && (
@@ -224,8 +230,6 @@ export function BookmarkCard({
                     bookmarkId={bookmark.id}
                 />
             ) : null}
-
-            {actions}
         </article>
     );
 }

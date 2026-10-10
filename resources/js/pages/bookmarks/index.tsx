@@ -7,7 +7,11 @@ import {
     create as createXConnection,
     destroy as destroyXConnection,
 } from '@/actions/App/Http/Controllers/XConnectionController';
-import { BookmarkCard, formatSyncedAt } from '@/components/bookmark-card';
+import {
+    BookmarkCard,
+    bookmarkIconActionClassName,
+    formatSyncedAt,
+} from '@/components/bookmark-card';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -119,17 +123,17 @@ export default function Index({
                                 <BookmarkCard
                                     bookmark={bookmark}
                                     actions={
-                                        <div className="flex items-center justify-end">
-                                            <ModalLink
-                                                href={show.url(bookmark)}
-                                                navigate
-                                                aria-label="Remove"
-                                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                                                data-test={`remove-bookmark-button-${bookmark.id}`}
-                                            >
-                                                <Trash2 className="size-4" />
-                                            </ModalLink>
-                                        </div>
+                                        <ModalLink
+                                            href={show.url(bookmark)}
+                                            navigate
+                                            aria-label="Remove bookmark"
+                                            className={
+                                                bookmarkIconActionClassName
+                                            }
+                                            data-test={`remove-bookmark-button-${bookmark.id}`}
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </ModalLink>
                                     }
                                 />
                             </li>

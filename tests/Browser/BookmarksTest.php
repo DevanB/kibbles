@@ -111,6 +111,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         ->assertSee('Nuno Maduro')
         ->assertSee('The quoted post with a photo.')
         ->assertPresent('[aria-label="Open on X"]')
+        ->assertPresent('[aria-label="Remove bookmark"]')
         ->assertAttribute('@open-on-x-'.$photo->id, 'href', $photo->url())
         ->assertAttribute('@open-quoted-'.$quoted->id, 'href', 'https://x.com/quoted/status/99')
         ->assertSee('Show full post')
@@ -125,7 +126,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         ->assertSee('Show less')
         ->assertNoJavaScriptErrors();
 
-    $page->click('@remove-bookmark-button-'.$photo->id)
+    $page->click('[data-test="bookmark-'.$photo->id.'"] [aria-label="Remove bookmark"]')
         ->assertSee('Remove this bookmark?')
         ->assertSee('Laravel 13 is out.')
         ->screenshot(filename: 'bookmark-remove-modal')
@@ -135,7 +136,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
 
     expect($photo->fresh())->not->toBeNull();
 
-    $page->click('@remove-bookmark-button-'.$quoted->id)
+    $page->click('[data-test="bookmark-'.$quoted->id.'"] [aria-label="Remove bookmark"]')
         ->click('@confirm-remove-bookmark-button-'.$quoted->id)
         ->assertSee('Bookmark removed.')
         ->assertPresent('@bookmark-media-'.$photo->id)
