@@ -145,8 +145,8 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         ->assertAttribute('@open-quoted-'.$quoted->id, 'href', 'https://x.com/quoted/status/99')
         ->assertSee('Show full post')
         ->assertPresent('@bookmark-media-'.$photo->id)
-        ->assertAttribute('@bookmark-media-'.$photo->id.' img', 'loading', 'lazy')
-        ->assertAttribute('@bookmark-media-'.$photo->id.' img', 'decoding', 'async')
+        ->assertAttribute('@bookmark-image-'.$photo->id, 'loading', 'lazy')
+        ->assertAttribute('@bookmark-image-'.$photo->id, 'decoding', 'async')
         ->assertPresent('@bookmark-video-'.$video->id)
         ->assertAttribute('@bookmark-video-'.$video->id, 'preload', 'none')
         ->assertPresent('@bookmark-media-'.$quoted->id.'-quoted')
@@ -213,15 +213,18 @@ it('loads the next page of bookmarks on scroll and removes a card from that page
     $secondPageFirst = $bookmarks[20];
     $secondPageNext = $bookmarks[21];
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('bookmarks.index'))
+        ->on()
+        ->iPhoneSE();
 
-    $page->resize(390, 640)
-        ->assertSee('Saved post 1')
+    $page->assertSee('Saved post 1')
         ->assertSee('Saved post 20')
         ->assertPresent('@bookmark-'.$firstPageLast->id)
-        ->assertNotPresent('@bookmark-'.$secondPageFirst->id)
-        ->script('window.scrollTo(0, document.body.scrollHeight)')
-        ->assertPresent('@bookmark-'.$secondPageFirst->id)
+        ->assertNotPresent('@bookmark-'.$secondPageFirst->id);
+
+    $page->script('window.scrollTo(0, document.body.scrollHeight)');
+
+    $page->assertPresent('@bookmark-'.$secondPageFirst->id)
         ->assertSee('Saved post 21')
         ->assertPresent('@bookmark-'.$secondPageNext->id)
         ->screenshot(filename: 'bookmarks-index-page-two')

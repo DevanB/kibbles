@@ -10,9 +10,11 @@ use App\Models\User;
 use App\Models\XBookmark;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ScrollMetadata;
 use InertiaUI\Modal\Modal;
 
 final readonly class BookmarkController
@@ -21,12 +23,22 @@ final readonly class BookmarkController
     {
         Gate::authorize('viewAny', XBookmark::class);
 
+        /** @var CursorPaginator<int, XBookmark> $paginator */
+        $paginator = $user->xBookmarks()
+            ->newestFirst()
+            ->cursorPaginate(20);
+
         return Inertia::render('bookmarks/index', [
             'bookmarks' => Inertia::scroll(
-                $user->xBookmarks()
-                    ->newestFirst()
-                    ->cursorPaginate(20)
-                    ->through(fn (XBookmark $bookmark): array => $bookmark->toWire()),
+                [
+                    ...$paginator->toArray(),
+                    'data' => $paginator
+                        ->getCollection()
+                        ->map(fn (XBookmark $bookmark): array => $bookmark->toWire())
+                        ->values()
+                        ->all(),
+                ],
+                metadata: ScrollMetadata::fromPaginator($paginator),
             ),
             'xConnection' => $user->xConnection?->toWire(),
         ]);
