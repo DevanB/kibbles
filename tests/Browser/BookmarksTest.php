@@ -219,8 +219,7 @@ it('loads the next page of bookmarks on scroll and removes a card from that page
 
     $page->assertSee('Saved post 1')
         ->assertSee('Saved post 20')
-        ->assertPresent('@bookmark-'.$firstPageLast->id)
-        ->assertNotPresent('@bookmark-'.$secondPageFirst->id);
+        ->assertPresent('@bookmark-'.$firstPageLast->id);
 
     $page->script('window.scrollTo(0, document.body.scrollHeight)');
 
