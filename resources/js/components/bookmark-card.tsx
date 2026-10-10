@@ -1,4 +1,5 @@
 import { format, formatDistanceToNow } from 'date-fns';
+import { ExternalLink } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -83,6 +84,21 @@ function BookmarkMediaList({
     );
 }
 
+function OpenOnX({ href, testId }: { href: string; testId: string }) {
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open on X"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            data-test={testId}
+        >
+            <ExternalLink className="size-4" />
+        </a>
+    );
+}
+
 function QuotedCard({
     quoted,
     bookmarkId,
@@ -95,12 +111,18 @@ function QuotedCard({
             data-test={`bookmark-quoted-${bookmarkId}`}
             className="space-y-2 rounded-xl border border-sidebar-border/70 p-3 dark:border-sidebar-border"
         >
-            <p className="text-sm font-medium">
-                {quoted.authorName}{' '}
-                <span className="font-normal text-muted-foreground">
-                    @{quoted.authorUsername}
-                </span>
-            </p>
+            <div className="flex items-start gap-3">
+                <p className="min-w-0 flex-1 text-sm font-medium">
+                    {quoted.authorName}{' '}
+                    <span className="font-normal text-muted-foreground">
+                        @{quoted.authorUsername}
+                    </span>
+                </p>
+                <OpenOnX
+                    href={quoted.url}
+                    testId={`open-quoted-${bookmarkId}`}
+                />
+            </div>
             {quoted.text !== '' && (
                 <p className="text-sm whitespace-pre-wrap">{quoted.text}</p>
             )}
@@ -108,15 +130,6 @@ function QuotedCard({
                 media={quoted.media}
                 bookmarkId={`${bookmarkId}-quoted`}
             />
-            <a
-                href={quoted.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex text-sm text-muted-foreground underline-offset-4 hover:underline"
-                data-test={`open-quoted-${bookmarkId}`}
-            >
-                Open ↗
-            </a>
         </div>
     );
 }
@@ -170,6 +183,10 @@ export function BookmarkCard({
                         Saved {formatBookmarkTime(bookmark.firstSeenAt)}
                     </p>
                 </div>
+                <OpenOnX
+                    href={bookmark.url}
+                    testId={`open-on-x-${bookmark.id}`}
+                />
             </div>
 
             {bookmark.text !== '' && (
