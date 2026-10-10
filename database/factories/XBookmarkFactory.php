@@ -62,6 +62,13 @@ final class XBookmarkFactory extends Factory
         ]);
     }
 
+    public function longText(): self
+    {
+        return $this->state(fn (): array => [
+            'text' => str_repeat('Saved from the timeline. ', 20),
+        ]);
+    }
+
     public function quoted(): self
     {
         return $this->state(fn (): array => [
