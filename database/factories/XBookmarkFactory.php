@@ -69,6 +69,13 @@ final class XBookmarkFactory extends Factory
         ]);
     }
 
+    public function withoutMedia(): self
+    {
+        return $this->state(fn (): array => [
+            'media' => [],
+        ]);
+    }
+
     public function quoted(): self
     {
         return $this->state(fn (): array => [
@@ -81,6 +88,62 @@ final class XBookmarkFactory extends Factory
                 media: [],
                 url: 'https://x.com/quoted/status/99',
             ),
+        ]);
+    }
+
+    public function quotedWithMedia(): self
+    {
+        return $this->quoted()->state(fn (): array => [
+            'quoted_post' => new XPost(
+                authorName: 'Quoted Author',
+                authorUsername: 'quoted',
+                authorAvatarUrl: 'https://avatars.githubusercontent.com/u/499550?s=96&v=4',
+                text: 'The quoted post with a photo.',
+                postedAt: now()->subDays(2),
+                media: [
+                    new XMedia(
+                        type: XMediaType::Photo,
+                        url: 'https://placehold.co/560x560/9a3412/ffffff/jpeg',
+                        previewUrl: null,
+                        width: 560,
+                        height: 560,
+                        mp4Url: null,
+                    ),
+                ],
+                url: 'https://x.com/quoted/status/99',
+            ),
+        ]);
+    }
+
+    public function hotlinkedPhoto(string $url, int $width, int $height): self
+    {
+        return $this->state(fn (): array => [
+            'media' => [
+                new XMedia(
+                    type: XMediaType::Photo,
+                    url: $url,
+                    previewUrl: null,
+                    width: $width,
+                    height: $height,
+                    mp4Url: null,
+                ),
+            ],
+        ]);
+    }
+
+    public function hotlinkedVideo(): self
+    {
+        return $this->state(fn (): array => [
+            'media' => [
+                new XMedia(
+                    type: XMediaType::Video,
+                    url: 'https://placehold.co/1280x720/111827/ffffff/jpeg',
+                    previewUrl: 'https://placehold.co/1280x720/111827/ffffff/jpeg',
+                    width: 1280,
+                    height: 720,
+                    mp4Url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+                ),
+            ],
         ]);
     }
 }

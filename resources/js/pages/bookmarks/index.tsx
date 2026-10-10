@@ -1,16 +1,15 @@
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
-import { cn } from 'cn';
-import { Bookmark as BookmarkIcon, Plus } from 'lucide-react';
+import { Bookmark as BookmarkIcon, Plus, Trash2 } from 'lucide-react';
 import { show } from '@/actions/App/Http/Controllers/BookmarkController';
 import { store as storeBookmarkSync } from '@/actions/App/Http/Controllers/BookmarkSyncController';
 import {
     create as createXConnection,
     destroy as destroyXConnection,
 } from '@/actions/App/Http/Controllers/XConnectionController';
-import { BookmarkCard } from '@/components/bookmark-card';
+import { BookmarkCard, formatSyncedAt } from '@/components/bookmark-card';
 import Heading from '@/components/heading';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/bookmarks';
 import type { Bookmark, BreadcrumbItem, XConnection } from '@/types';
@@ -21,6 +20,18 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: index(),
     },
 ];
+
+function headerDescription(connection: XConnection | null): string {
+    if (connection === null) {
+        return 'Connect X to sync your saved posts';
+    }
+
+    if (connection.lastSyncedAt === null) {
+        return `Saved posts from @${connection.username}`;
+    }
+
+    return `Saved posts from @${connection.username} · ${formatSyncedAt(connection.lastSyncedAt)}`;
+}
 
 export default function Index({
     bookmarks,
@@ -39,11 +50,7 @@ export default function Index({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Bookmarks"
-                        description={
-                            xConnection
-                                ? `Saved posts from @${xConnection.username}`
-                                : 'Connect X to sync your saved posts'
-                        }
+                        description={headerDescription(xConnection)}
                     />
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -112,33 +119,24 @@ export default function Index({
                                 <BookmarkCard
                                     bookmark={bookmark}
                                     actions={
-                                        <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex items-center justify-between gap-3">
                                             <a
                                                 href={bookmark.url}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'outline',
-                                                        size: 'sm',
-                                                    }),
-                                                )}
+                                                className="text-sm text-muted-foreground underline-offset-4 hover:underline"
                                                 data-test={`open-on-x-${bookmark.id}`}
                                             >
-                                                Open on X
+                                                Open ↗
                                             </a>
                                             <ModalLink
                                                 href={show.url(bookmark)}
                                                 navigate
-                                                className={cn(
-                                                    buttonVariants({
-                                                        variant: 'destructive',
-                                                        size: 'sm',
-                                                    }),
-                                                )}
+                                                aria-label="Remove"
+                                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                                                 data-test={`remove-bookmark-button-${bookmark.id}`}
                                             >
-                                                Remove
+                                                <Trash2 className="size-4" />
                                             </ModalLink>
                                         </div>
                                     }
