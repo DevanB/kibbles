@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\Contracts\PasskeyUser;
@@ -32,6 +33,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Game> $games
  * @property-read Collection<int, PlaySession> $playSessions
+ * @property-read Collection<int, XBookmark> $xBookmarks
+ * @property-read XConnection|null $xConnection
  */
 #[Hidden([
     'password',
@@ -63,6 +66,22 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function playSessions(): HasMany
     {
         return $this->hasMany(PlaySession::class);
+    }
+
+    /**
+     * @return HasOne<XConnection, $this>
+     */
+    public function xConnection(): HasOne
+    {
+        return $this->hasOne(XConnection::class);
+    }
+
+    /**
+     * @return HasMany<XBookmark, $this>
+     */
+    public function xBookmarks(): HasMany
+    {
+        return $this->hasMany(XBookmark::class);
     }
 
     /**

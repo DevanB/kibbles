@@ -74,3 +74,93 @@ function something(): void
 {
     // ..
 }
+
+function configureX(): void
+{
+    config([
+        'services.x.client_id' => 'test-client-id',
+        'services.x.client_secret' => 'test-client-secret',
+        'services.x.redirect' => '/x-connection/callback',
+    ]);
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function xTweet(string $id, array $overrides = []): array
+{
+    return [
+        'id' => $id,
+        'text' => 'Hello from '.$id,
+        'author_id' => 'author-'.$id,
+        'created_at' => '2026-09-23T12:00:00.000Z',
+        ...$overrides,
+    ];
+}
+
+/**
+ * @return array{id: string, name: string, username: string, profile_image_url: string}
+ */
+function xAuthor(string $id, string $username = 'devan', string $name = 'Devan'): array
+{
+    return [
+        'id' => $id,
+        'name' => $name,
+        'username' => $username,
+        'profile_image_url' => 'https://pbs.twimg.com/profile_images/1/avatar.jpg',
+    ];
+}
+
+/**
+ * @return array{media_key: string, type: string, url: string, width: int, height: int}
+ */
+function xPhotoMedia(string $key = '3_1'): array
+{
+    return [
+        'media_key' => $key,
+        'type' => 'photo',
+        'url' => 'https://pbs.twimg.com/media/demo.jpg',
+        'width' => 1200,
+        'height' => 800,
+    ];
+}
+
+/**
+ * @return array{media_key: string, type: string, preview_image_url: string, width: int, height: int, variants: list<array{content_type: string, url: string, bit_rate?: int}>}
+ */
+function xVideoMedia(string $key = '13_1'): array
+{
+    return [
+        'media_key' => $key,
+        'type' => 'video',
+        'preview_image_url' => 'https://pbs.twimg.com/ext_tw_video_thumb/demo.jpg',
+        'width' => 1280,
+        'height' => 720,
+        'variants' => [
+            ['content_type' => 'application/x-mpegURL', 'url' => 'https://video.twimg.com/playlist.m3u8'],
+            ['content_type' => 'video/mp4', 'url' => 'https://video.twimg.com/low.mp4', 'bit_rate' => 256000],
+            ['content_type' => 'video/mp4', 'url' => 'https://video.twimg.com/high.mp4', 'bit_rate' => 2176000],
+        ],
+    ];
+}
+
+/**
+ * @param  list<array<string, mixed>>  $tweets
+ * @param  array<string, mixed>  $includes
+ * @return array{data: list<array<string, mixed>>, includes: array<string, mixed>, meta: array<string, int|string>}
+ */
+function xBookmarksPayload(array $tweets, array $includes = [], ?string $nextToken = null): array
+{
+    $meta = ['result_count' => count($tweets)];
+
+    if ($nextToken !== null) {
+        $meta['next_token'] = $nextToken;
+    }
+
+    return [
+        'data' => $tweets,
+        'includes' => $includes,
+        'meta' => $meta,
+    ];
+}
