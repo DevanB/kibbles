@@ -58,6 +58,28 @@ it('sends X the registered callback and bookmark scopes', function (): void {
         ->and($location)->toContain('offline.access');
 });
 
+it('sends Inertia to the X authorize URL instead of following the redirect over XHR', function (): void {
+    configureX();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    $manifest = public_path('build/manifest.json');
+    $version = is_file($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+        ])
+        ->get(route('x-connection.create'));
+
+    $response->assertConflict();
+
+    $location = (string) $response->headers->get('X-Inertia-Location');
+
+    expect($location)->toContain('https://x.com/i/oauth2/authorize')
+        ->and($location)->toContain(urlencode(url('/x-connection/callback')));
+});
+
 it('stores the X connection from the callback and dispatches a sync', function (): void {
     configureX();
     Queue::fake([SyncXBookmarks::class]);

@@ -6,7 +6,11 @@ use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
 
 it('renders the empty bookmarks page and the connect action', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
@@ -22,6 +26,34 @@ it('renders the empty bookmarks page and the connect action', function (): void 
         ->assertSee('Connect X')
         ->assertPresent('@connect-x-button')
         ->screenshot(filename: 'bookmarks-index-empty')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens X authorize in the top-level window from Connect X', function (): void {
+    configureX();
+
+    Route::get('/i/oauth2/authorize', fn (): string => '<html><body>X authorize</body></html>');
+
+    $provider = Mockery::mock(AbstractProvider::class);
+    $provider->shouldReceive('setScopes')->andReturnSelf();
+    $provider->shouldReceive('redirectUrl')->andReturnSelf();
+    $provider->shouldReceive('redirect')->andReturnUsing(
+        fn (): RedirectResponse => new RedirectResponse(
+            url('/i/oauth2/authorize?redirect_uri='.urlencode(url('/x-connection/callback'))),
+        ),
+    );
+    Socialite::shouldReceive('driver')->with('x')->andReturn($provider);
+
+    $user = User::factory()->withoutTwoFactor()->create();
+
+    $this->actingAs($user);
+
+    $page = visit(route('bookmarks.index'));
+
+    $page->click('@connect-x-button')
+        ->assertPathIs('/i/oauth2/authorize')
+        ->assertQueryStringHas('redirect_uri', url('/x-connection/callback'))
+        ->assertSee('X authorize')
         ->assertNoJavaScriptErrors();
 });
 
