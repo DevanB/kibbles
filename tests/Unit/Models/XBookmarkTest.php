@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\XBookmark;
 use App\ValueObjects\XMedia as XMediaValue;
 use App\ValueObjects\XPost as XPostValue;
-use InvalidArgumentException;
 
 it('round-trips media and quoted posts through the custom casts', function (): void {
     $bookmark = XBookmark::factory()->quoted()->video()->create([
