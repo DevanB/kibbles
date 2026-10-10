@@ -83,7 +83,7 @@ final readonly class SyncXBookmarks
 
         $unknown = array_values(array_filter(
             $seen,
-            fn (string $id): bool => ! $known->contains($id),
+            fn (string $id): bool => $known->doesntContain($id),
         ));
 
         if ($unknown !== []) {
@@ -101,7 +101,7 @@ final readonly class SyncXBookmarks
         $stored = XBookmark::query()->whereBelongsTo($user)->xPostIds();
         $missing = array_values(array_filter(
             $unknown,
-            fn (string $id): bool => ! $stored->contains($id),
+            fn (string $id): bool => $stored->doesntContain($id),
         ));
 
         foreach (array_chunk($missing, 100) as $chunk) {
