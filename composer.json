@@ -48,7 +48,13 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        }
+        },
+        "exclude-from-classmap": [
+            "vendor/laravel/framework/src/Illuminate/Testing/ParallelRunner.php"
+        ],
+        "classmap": [
+            "bootstrap/testing/ParallelRunner.php"
+        ]
     },
     "scripts": {
         "setup": [
