@@ -105,6 +105,7 @@ function BookmarkMediaList({
                         decoding="async"
                         referrerPolicy="no-referrer"
                         className="w-full rounded-lg object-cover"
+                        data-test={`bookmark-image-${bookmarkId}`}
                     />
                 );
             })}
