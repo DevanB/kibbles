@@ -49,9 +49,6 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 1
-      semver-major-days: 1
-      semver-minor-days: 1
-      semver-patch-days: 1
     groups:
       github-actions-minor:
         patterns: ["*"]
