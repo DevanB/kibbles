@@ -30,13 +30,16 @@
         "laravel/vet": "^0.2.1",
         "mockery/mockery": "^1.6.15",
         "nunomaduro/collision": "^8.9.5",
-        "pestphp/pest": "^5.3.1",
+        "pestphp/pest": "^5.3.0",
         "pestphp/pest-plugin-browser": "^5.1.2",
         "pestphp/pest-plugin-laravel": "^5.0.1",
         "pestphp/pest-plugin-rector": "^5.0.6",
-        "pestphp/pest-plugin-type-coverage": "^5.0.3",
+        "pestphp/pest-plugin-type-coverage": "^5.0.2",
         "rector/rector": "^2.7.0",
         "roave/security-advisories": "dev-latest"
+    },
+    "conflict": {
+        "phpunit/phpunit": ">=13.4.0"
     },
     "autoload": {
         "psr-4": {
@@ -48,13 +51,7 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        },
-        "exclude-from-classmap": [
-            "vendor/laravel/framework/src/Illuminate/Testing/ParallelRunner.php"
-        ],
-        "classmap": [
-            "bootstrap/testing/ParallelRunner.php"
-        ]
+        }
     },
     "scripts": {
         "setup": [
