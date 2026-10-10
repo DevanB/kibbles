@@ -20,7 +20,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as XOAuthUser;
 use LogicException;
-use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 final readonly class XConnectionController
@@ -36,11 +36,11 @@ final readonly class XConnectionController
         'offline.access',
     ];
 
-    public function create(): SymfonyRedirectResponse
+    public function create(): Response
     {
         Gate::authorize('create', XConnection::class);
 
-        return $this->xDriver()->redirect();
+        return Inertia::location($this->xDriver()->redirect());
     }
 
     public function store(

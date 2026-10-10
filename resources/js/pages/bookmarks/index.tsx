@@ -1,4 +1,4 @@
-import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { Bookmark as BookmarkIcon, Plus, Trash2 } from 'lucide-react';
 import { show } from '@/actions/App/Http/Controllers/BookmarkController';
@@ -87,10 +87,10 @@ export default function Index({
                             </>
                         ) : (
                             <Button asChild data-test="connect-x-button">
-                                <Link href={createXConnection.url()}>
+                                <a href={createXConnection.url()}>
                                     <Plus />
                                     Connect X
-                                </Link>
+                                </a>
                             </Button>
                         )}
                     </div>
