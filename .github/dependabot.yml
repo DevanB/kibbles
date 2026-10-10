@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 1
+      semver-major-days: 1
+      semver-minor-days: 1
+      semver-patch-days: 1
     groups:
       composer-minor:
         patterns: ["*"]
@@ -15,6 +20,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 1
+      semver-major-days: 1
+      semver-minor-days: 1
+      semver-patch-days: 1
     groups:
       bun-minor:
         patterns: ["*"]
@@ -26,6 +36,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 1
+      semver-major-days: 1
+      semver-minor-days: 1
+      semver-patch-days: 1
     groups:
       github-actions-minor:
         patterns: ["*"]
