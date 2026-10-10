@@ -250,6 +250,38 @@ it('falls back to preview or mp4 urls and ignores unusable media variants', func
         ->and($page->bookmarks[0]->media[0]->height)->toBeNull();
 });
 
+it('keeps posts with no media keys and uses an empty url when X omits every media url', function (): void {
+    configureX();
+
+    $connection = XConnection::factory()->create(['x_user_id' => '42']);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+            [
+                xTweet('1'),
+                xTweet('2', [
+                    'attachments' => ['media_keys' => ['3_empty']],
+                ]),
+            ],
+            [
+                'users' => [xAuthor('author-1'), xAuthor('author-2')],
+                'media' => [
+                    [
+                        'media_key' => '3_empty',
+                        'type' => 'photo',
+                    ],
+                ],
+            ],
+        )),
+    ]);
+
+    $page = resolve(XClient::class)->bookmarks($connection);
+
+    expect($page->bookmarks[0]->media)->toBeEmpty()
+        ->and($page->bookmarks[1]->media[0]->url)->toBeEmpty()
+        ->and($page->bookmarks[1]->media[0]->mp4Url)->toBeNull();
+});
+
 it('treats a non-object X payload as an empty page', function (): void {
     configureX();
 
@@ -258,9 +290,7 @@ it('treats a non-object X payload as an empty page', function (): void {
     Http::fake([
         'https://api.x.com/2/users/42/bookmarks*' => Http::response([
             'data' => 'nope',
-            'includes' => [
-                ['id' => 'ignored'],
-            ],
+            'includes' => 'nope',
         ]),
     ]);
 
