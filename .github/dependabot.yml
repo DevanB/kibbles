@@ -9,10 +9,17 @@ updates:
       semver-major-days: 1
       semver-minor-days: 1
       semver-patch-days: 1
-    # Temporary until Wayfinder accepts HTTP QUERY (laravel/wayfinder#324).
+    # Temporary until Wayfinder accepts HTTP QUERY (laravel/wayfinder#324)
+    # and laravel/framework 13.35 can land (PHPUnit 13.4 / Pest 5.3.1 need it).
     ignore:
       - dependency-name: "laravel/framework"
         versions: [">=13.35"]
+      - dependency-name: "phpunit/phpunit"
+        versions: [">=13.4"]
+      - dependency-name: "pestphp/pest"
+        versions: [">=5.3.1"]
+      - dependency-name: "pestphp/pest-plugin-type-coverage"
+        versions: [">=5.0.3"]
     groups:
       composer-minor:
         patterns: ["*"]
