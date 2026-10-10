@@ -110,7 +110,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
         ->assertSee('Saved')
         ->assertSee('Nuno Maduro')
         ->assertSee('The quoted post with a photo.')
-        ->assertSeeLink('Open on X')
+        ->assertPresent('[aria-label="Open on X"]')
         ->assertAttribute('@open-on-x-'.$photo->id, 'href', $photo->url())
         ->assertAttribute('@open-quoted-'.$quoted->id, 'href', 'https://x.com/quoted/status/99')
         ->assertSee('Show full post')
