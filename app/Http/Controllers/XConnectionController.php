@@ -104,7 +104,7 @@ final readonly class XConnectionController
             'message' => __('X disconnected.'),
         ]);
 
-        return to_route('bookmarks.index');
+        return redirect('/bookmarks');
     }
 
     private function xDriver(): AbstractProvider
