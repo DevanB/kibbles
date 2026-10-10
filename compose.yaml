@@ -13,6 +13,8 @@
 #      the image.
 #   5. docker compose pull && docker compose up -d
 #
+# Existing NAS (add scheduler): refresh this file from master, then docker compose up -d
+#
 # Local image build (optional): APP_REVISION=$(git rev-parse HEAD) docker compose build
 name: kibbles
 
@@ -49,6 +51,16 @@ services:
   queue:
     <<: *laravel
     command: php artisan queue:work --sleep=1 --tries=3 --timeout=60 --max-time=3600
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    stop_grace_period: 30s
+
+  scheduler:
+    <<: *laravel
+    command: php artisan schedule:work
     depends_on:
       app:
         condition: service_healthy
