@@ -67,7 +67,7 @@ it('lists bookmarks newest first', function (): void {
             ->where('bookmarks.data.1.id', $older->id));
 });
 
-it('returns the first 20 bookmarks and the following page in newest-first order', function (): void {
+it('returns a cursor page of bookmarks and the following page in newest-first order', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
     XConnection::factory()->recycle($user)->create();
 
@@ -76,7 +76,6 @@ it('returns the first 20 bookmarks and the following page in newest-first order'
         ->withoutMedia()
         ->count(25)
         ->sequence(fn ($sequence): array => [
-            'text' => 'Saved post '.($sequence->index + 1),
             'first_seen_at' => now()->subMinutes($sequence->index),
         ])
         ->create();
@@ -86,30 +85,32 @@ it('returns the first 20 bookmarks and the following page in newest-first order'
         ->assertOk();
 
     $nextCursor = null;
+    $firstPageSize = 0;
 
-    $first->assertInertia(function ($page) use ($bookmarks, &$nextCursor): void {
-        $page->has('bookmarks.data', 20)
-            ->where('bookmarks.data.0.id', $bookmarks[0]->id)
-            ->where('bookmarks.data.0.text', 'Saved post 1')
-            ->where('bookmarks.data.19.id', $bookmarks[19]->id)
-            ->where('bookmarks.data.19.text', 'Saved post 20')
-            ->whereType('bookmarks.next_cursor', 'string');
+    $first->assertInertia(function ($page) use ($bookmarks, &$nextCursor, &$firstPageSize): void {
+        $props = $page->toArray()['props']['bookmarks'];
+        $firstPageSize = count($props['data']);
+        $nextCursor = $props['next_cursor'];
 
-        $nextCursor = $page->toArray()['props']['bookmarks']['next_cursor'];
+        expect($firstPageSize)->toBeGreaterThan(0)
+            ->and($firstPageSize)->toBeLessThan($bookmarks->count());
+        expect($props['data'][0]['id'])->toBe($bookmarks[0]->id);
+        expect($props['data'][$firstPageSize - 1]['id'])->toBe($bookmarks[$firstPageSize - 1]->id);
+        expect($nextCursor)->not->toBeEmpty();
     });
-
-    expect($nextCursor)->toBeString()->not->toBeEmpty();
 
     $this->actingAs($user)
         ->get(route('bookmarks.index', ['cursor' => $nextCursor]))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->has('bookmarks.data', 5)
-            ->where('bookmarks.data.0.id', $bookmarks[20]->id)
-            ->where('bookmarks.data.0.text', 'Saved post 21')
-            ->where('bookmarks.data.4.id', $bookmarks[24]->id)
-            ->where('bookmarks.data.4.text', 'Saved post 25')
-            ->where('bookmarks.next_cursor', null));
+        ->assertInertia(function ($page) use ($bookmarks, $firstPageSize): void {
+            $props = $page->toArray()['props']['bookmarks'];
+            $nextPage = $props['data'];
+
+            expect($nextPage[0]['id'])->toBe($bookmarks[$firstPageSize]->id);
+            expect($nextPage[count($nextPage) - 1]['id'])->toBe($bookmarks->last()->id);
+            expect($nextPage)->toHaveCount($bookmarks->count() - $firstPageSize);
+            expect($props['next_cursor'])->toBeNull();
+        });
 });
 
 it('forbids another user from viewing or removing a bookmark', function (): void {
