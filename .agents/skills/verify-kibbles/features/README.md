@@ -18,7 +18,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 
 ## Driving conventions
 
-- **Primary harness:** `php artisan test --compact tests/Browser/...` and `tests/Feature/Controllers/...`. `bin/prove-*` stash `public/hot` around Pest Browser so Vite HMR from `composer dev` does not break Inertia SSR.
+- **Primary harness:** `php artisan test --compact tests/Browser/...` and `tests/Feature/Controllers/...`. `bin/prove-*` stash `public/hot` around Pest so Vite HMR from `composer dev` does not break Inertia SSR (Browser and Feature page renders).
 - Pest `@name` → element `data-test="name"` (e.g. `click('@login-button')`)
 - Assert copy from real pages (`Log in to your account`, `Create an account`, `Profile information`, `Games`, …)
 - Feature tests use `assertInertia` + route names (`login`, `register`, `dashboard`, `games.index`, `user-profile.edit`)

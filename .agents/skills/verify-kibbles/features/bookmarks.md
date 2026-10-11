@@ -38,4 +38,4 @@ Preconditions:
 - Callback URL is `{APP_URL}/x-connection/callback` (`X_REDIRECT_URI` optional).
 - Disconnect deletes **all** local bookmarks for that user.
 - Index is not paginated on master. Do not document draft UI pagination.
-- `prove-bookmarks` (and the other prove helpers) stash `public/hot` around Pest Browser so Vite HMR does not break Inertia SSR under `Http::preventStrayRequests()`.
+- `prove-bookmarks` (and the other prove helpers) stash `public/hot` around Pest so Vite HMR does not break Inertia SSR under `Http::preventStrayRequests()`.
