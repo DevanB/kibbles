@@ -226,9 +226,13 @@ it('loads the next page of bookmarks on scroll and removes a card from that page
         ->click('@confirm-remove-bookmark-button-'.$oldest->id)
         ->assertSee('Bookmark removed.')
         ->assertMissing('@bookmark-'.$oldest->id)
-        ->assertPresent('@bookmark-'.$newest->id)
         ->assertPresent('@bookmark-'.$nextOldest->id)
         ->screenshot(filename: 'bookmarks-index-page-two-after-remove')
+        ->assertNoJavaScriptErrors();
+
+    $page->script('window.scrollTo(0, 0)');
+
+    $page->assertPresent('@bookmark-'.$newest->id)
         ->assertNoJavaScriptErrors();
 
     expect($oldest->fresh())->toBeNull()
