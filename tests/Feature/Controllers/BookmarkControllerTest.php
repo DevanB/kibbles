@@ -93,10 +93,10 @@ it('returns a cursor page of bookmarks and the following page in newest-first or
         $nextCursor = $props['next_cursor'];
 
         expect($firstPageSize)->toBeGreaterThan(0)
-            ->and($firstPageSize)->toBeLessThan($bookmarks->count());
-        expect($props['data'][0]['id'])->toBe($bookmarks[0]->id);
-        expect($props['data'][$firstPageSize - 1]['id'])->toBe($bookmarks[$firstPageSize - 1]->id);
-        expect($nextCursor)->not->toBeEmpty();
+            ->and($firstPageSize)->toBeLessThan($bookmarks->count())
+            ->and($props['data'][0]['id'])->toBe($bookmarks[0]->id)
+            ->and($props['data'][$firstPageSize - 1]['id'])->toBe($bookmarks[$firstPageSize - 1]->id)
+            ->and($nextCursor)->not->toBeEmpty();
     });
 
     $this->actingAs($user)
@@ -106,10 +106,10 @@ it('returns a cursor page of bookmarks and the following page in newest-first or
             $props = $page->toArray()['props']['bookmarks'];
             $nextPage = $props['data'];
 
-            expect($nextPage[0]['id'])->toBe($bookmarks[$firstPageSize]->id);
-            expect($nextPage[count($nextPage) - 1]['id'])->toBe($bookmarks->last()->id);
-            expect($nextPage)->toHaveCount($bookmarks->count() - $firstPageSize);
-            expect($props['next_cursor'])->toBeNull();
+            expect($nextPage[0]['id'])->toBe($bookmarks[$firstPageSize]->id)
+                ->and($nextPage[count($nextPage) - 1]['id'])->toBe($bookmarks->last()->id)
+                ->and($nextPage)->toHaveCount($bookmarks->count() - $firstPageSize)
+                ->and($props['next_cursor'])->toBeNull();
         });
 });
 
