@@ -218,6 +218,8 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `sync-bookmarks-button` | `/bookmarks` Sync now |
 | `disconnect-x-button` | `/bookmarks` Disconnect X |
 | `bookmarks-empty` | `/bookmarks` empty state |
+| `bookmark-masonry` | `/bookmarks` Masonic grid wrapper |
+| `bookmarks-load-more` | `/bookmarks` InfiniteScroll loading copy (**Loading more…**) |
 | `bookmark-{id}` | bookmarks card |
 | `bookmark-text-{id}` / `bookmark-saved-{id}` | bookmarks card body / saved date |
 | `bookmark-media-{id}` / `bookmark-video-{id}` / `bookmark-gif-{id}` | bookmarks card media |
@@ -307,6 +309,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
-| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `XConnectionControllerTest` + `BookmarksTest`. Doctor is logged only. |
+| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `XConnectionControllerTest` + `BookmarksTest` (empty/connect/grid/remove + cursor page + scroll-load). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.
