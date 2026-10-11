@@ -23,7 +23,7 @@ DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature Bookmark/Sync/XConnection + Browser Bookmarks; doctor is informational"
+  echo "note=Feature Bookmark/Sync/XConnection + Browser Bookmarks (empty/connect/grid/remove + cursor infinite scroll); doctor is informational"
 } | tee "$ART/bookmarks-summary.txt"
 
 set +e
@@ -52,7 +52,7 @@ cat "$ART/bookmarks-tests.log"
   echo "tests_rc=$TEST_RC"
   echo "feature=tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php"
   echo "browser=tests/Browser/BookmarksTest.php"
-  echo "verified=guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove"
+  echo "verified=guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove, cursor page + scroll-load page two"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi
