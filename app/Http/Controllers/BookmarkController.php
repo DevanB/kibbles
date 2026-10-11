@@ -10,9 +10,11 @@ use App\Models\User;
 use App\Models\XBookmark;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ScrollMetadata;
 use InertiaUI\Modal\Modal;
 
 final readonly class BookmarkController
@@ -21,13 +23,23 @@ final readonly class BookmarkController
     {
         Gate::authorize('viewAny', XBookmark::class);
 
+        /** @var CursorPaginator<int, XBookmark> $paginator */
+        $paginator = $user->xBookmarks()
+            ->newestFirst()
+            ->cursorPaginate(20);
+
         return Inertia::render('bookmarks/index', [
-            'bookmarks' => $user->xBookmarks()
-                ->newestFirst()
-                ->get()
-                ->map(fn (XBookmark $bookmark): array => $bookmark->toWire())
-                ->values()
-                ->all(),
+            'bookmarks' => Inertia::scroll(
+                [
+                    ...$paginator->toArray(),
+                    'data' => $paginator
+                        ->getCollection()
+                        ->map(fn (XBookmark $bookmark): array => $bookmark->toWire())
+                        ->values()
+                        ->all(),
+                ],
+                metadata: ScrollMetadata::fromPaginator($paginator),
+            ),
             'xConnection' => $user->xConnection?->toWire(),
         ]);
     }
@@ -52,7 +64,9 @@ final readonly class BookmarkController
                 'message' => __('Could not remove the bookmark from X.'),
             ]);
 
-            return to_route('bookmarks.index');
+            return to_route('bookmarks.index')->withErrors([
+                'bookmark' => __('Could not remove the bookmark from X.'),
+            ]);
         }
 
         Inertia::flash('toast', [

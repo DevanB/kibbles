@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
 import { Modal, useModal } from '@inertiaui/modal-react';
 import { destroy } from '@/actions/App/Http/Controllers/BookmarkController';
 import { BookmarkCard } from '@/components/bookmark-card';
@@ -39,7 +39,22 @@ export default function Show({ bookmark }: { bookmark: Bookmark }) {
                     >
                         Cancel
                     </Button>
-                    <Form {...destroy.form(bookmark)}>
+                    <Form
+                        {...destroy.form(bookmark)}
+                        options={{
+                            preserveScroll: true,
+                            except: ['bookmarks'],
+                        }}
+                        onSuccess={() => {
+                            router.replaceProp(
+                                'bookmarks.data',
+                                (current: unknown) =>
+                                    (current as Bookmark[]).filter(
+                                        (item) => item.id !== bookmark.id,
+                                    ),
+                            );
+                        }}
+                    >
                         {({ processing }) => (
                             <Button
                                 type="submit"

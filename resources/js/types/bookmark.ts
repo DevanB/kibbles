@@ -31,6 +31,10 @@ export type Bookmark = {
     url: string;
 };
 
+export type BookmarkPage = {
+    data: Bookmark[];
+};
+
 export type XConnection = {
     username: string;
     lastSyncedAt: string | null;

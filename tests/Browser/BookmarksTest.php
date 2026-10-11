@@ -181,3 +181,65 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
     Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
         && $request->url() === 'https://api.x.com/2/users/42/bookmarks/quoted-100');
 });
+
+it('loads the next page of bookmarks on scroll and removes a card from that page', function (): void {
+    configureX();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    XConnection::factory()->recycle($user)->synced()->create([
+        'username' => 'devan',
+        'x_user_id' => '42',
+    ]);
+    $bookmarks = XBookmark::factory()
+        ->recycle($user)
+        ->withoutMedia()
+        ->count(25)
+        ->sequence(fn ($sequence): array => [
+            'first_seen_at' => now()->subMinutes($sequence->index),
+        ])
+        ->create();
+
+    Http::fake([
+        'https://api.x.com/2/users/*/bookmarks/*' => Http::response(['data' => ['bookmarked' => false]]),
+    ]);
+
+    $this->actingAs($user);
+
+    $newest = $bookmarks->first();
+    $oldest = $bookmarks->last();
+    $nextOldest = $bookmarks[$bookmarks->count() - 2];
+
+    $page = visit(route('bookmarks.index'))
+        ->on()
+        ->iPhoneSE();
+
+    $page->assertPresent('@bookmark-'.$newest->id);
+
+    $page->script('window.scrollTo(0, document.body.scrollHeight)');
+
+    $page->assertPresent('@bookmark-'.$oldest->id)
+        ->assertPresent('@bookmark-'.$nextOldest->id)
+        ->screenshot(filename: 'bookmarks-index-page-two')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="bookmark-'.$oldest->id.'"] [aria-label="Remove bookmark"]')
+        ->click('@confirm-remove-bookmark-button-'.$oldest->id)
+        ->assertSee('Bookmark removed.')
+        ->assertMissing('@bookmark-'.$oldest->id)
+        ->assertPresent('@bookmark-'.$nextOldest->id)
+        ->screenshot(filename: 'bookmarks-index-page-two-after-remove')
+        ->assertNoJavaScriptErrors();
+
+    $page->script('window.scrollTo(0, 0)');
+
+    $page->assertPresent('@bookmark-'.$newest->id)
+        ->assertNoJavaScriptErrors();
+
+    expect($oldest->fresh())->toBeNull()
+        ->and($newest->fresh())->not->toBeNull()
+        ->and($nextOldest->fresh())->not->toBeNull()
+        ->and($user->xBookmarks()->count())->toBe($bookmarks->count() - 1);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+        && $request->url() === 'https://api.x.com/2/users/42/bookmarks/'.$oldest->x_post_id);
+});
