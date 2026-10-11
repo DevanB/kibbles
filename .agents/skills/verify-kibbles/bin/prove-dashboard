@@ -9,6 +9,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
 cd "$ROOT"
+# shellcheck source=common.sh
+source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 RUN_ID="${RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
 ART="artifacts/verify-kibbles/${RUN_ID}"
@@ -28,6 +30,10 @@ set +e
 "$DOCTOR" "$BASE" 2>&1 | tee "$ART/dashboard-doctor.log"
 DOCTOR_RC=${PIPESTATUS[0]}
 set -e
+
+stash_vite_hot
+echo "vite_hot_stash=${VERIFY_HOT_STASH:-absent}" >> "$ART/dashboard-summary.txt"
+trap restore_vite_hot EXIT
 
 set +e
 php artisan test --compact \

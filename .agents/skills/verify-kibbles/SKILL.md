@@ -1,11 +1,11 @@
 ---
 name: verify-kibbles
-description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving home/login/register/dashboard/games/settings, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + guest / 302 + /login 200 + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
+description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving home/login/register/dashboard/games/bookmarks/settings, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + guest / 302 + /login 200 + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
 ---
 
 # Verify kibbles
 
-Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys + Pennant registration + user-owned Games. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
+Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys + Pennant registration + user-owned Games + X bookmarks. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
 
 ## Required before claiming done
 
@@ -21,6 +21,7 @@ How to invoke:
 .agents/skills/verify-kibbles/bin/prove-home
 .agents/skills/verify-kibbles/bin/prove-dashboard
 .agents/skills/verify-kibbles/bin/prove-games
+.agents/skills/verify-kibbles/bin/prove-bookmarks
 # or the mapped Pest files this skill names, e.g.:
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
 ```
@@ -136,8 +137,10 @@ Prefer Pest over inventing selectors from scratch.
 php artisan test --compact tests/Browser/HomeTest.php
 php artisan test --compact tests/Browser/DashboardTest.php
 php artisan test --compact tests/Browser/GamesTest.php
+php artisan test --compact tests/Browser/GameCatalogTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/PlaySessionsTest.php
+php artisan test --compact tests/Browser/BookmarksTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -146,6 +149,8 @@ php artisan test --compact --testsuite=Browser
 ```
 
 Pest Browser starts its own app server; it does not require `composer dev` or Herd. After `bun install`, if Browser tests fail with Playwright outdated / just-installed errors, run `bunx playwright install` (or `bunx playwright install chromium`) so browser binaries match the pinned `playwright` package. Browsers land under `~/Library/Caches/ms-playwright` (macOS) or `~/.cache/ms-playwright` (Linux).
+
+**`public/hot` + Pest Browser:** tests call `Http::preventStrayRequests()`. If `public/hot` exists (Vite from `composer dev`), Inertia SSR requests `http://[::1]:5173/__inertia_ssr` and Browser tests fail. The `bin/prove-*` helpers stash and restore `public/hot` around Pest so they can run while `composer dev` is up. If you invoke `php artisan test` on Browser files yourself, stash `public/hot` first (or stop the Vite pane). Feature tests are fine with `public/hot` present.
 
 **`@name` → `data-test`:** Pest `click('@login-button')` targets `data-test="login-button"`. Real attrs in this app:
 
@@ -206,6 +211,22 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `save-journal-entry-button-{id}` | journal edit modal save |
 | `delete-journal-entry-button-{id}` | journal show modal delete |
 | `confirm-delete-journal-entry-button-{id}` / `cancel-delete-journal-entry-button-{id}` | journal delete confirm |
+| `game-status` / `game-status-{id}` | games show badge / index tile badge |
+| `game-tabs` | games show Play Sessions / Journal tabs wrapper |
+| `edit-{id}-body` | journal edit modal textarea |
+| `connect-x-button` | `/bookmarks` Connect X (disconnected) |
+| `sync-bookmarks-button` | `/bookmarks` Sync now |
+| `disconnect-x-button` | `/bookmarks` Disconnect X |
+| `bookmarks-empty` | `/bookmarks` empty state |
+| `bookmark-{id}` | bookmarks card |
+| `bookmark-text-{id}` / `bookmark-saved-{id}` | bookmarks card body / saved date |
+| `bookmark-media-{id}` / `bookmark-video-{id}` / `bookmark-gif-{id}` | bookmarks card media |
+| `bookmark-quoted-{id}` / `open-quoted-{id}` | quoted post / quoted Open on X |
+| `show-full-post-{id}` | bookmarks expand / collapse long text |
+| `open-on-x-{id}` | bookmarks Open on X (`aria-label="Open on X"`) |
+| `remove-bookmark-button-{id}` | bookmarks card remove (`aria-label="Remove bookmark"`) |
+| `bookmark-modal-{id}` | bookmarks remove modal |
+| `confirm-remove-bookmark-button-{id}` / `cancel-remove-bookmark-button-{id}` | bookmarks remove confirm |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 
@@ -221,6 +242,10 @@ php artisan test --compact tests/Feature/Controllers/DashboardTest.php
 php artisan test --compact tests/Feature/Controllers/GameControllerTest.php
 php artisan test --compact tests/Feature/Controllers/JournalEntryControllerTest.php
 php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.php
+php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTest.php
+php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php
+php artisan test --compact tests/Feature/Controllers/BookmarkSyncControllerTest.php
+php artisan test --compact tests/Feature/Controllers/XConnectionControllerTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
 php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.php
@@ -240,7 +265,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
 curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, profile-settings, password-settings, passkeys, appearance).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -281,6 +306,7 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Passkey host | `.agents/skills/verify-kibbles/bin/check-passkey-host [browse_url]` — exit 0 + `passkey:host_ok` when browse host equals APP_URL / RP; exit 1 on mismatch |
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
-| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest`. Doctor is logged only. |
+| Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
+| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `XConnectionControllerTest` + `BookmarksTest`. Doctor is logged only. |
 
-Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it.
+Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers that run Pest Browser stash `public/hot` for the test process and restore it afterward so `composer dev` Vite does not break Inertia SSR.

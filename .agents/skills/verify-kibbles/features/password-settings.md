@@ -6,6 +6,7 @@ Authenticated password change at `/settings/password` (route `password.edit`, In
 
 - Current + new + confirmation
 - Submit via `data-test="update-password-button"`
+- Success toast **Password updated.**
 - Requires verified email
 
 ## How to get to it (user POV)
