@@ -1,4 +1,12 @@
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { Masonry, type RenderComponentProps } from 'masonic';
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useSyncExternalStore,
+    type ReactNode,
+} from 'react';
 import type { Bookmark } from '@/types';
 
 const SM = '(min-width: 40rem)';
@@ -29,14 +37,18 @@ function columnCount(): number {
     return 1;
 }
 
-function splitColumns<T>(items: T[], count: number): T[][] {
-    const columns = Array.from({ length: count }, (): T[] => []);
+function usePositionerReset(ids: string[]): number {
+    const [generation, setGeneration] = useState(0);
+    const [seen, setSeen] = useState(ids);
 
-    items.forEach((item, index) => {
-        columns[index % count]?.push(item);
-    });
+    if (seen.some((id) => !ids.includes(id))) {
+        setGeneration((current) => current + 1);
+        setSeen(ids);
+    } else if (seen.length !== ids.length) {
+        setSeen(ids);
+    }
 
-    return columns;
+    return generation;
 }
 
 export function BookmarkMasonry({
@@ -47,19 +59,38 @@ export function BookmarkMasonry({
     children: (bookmark: Bookmark) => ReactNode;
 }) {
     const columns = useSyncExternalStore(subscribe, columnCount, () => 1);
+    const childrenRef = useRef(children);
+    const positionerReset = usePositionerReset(
+        bookmarks.map((bookmark) => bookmark.id),
+    );
+
+    useEffect(() => {
+        childrenRef.current = children;
+    });
+
+    const render = useMemo(() => {
+        function Cell({ data }: RenderComponentProps<Bookmark>) {
+            return childrenRef.current(data);
+        }
+
+        return Cell;
+    }, []);
 
     return (
-        <div
-            data-test="bookmark-masonry"
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-            {splitColumns(bookmarks, columns).map((column, columnIndex) => (
-                <ul key={columnIndex} className="flex min-w-0 flex-col gap-4">
-                    {column.map((bookmark) => (
-                        <li key={bookmark.id}>{children(bookmark)}</li>
-                    ))}
-                </ul>
-            ))}
+        <div data-test="bookmark-masonry">
+            <Masonry
+                key={positionerReset}
+                items={bookmarks}
+                columnCount={columns}
+                columnGutter={16}
+                rowGutter={16}
+                overscanBy={8}
+                itemHeightEstimate={280}
+                ssrWidth={1280}
+                ssrHeight={720}
+                itemKey={(item) => item.id}
+                render={render}
+            />
         </div>
     );
 }
