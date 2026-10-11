@@ -12,7 +12,7 @@ Authenticated play-time log on `games.show`, nested under `games.play-sessions`.
 - Add / Edit Session: native `datetime-local` + Label + hidden `timezone`. Values are browser-local; the server stores UTC. Buttons **Save Session** / **Save Changes**.
 - Delete uses DeleteConfirmationDialog: **Delete Session?** / **This will permanently delete this play session. Linked journal entries are kept.** / **Delete Session** / **Cancel**.
 - Start moves Backlog and Abandoned to In Progress. Finished stays Finished. Adding a past session never changes status. Update cannot reopen a session. Stopping an already-closed session is a validation error.
-- One open session per user: app-level rule plus a partial unique index on `(user_id) WHERE ended_at IS NULL`. Race maps to **Stop your session on {title} first.** Production DB is SQLite (not MySQL generated `is_open`).
+- One open session per user: app-level rule plus a stored generated `open_user_id` (`user_id` when `ended_at` is null) with a unique index. Race maps to **Stop your session on {title} first.** Production DB is SQLite (not a MySQL `is_open` column).
 - Index receives `openPlaySessionGameId`. The open game's tile gets a top-left **Playing** badge (`data-test="game-playing-{id}"`).
 - Toasts: **Session started.** / **Session saved.** / **Session updated.** / **Session deleted.**
 

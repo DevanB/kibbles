@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Durable proof for X bookmarks: Pest Feature + Browser tests.
+# Pest boots its own server — composer dev is not required.
+# Doctor against VERIFY_BASE_URL (default http://localhost:8000) is recorded;
+# a down composer-dev server does not fail this proof.
+# Usage: .agents/skills/verify-kibbles/bin/prove-bookmarks
+# Do not pipe `php artisan test` through tee — Playwright run-server inherits the pipe.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+cd "$ROOT"
+# shellcheck source=common.sh
+source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+
+RUN_ID="${RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
+ART="artifacts/verify-kibbles/${RUN_ID}"
+mkdir -p "$ART"
+BASE="${VERIFY_BASE_URL:-http://localhost:8000}"
+DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
+
+{
+  echo "=== prove-bookmarks run_id=${RUN_ID} ==="
+  echo "artifacts=$ART"
+  echo "base=$BASE"
+  echo "cwd=$ROOT"
+  echo "note=Feature Bookmark/Sync/XConnection + Browser Bookmarks; doctor is informational"
+} | tee "$ART/bookmarks-summary.txt"
+
+set +e
+"$DOCTOR" "$BASE" 2>&1 | tee "$ART/bookmarks-doctor.log"
+DOCTOR_RC=${PIPESTATUS[0]}
+set -e
+
+stash_vite_hot
+echo "vite_hot_stash=${VERIFY_HOT_STASH:-absent}" >> "$ART/bookmarks-summary.txt"
+trap restore_vite_hot EXIT
+
+set +e
+php artisan test --compact \
+  tests/Feature/Controllers/BookmarkControllerTest.php \
+  tests/Feature/Controllers/BookmarkSyncControllerTest.php \
+  tests/Feature/Controllers/XConnectionControllerTest.php \
+  tests/Browser/BookmarksTest.php \
+  > "$ART/bookmarks-tests.log" 2>&1
+TEST_RC=$?
+set -e
+cat "$ART/bookmarks-tests.log"
+
+{
+  echo "doctor_rc=$DOCTOR_RC"
+  echo "doctor_required=0"
+  echo "tests_rc=$TEST_RC"
+  echo "feature=tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php"
+  echo "browser=tests/Browser/BookmarksTest.php"
+  echo "verified=guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove"
+  if [[ "$DOCTOR_RC" -ne 0 ]]; then
+    echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
+  fi
+  ls -la "$ART" || true
+} | tee -a "$ART/bookmarks-summary.txt"
+
+if [[ "$TEST_RC" -ne 0 ]]; then
+  echo "=== prove-bookmarks FAILED (evidence kept at $ART) ==="
+  exit 1
+fi
+
+echo "=== prove-bookmarks OK ==="
+exit 0

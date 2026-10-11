@@ -19,7 +19,7 @@ Adjacent (still true, not the dashboard proof):
 
 - `SessionControllerTest` / `UserControllerTest` success paths `assertRedirectToRoute('dashboard')`
 - `LayoutTest` starts on settings (same app layout), not the dashboard page
-- Sidebar links to **Games** (`games.index`) — see [games.md](./games.md). `AppLayout` mounts the sidebar shell, not `AppHeader`.
+- Sidebar links to **Games** (`games.index`) and **X** (`bookmarks.index`) — see [games.md](./games.md) and [bookmarks.md](./bookmarks.md). `AppLayout` mounts the sidebar shell, not `AppHeader`.
 
 ## Sub-features
 
@@ -27,7 +27,7 @@ Adjacent (still true, not the dashboard proof):
 - Placeholder card body (no Recent Journal Entries)
 - Entry to the user menu (`data-test="sidebar-menu-button"`) and logout item (`data-test="logout-button"`, label `Log out`)
 - Post-login / post-register landing target
-- Nav sibling **Games**
+- Nav siblings **Games** and **X** (bookmarks)
 - Sidebar brand **Kibbles** (no Repository / Documentation footer links)
 - Document title `{page} :: Kibbles`
 

@@ -18,7 +18,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 
 ## Driving conventions
 
-- **Primary harness:** `php artisan test --compact tests/Browser/...` and `tests/Feature/Controllers/...`
+- **Primary harness:** `php artisan test --compact tests/Browser/...` and `tests/Feature/Controllers/...`. `bin/prove-*` stash `public/hot` around Pest Browser so Vite HMR from `composer dev` does not break Inertia SSR.
 - Pest `@name` → element `data-test="name"` (e.g. `click('@login-button')`)
 - Assert copy from real pages (`Log in to your account`, `Create an account`, `Profile information`, `Games`, …)
 - Feature tests use `assertInertia` + route names (`login`, `register`, `dashboard`, `games.index`, `user-profile.edit`)
@@ -43,6 +43,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 | Dashboard | `/dashboard` | [dashboard.md](./dashboard.md) |
 | Games | `/games` | [games.md](./games.md) |
 | Play sessions | `/games/{game}` | [play-sessions.md](./play-sessions.md) |
+| X (bookmarks) | `/bookmarks` | [bookmarks.md](./bookmarks.md) |
 | Profile settings | `/settings/profile` | [profile-settings.md](./profile-settings.md) |
 | Password settings | `/settings/password` | [password-settings.md](./password-settings.md) |
 | Passkeys | `/settings/passkeys` | [passkeys.md](./passkeys.md) |
@@ -56,8 +57,9 @@ There is **no** welcome / marketing page. `welcome.md` and `tests/Browser/Welcom
 - **Register:** Pennant kill-switch. Default env is off (403 on `/register`). Feature tests enable the flag in `beforeEach`. LayoutTest is nav smoke; full submit is `tests/Browser/RegistrationTest.php` (lands on `/verify-email`).
 - **Login Browser submit:** `tests/Browser/SessionTest.php` (success → `/dashboard`; invalid password stays `/login` with `auth.failed`; 2FA recovery code → `/dashboard`).
 - **Dashboard logout (Browser):** lands on `/login` immediately (home redirect chain). HTTP logout still `POST logout` → `/`.
-- **Games:** user-owned catalog (`GameController`, unique title per user). **Show is the hub** — create/update redirect to `games.show`; edit is title-only. Drive with `GameControllerTest` + `JournalEntryControllerTest` + `GamesTest` + `JournalEntriesTest` and `bin/prove-games`. Sidebar nav, not `AppHeader`.
-- **Play sessions:** one open session per user on the show hub. Drive with `PlaySessionControllerTest` + `PlaySessionsTest`. Production DB is SQLite (partial unique index, not a MySQL `is_open` column).
+- **Games:** user-owned catalog (`GameController`, unique title per user). **Show is the hub** — create/update redirect to `games.show`; edit is title + status. Drive with `GameControllerTest` + `JournalEntryControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `GameCatalogTest` + `JournalEntriesTest` and `bin/prove-games`. Sidebar nav, not `AppHeader`.
+- **Play sessions:** one open session per user on the show hub. Drive with `PlaySessionControllerTest` + `PlaySessionsTest`. Production DB is SQLite (generated `open_user_id` unique column, not a MySQL `is_open` column).
+- **X (bookmarks):** sidebar label **X**, page title **Bookmarks**. Connect/disconnect/sync + masonry grid. Drive with `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `XConnectionControllerTest` + `BookmarksTest` and `bin/prove-bookmarks`. Completing a real x.com grant needs `X_CLIENT_ID` / `X_CLIENT_SECRET`. No index pagination on master.
 - **Profile delete:** `UserController@destroy` (`user.destroy`); Browser lands on `/login` after the home redirect.
 - **Appearance GET:** `tests/Feature/Controllers/AppearanceTest.php` (guest → login, verified → Inertia `appearance/update`, unverified → `verification.notice`).
 - **Verify-email notice UI:** `tests/Browser/EmailVerificationTest.php` (unverified dashboard visit).
