@@ -38,7 +38,7 @@ final class CreateJournalEntryRequest extends FormRequest
     {
         $value = $this->validated('play_session_id');
 
-        return is_string($value) ? $value : null;
+        return is_string($value) && $value !== '' && $value !== 'none' ? $value : null;
     }
 
     /**
@@ -50,14 +50,6 @@ final class CreateJournalEntryRequest extends FormRequest
             'body.required' => 'A body is required.',
             'body.string' => 'The body must be a string.',
             'body.max' => 'The body may not be greater than 10000 characters.',
-            ...LinkablePlaySession::messages(),
         ];
-    }
-
-    public function prepareForValidation(): void
-    {
-        if (in_array($this->input('play_session_id'), ['', 'none'], true)) {
-            $this->merge(['play_session_id' => null]);
-        }
     }
 }

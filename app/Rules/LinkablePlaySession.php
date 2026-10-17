@@ -9,6 +9,7 @@ use App\Models\JournalEntry;
 use App\Models\PlaySession;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Str;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 final readonly class LinkablePlaySession implements ValidationRule
@@ -25,22 +26,17 @@ final readonly class LinkablePlaySession implements ValidationRule
         return 'The play session is already linked to a journal entry.';
     }
 
+    public static function invalidMessage(): string
+    {
+        return 'The play session is invalid.';
+    }
+
     /**
      * @return list<string|self>
      */
     public static function rules(Game $game, ?JournalEntry $current = null): array
     {
-        return ['nullable', 'uuid', 'bail', new self($game, $current)];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function messages(): array
-    {
-        return [
-            'play_session_id.uuid' => 'The play session is invalid.',
-        ];
+        return ['nullable', 'bail', new self($game, $current)];
     }
 
     /**
@@ -48,6 +44,16 @@ final readonly class LinkablePlaySession implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if (! is_string($value) || $value === '' || $value === 'none') {
+            return;
+        }
+
+        if (! Str::isUuid($value)) {
+            $fail(self::invalidMessage());
+
+            return;
+        }
+
         $session = PlaySession::query()->whereKey($value)->first();
 
         if (! $session instanceof PlaySession || $session->game_id !== $this->game->id || $session->user_id !== $this->game->user_id) {
