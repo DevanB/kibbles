@@ -176,7 +176,7 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `game-art` | games show hotlinked box art |
 | `game-description` | games show catalog description |
 | `edit-game-button` | games show → edit |
-| `game-actions-button` | games show split-button chevron (Delete lives in the menu) |
+| `game-actions-button` | games show ButtonGroup chevron (Delete lives in the menu) |
 | `delete-game-button` | games show menu / edit delete |
 | `confirm-delete-game-button` / `cancel-delete-game-button` | games show delete dialog |
 | `game-title-{id}` | games index title under the tile |
@@ -195,13 +195,14 @@ Pest Browser starts its own app server; it does not require `composer dev` or He
 | `play-session-{id}` | games show session row |
 | `play-session-journal-{id}` | games show Journal chip |
 | `edit-play-session-button-{id}` | games show session Edit |
-| `play-session-actions-button-{id}` | games show session menu |
+| `play-session-actions-button-{id}` | games show session ButtonGroup ellipsis (Delete lives in the menu) |
 | `delete-play-session-button-{id}` | games show session Delete |
 | `confirm-delete-play-session-button-{id}` / `cancel-delete-play-session-button-{id}` | session delete confirm |
 | `play-session-started-at` / `play-session-ended-at` | session create/edit datetime-local |
 | `save-play-session-button` | stop/add Save Session |
 | `save-play-session-changes-button` | session edit Save Changes |
 | `stop-session-body` | stop modal textarea |
+| `journal-entry-play-session` | journal create/edit Play session select |
 | `create-journal-entry-button` | games show opens create modal |
 | `add-journal-entry-button` | journal create modal submit |
 | `compose-body` | journal create modal textarea |
