@@ -1,7 +1,7 @@
 import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { cn } from 'cn';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Ellipsis } from 'lucide-react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useState } from 'react';
 import GameController from '@/actions/App/Http/Controllers/GameController';
@@ -13,9 +13,11 @@ import {
     store as storePlaySession,
 } from '@/actions/App/Http/Controllers/PlaySessionController';
 import DeleteConfirmationDialog from '@/components/delete-confirmation-dialog';
+import GameDetailListRow from '@/components/game-detail-list-row';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,7 +27,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { formatSessionRow } from '@/lib/local-date-time';
+import {
+    formatDuration,
+    formatListDate,
+    formatSessionRange,
+} from '@/lib/local-date-time';
 import { index, show } from '@/routes/games';
 import type { Game, JournalEntry, OpenPlaySession, PlaySession } from '@/types';
 
@@ -37,15 +43,6 @@ const gameTabParser = parseAsStringLiteral(gameTabs).withDefault('sessions');
 
 function parseGameTab(tab: string): GameTab {
     return tab === 'journal' ? 'journal' : 'sessions';
-}
-
-function formatEntryDate(value: string): string {
-    return new Date(value).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        timeZone: 'UTC',
-    });
 }
 
 export default function Show({
@@ -131,13 +128,8 @@ export default function Show({
                                 </Button>
                             </Form>
                         ) : null}
-                        <div className="inline-flex">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="rounded-r-none"
-                            >
+                        <ButtonGroup aria-label="Game actions">
+                            <Button variant="outline" size="sm" asChild>
                                 <ModalLink
                                     href={GameController.edit.url(game.id)}
                                     navigate
@@ -151,7 +143,7 @@ export default function Show({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="rounded-l-none border-l-0 px-2"
+                                        className="px-2"
                                         aria-label="More actions"
                                         data-test="game-actions-button"
                                     >
@@ -170,17 +162,17 @@ export default function Show({
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <DeleteConfirmationDialog
-                                open={deleteOpen}
-                                onOpenChange={setDeleteOpen}
-                                title={`Delete ${game.title}?`}
-                                description={`This will permanently delete ${game.title} and its journal entries. This cannot be undone.`}
-                                confirmLabel="Delete Game"
-                                confirmTest="confirm-delete-game-button"
-                                cancelTest="cancel-delete-game-button"
-                                form={GameController.destroy.form(game.id)}
-                            />
-                        </div>
+                        </ButtonGroup>
+                        <DeleteConfirmationDialog
+                            open={deleteOpen}
+                            onOpenChange={setDeleteOpen}
+                            title={`Delete ${game.title}?`}
+                            description={`This will permanently delete ${game.title} and its journal entries. This cannot be undone.`}
+                            confirmLabel="Delete Game"
+                            confirmTest="confirm-delete-game-button"
+                            cancelTest="cancel-delete-game-button"
+                            form={GameController.destroy.form(game.id)}
+                        />
                     </div>
                 </div>
 
@@ -331,116 +323,118 @@ export default function Show({
                                     return (
                                         <li
                                             key={session.id}
-                                            className="flex flex-wrap items-center justify-between gap-4 px-4 py-3"
                                             data-test={`play-session-${session.id}`}
                                         >
-                                            <div className="min-w-0">
-                                                <p>
-                                                    {formatSessionRow(
-                                                        session.startedAt,
-                                                        session.endedAt,
-                                                        session.durationMinutes,
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {isOpen ? (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
-                                                    >
-                                                        <ModalLink
-                                                            href={editPlaySession.url(
-                                                                {
-                                                                    game: game.id,
-                                                                    play_session:
-                                                                        session.id,
-                                                                },
-                                                            )}
-                                                            navigate
-                                                            data-test={`stop-play-session-button-${session.id}`}
+                                            <GameDetailListRow
+                                                primary={formatSessionRange(
+                                                    session.startedAt,
+                                                    session.endedAt,
+                                                )}
+                                                secondary={
+                                                    isOpen
+                                                        ? 'Open'
+                                                        : session.durationMinutes ===
+                                                            null
+                                                          ? undefined
+                                                          : formatDuration(
+                                                                session.durationMinutes,
+                                                            )
+                                                }
+                                                trailing={
+                                                    isOpen ? (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            asChild
                                                         >
-                                                            Stop
-                                                        </ModalLink>
-                                                    </Button>
-                                                ) : (
-                                                    <>
-                                                        {session.journalEntryId ? (
                                                             <ModalLink
-                                                                href={JournalEntryController.show.url(
+                                                                href={editPlaySession.url(
                                                                     {
                                                                         game: game.id,
-                                                                        journal_entry:
-                                                                            session.journalEntryId,
+                                                                        play_session:
+                                                                            session.id,
                                                                     },
                                                                 )}
                                                                 navigate
-                                                                className={cn(
-                                                                    buttonVariants(
-                                                                        {
-                                                                            variant:
-                                                                                'secondary',
-                                                                            size: 'sm',
-                                                                        },
-                                                                    ),
-                                                                )}
-                                                                data-test={`play-session-journal-${session.id}`}
+                                                                data-test={`stop-play-session-button-${session.id}`}
                                                             >
-                                                                Journal
+                                                                Stop
                                                             </ModalLink>
-                                                        ) : null}
-                                                        <ModalLink
-                                                            href={editPlaySession.url(
-                                                                {
-                                                                    game: game.id,
-                                                                    play_session:
-                                                                        session.id,
-                                                                },
-                                                            )}
-                                                            navigate
-                                                            className={cn(
-                                                                buttonVariants({
-                                                                    variant:
-                                                                        'outline',
-                                                                    size: 'sm',
-                                                                }),
-                                                            )}
-                                                            data-test={`edit-play-session-button-${session.id}`}
-                                                        >
-                                                            Edit
-                                                        </ModalLink>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger
+                                                        </Button>
+                                                    ) : (
+                                                        <ButtonGroup aria-label="Session actions">
+                                                            {session.journalEntryId ? (
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    asChild
+                                                                >
+                                                                    <ModalLink
+                                                                        href={JournalEntryController.show.url(
+                                                                            {
+                                                                                game: game.id,
+                                                                                journal_entry:
+                                                                                    session.journalEntryId,
+                                                                            },
+                                                                        )}
+                                                                        navigate
+                                                                        data-test={`play-session-journal-${session.id}`}
+                                                                    >
+                                                                        Journal
+                                                                    </ModalLink>
+                                                                </Button>
+                                                            ) : null}
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
                                                                 asChild
                                                             >
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="px-2"
-                                                                    aria-label="Session actions"
-                                                                    data-test={`play-session-actions-button-${session.id}`}
+                                                                <ModalLink
+                                                                    href={editPlaySession.url(
+                                                                        {
+                                                                            game: game.id,
+                                                                            play_session:
+                                                                                session.id,
+                                                                        },
+                                                                    )}
+                                                                    navigate
+                                                                    data-test={`edit-play-session-button-${session.id}`}
                                                                 >
-                                                                    <ChevronDown />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem
-                                                                    variant="destructive"
-                                                                    data-test={`delete-play-session-button-${session.id}`}
-                                                                    onSelect={() => {
-                                                                        setSessionToDelete(
-                                                                            session,
-                                                                        );
-                                                                    }}
+                                                                    Edit
+                                                                </ModalLink>
+                                                            </Button>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    Delete
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </>
-                                                )}
-                                            </div>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="px-2"
+                                                                        aria-label="Session actions"
+                                                                        data-test={`play-session-actions-button-${session.id}`}
+                                                                    >
+                                                                        <Ellipsis />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem
+                                                                        variant="destructive"
+                                                                        data-test={`delete-play-session-button-${session.id}`}
+                                                                        onSelect={() => {
+                                                                            setSessionToDelete(
+                                                                                session,
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </ButtonGroup>
+                                                    )
+                                                }
+                                            />
                                         </li>
                                     );
                                 })}
@@ -493,34 +487,56 @@ export default function Show({
                             </div>
                         ) : (
                             <ul className="w-full divide-y rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                                {journalEntries.map((entry) => (
-                                    <li key={entry.id}>
-                                        <ModalLink
-                                            href={JournalEntryController.show.url(
-                                                {
-                                                    game: game.id,
-                                                    journal_entry: entry.id,
-                                                },
-                                            )}
-                                            navigate
-                                            className="flex w-full items-center justify-between gap-4 px-4 py-3 hover:bg-accent/50"
-                                            data-test={`journal-entry-${entry.id}`}
-                                        >
-                                            <time
-                                                dateTime={entry.createdAt}
-                                                className="text-sm font-medium"
-                                            >
-                                                {formatEntryDate(
-                                                    entry.createdAt,
+                                {journalEntries.map((entry) => {
+                                    const linkedSession = playSessions.find(
+                                        (session) =>
+                                            session.id === entry.playSessionId,
+                                    );
+
+                                    return (
+                                        <li key={entry.id}>
+                                            <ModalLink
+                                                href={JournalEntryController.show.url(
+                                                    {
+                                                        game: game.id,
+                                                        journal_entry: entry.id,
+                                                    },
                                                 )}
-                                            </time>
-                                            <ChevronRight
-                                                aria-hidden
-                                                className="size-4 text-muted-foreground"
-                                            />
-                                        </ModalLink>
-                                    </li>
-                                ))}
+                                                navigate
+                                                className="block w-full hover:bg-accent/50"
+                                                data-test={`journal-entry-${entry.id}`}
+                                            >
+                                                <GameDetailListRow
+                                                    primary={
+                                                        <time
+                                                            dateTime={
+                                                                entry.createdAt
+                                                            }
+                                                        >
+                                                            {formatListDate(
+                                                                entry.createdAt,
+                                                            )}
+                                                        </time>
+                                                    }
+                                                    secondary={
+                                                        linkedSession
+                                                            ? formatSessionRange(
+                                                                  linkedSession.startedAt,
+                                                                  linkedSession.endedAt,
+                                                              )
+                                                            : undefined
+                                                    }
+                                                    trailing={
+                                                        <ChevronRight
+                                                            aria-hidden
+                                                            className="size-4 text-muted-foreground"
+                                                        />
+                                                    }
+                                                />
+                                            </ModalLink>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </TabsContent>

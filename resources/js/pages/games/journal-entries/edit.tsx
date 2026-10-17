@@ -2,18 +2,21 @@ import { Form, Head } from '@inertiajs/react';
 import { Modal } from '@inertiaui/modal-react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import InputError from '@/components/input-error';
+import JournalEntryPlaySessionSelect from '@/components/journal-entry-play-session-select';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { Game, JournalEntry } from '@/types';
+import type { Game, JournalEntry, PlaySession } from '@/types';
 
 export default function Edit({
     game,
     journalEntry,
+    playSessions,
 }: {
     game: Game;
     journalEntry: JournalEntry;
+    playSessions: PlaySession[];
 }) {
     return (
         <Modal>
@@ -49,6 +52,12 @@ export default function Edit({
                                 />
                                 <InputError message={errors.body} />
                             </div>
+
+                            <JournalEntryPlaySessionSelect
+                                sessions={playSessions}
+                                defaultValue={journalEntry.playSessionId ?? ''}
+                                error={errors.play_session_id}
+                            />
 
                             <Button
                                 disabled={processing}
