@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Game;
 use App\Models\JournalEntry;
+use App\Models\PlaySession;
 use App\Models\User;
 
 it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
@@ -141,6 +142,158 @@ it('rejects a body longer than 10000 characters', function (): void {
         ])
         ->assertRedirectToRoute('games.show', $game)
         ->assertSessionHasErrors(['body' => 'The body may not be greater than 10000 characters.']);
+
+    expect($game->journalEntries()->count())->toBe(0);
+});
+
+it('rejects linking a play session from another game when creating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $otherGame = Game::factory()->recycle($user)->create();
+    $foreignSession = PlaySession::factory()->create([
+        'game_id' => $otherGame->id,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.create', $game)
+        ->post(route('games.journal-entries.store', $game), [
+            'body' => 'Wrong table.',
+            'play_session_id' => $foreignSession->id,
+        ])
+        ->assertRedirectToRoute('games.journal-entries.create', $game)
+        ->assertSessionHasErrors(['play_session_id' => 'The play session must belong to this game.']);
+
+    expect($game->journalEntries()->count())->toBe(0)
+        ->and($foreignSession->refresh()->journalEntry)->toBeNull();
+});
+
+it('rejects linking a play session that already has a journal entry when creating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $session = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+    ]);
+    $existing = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Already attached.',
+        'play_session_id' => $session->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.create', $game)
+        ->post(route('games.journal-entries.store', $game), [
+            'body' => 'Second note.',
+            'play_session_id' => $session->id,
+        ])
+        ->assertRedirectToRoute('games.journal-entries.create', $game)
+        ->assertSessionHasErrors(['play_session_id' => 'The play session is already linked to a journal entry.']);
+
+    expect($game->journalEntries()->count())->toBe(1)
+        ->and($existing->refresh()->play_session_id)->toBe($session->id);
+});
+
+it('rejects linking a play session from another game when updating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $otherGame = Game::factory()->recycle($user)->create();
+    $entry = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Owned sitting',
+    ]);
+    $foreignSession = PlaySession::factory()->create([
+        'game_id' => $otherGame->id,
+        'user_id' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.edit', [$game, $entry])
+        ->put(route('games.journal-entries.update', [$game, $entry]), [
+            'body' => 'Owned sitting',
+            'play_session_id' => $foreignSession->id,
+        ])
+        ->assertRedirectToRoute('games.journal-entries.edit', [$game, $entry])
+        ->assertSessionHasErrors(['play_session_id' => 'The play session must belong to this game.']);
+
+    expect($entry->refresh()->play_session_id)->toBeNull()
+        ->and($entry->body)->toBe('Owned sitting');
+});
+
+it('rejects linking a play session that already has a journal entry when updating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $taken = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+    ]);
+    JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Keeps this session.',
+        'play_session_id' => $taken->id,
+    ]);
+    $entry = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Looking for a session.',
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.edit', [$game, $entry])
+        ->put(route('games.journal-entries.update', [$game, $entry]), [
+            'body' => 'Looking for a session.',
+            'play_session_id' => $taken->id,
+        ])
+        ->assertRedirectToRoute('games.journal-entries.edit', [$game, $entry])
+        ->assertSessionHasErrors(['play_session_id' => 'The play session is already linked to a journal entry.']);
+
+    expect($entry->refresh()->play_session_id)->toBeNull();
+});
+
+it('rejects linking a play session that belongs to another user when creating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $intruder = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $foreignSession = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $intruder->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.create', $game)
+        ->post(route('games.journal-entries.store', $game), [
+            'body' => 'Stolen clock.',
+            'play_session_id' => $foreignSession->id,
+        ])
+        ->assertRedirectToRoute('games.journal-entries.create', $game)
+        ->assertSessionHasErrors(['play_session_id' => 'The play session must belong to this game.']);
+
+    expect($game->journalEntries()->count())->toBe(0);
+});
+
+it('rejects an invalid play session id when creating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.create', $game)
+        ->post(route('games.journal-entries.store', $game), [
+            'body' => 'Bad id.',
+            'play_session_id' => 'not-a-uuid',
+        ])
+        ->assertRedirectToRoute('games.journal-entries.create', $game)
+        ->assertSessionHasErrors(['play_session_id' => 'The play session is invalid.']);
+
+    expect($game->journalEntries()->count())->toBe(0);
+});
+
+it('rejects a missing play session when creating an entry', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+
+    $this->actingAs($user)
+        ->fromRoute('games.journal-entries.create', $game)
+        ->post(route('games.journal-entries.store', $game), [
+            'body' => 'Ghost session.',
+            'play_session_id' => '00000000-0000-0000-0000-000000000099',
+        ])
+        ->assertRedirectToRoute('games.journal-entries.create', $game)
+        ->assertSessionHasErrors(['play_session_id' => 'The play session must belong to this game.']);
 
     expect($game->journalEntries()->count())->toBe(0);
 });

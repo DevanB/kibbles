@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\StartPlaySession;
 use App\Models\Game;
+use App\Models\JournalEntry;
 use App\Models\PlaySession;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -268,4 +269,28 @@ it('rejects a stop journal body longer than 10000 characters', function (): void
 
     expect($session->refresh()->ended_at)->toBeNull()
         ->and($game->journalEntries()->count())->toBe(0);
+});
+
+it('does not create a second journal when stopping a session that is already linked', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create();
+    $session = PlaySession::factory()->open()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+    ]);
+    $entry = JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Already written.',
+        'play_session_id' => $session->id,
+    ]);
+
+    $this->actingAs($user)
+        ->fromRoute('games.show', $game)
+        ->put(route('games.play-sessions.update', [$game, $session]), [
+            'body' => 'Would be a duplicate.',
+        ])
+        ->assertRedirectToRoute('games.show', ['game' => $game, 'tab' => 'journal']);
+
+    expect($game->journalEntries()->count())->toBe(1)
+        ->and($entry->refresh()->body)->toBe('Already written.')
+        ->and($session->refresh()->ended_at)->not->toBeNull();
 });
