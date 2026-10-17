@@ -24,7 +24,8 @@ it('starts, stops, and journals a session from the show page', function (): void
     $page->click('@start-play-session-button')
         ->assertSee('Session started.')
         ->assertSee('In Progress')
-        ->assertSee('now · Open')
+        ->assertSee('– now')
+        ->assertSee('Open')
         ->screenshot(filename: 'pr-b-show-open-session')
         ->assertNoJavaScriptErrors();
 
@@ -48,7 +49,8 @@ it('starts, stops, and journals a session from the show page', function (): void
 
     $page->click('@start-play-session-button')
         ->assertSee('Session started.')
-        ->assertSee('now · Open')
+        ->assertSee('– now')
+        ->assertSee('Open')
         ->assertNoJavaScriptErrors();
 
     $open = $game->playSessions()->open()->first();
@@ -104,7 +106,8 @@ it('adds, edits, and deletes a past session', function (): void {
         ->fill('#play-session-ended-at', '2026-01-15T12:44')
         ->click('@save-play-session-button')
         ->assertSee('Session saved.')
-        ->assertSee('Jan 15, 10:30 AM – 12:44 PM · 2h 14m')
+        ->assertSee('Jan 15, 2026, 10:30 AM – 12:44 PM')
+        ->assertSee('2h 14m')
         ->assertQueryStringMissing('tab')
         ->assertNoJavaScriptErrors();
 
@@ -122,7 +125,8 @@ it('adds, edits, and deletes a past session', function (): void {
         ->fill('#play-session-ended-at', '2026-01-15T10:44')
         ->click('@save-play-session-changes-button')
         ->assertSee('Session updated.')
-        ->assertSee('Jan 15, 10:30 – 10:44 AM · 14m')
+        ->assertSee('Jan 15, 2026, 10:30 – 10:44 AM')
+        ->assertSee('14m')
         ->assertNoJavaScriptErrors();
 
     $page->click('@play-session-actions-button-'.$session->id)
@@ -170,7 +174,8 @@ it('shows a playing badge and an other-game banner', function (): void {
         ->click('@open-session-game-link')
         ->assertPathIs('/games/'.$hades->id)
         ->assertSee('Hades')
-        ->assertSee('now · Open')
+        ->assertSee('– now')
+        ->assertSee('Open')
         ->assertSeeIn('@play-time-total', '2h')
         ->assertNoJavaScriptErrors();
 });
@@ -242,8 +247,10 @@ it('formats session ranges by local day and year', function (): void {
 
     visit(route('games.show', $game))
         ->withTimezone('America/New_York')
-        ->assertSee('Jan 15, 10:30 AM – 12:44 PM · 2h 14m')
-        ->assertSee('Jan 14, 11:00 PM – Jan 15, 1:12 AM · 2h 12m')
-        ->assertSee('Oct 5, 2025, 11:00 PM – Oct 6, 2025, 1:14 AM · 2h 14m')
+        ->assertSee('Jan 15, 2026, 10:30 AM – 12:44 PM')
+        ->assertSee('2h 14m')
+        ->assertSee('Jan 14, 2026, 11:00 PM – Jan 15, 2026, 1:12 AM')
+        ->assertSee('2h 12m')
+        ->assertSee('Oct 5, 2025, 11:00 PM – Oct 6, 2025, 1:14 AM')
         ->assertNoJavaScriptErrors();
 });

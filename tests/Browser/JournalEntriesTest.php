@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Game;
+use App\Models\JournalEntry;
+use App\Models\PlaySession;
 use App\Models\User;
 
 it('may add, view, edit, and delete a journal entry from hub modals', function (): void {
@@ -117,4 +119,115 @@ it('may add, view, edit, and delete a journal entry from hub modals', function (
         ->assertNoJavaScriptErrors();
 
     expect($newer->fresh())->toBeNull();
+});
+
+it('may link, change, and unlink a play session from journal entry modals', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $game = Game::factory()->recycle($user)->create(['title' => 'Hades']);
+    $first = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+        'started_at' => '2026-01-15 15:30:00',
+        'ended_at' => '2026-01-15 17:44:00',
+    ]);
+    $second = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+        'started_at' => '2026-01-16 15:00:00',
+        'ended_at' => '2026-01-16 16:00:00',
+    ]);
+    $alreadyLinked = PlaySession::factory()->create([
+        'game_id' => $game->id,
+        'user_id' => $user->id,
+        'started_at' => '2026-01-17 15:00:00',
+        'ended_at' => '2026-01-17 16:00:00',
+    ]);
+    JournalEntry::factory()->recycle($game)->create([
+        'body' => 'Already attached.',
+        'play_session_id' => $alreadyLinked->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']))
+        ->withTimezone('America/New_York');
+
+    $page->click('@create-journal-entry-button')
+        ->assertSee('Add Entry')
+        ->assertVisible('@journal-entry-play-session')
+        ->assertSee('Play session')
+        ->assertNoJavaScriptErrors();
+
+    $createOptions = $page->script(<<<'JS'
+        (() => [...document.querySelectorAll('#play_session_id option')].map((option) => option.value))()
+    JS);
+
+    expect($createOptions)->toContain('none', $first->id, $second->id)
+        ->and($createOptions)->not->toContain($alreadyLinked->id);
+
+    $page->fill('#compose-body', 'Cleared Tartarus.')
+        ->select('play_session_id', $first->id)
+        ->click('@add-journal-entry-button')
+        ->assertSee('Journal entry added.')
+        ->assertSee('Jan 15, 2026, 10:30 AM – 12:44 PM')
+        ->assertNoJavaScriptErrors();
+
+    $entry = $game->journalEntries()->where('body', 'Cleared Tartarus.')->first();
+
+    expect($entry)->not->toBeNull()
+        ->and($entry->play_session_id)->toBe($first->id);
+
+    $page->click('@game-tab-sessions')
+        ->assertVisible('@play-session-journal-'.$first->id)
+        ->click('@play-session-journal-'.$first->id)
+        ->assertSee('Cleared Tartarus.')
+        ->assertNoJavaScriptErrors();
+
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']))
+        ->withTimezone('America/New_York');
+
+    $page->click('@journal-entry-'.$entry->id)
+        ->click('@edit-journal-entry-button-'.$entry->id)
+        ->assertSee('Save Entry')
+        ->assertVisible('@journal-entry-play-session')
+        ->assertNoJavaScriptErrors();
+
+    $editOptions = $page->script(<<<'JS'
+        (() => [...document.querySelectorAll('#play_session_id option')].map((option) => option.value))()
+    JS);
+
+    expect($editOptions)->toContain('none', $first->id, $second->id)
+        ->and($editOptions)->not->toContain($alreadyLinked->id);
+
+    $page->select('play_session_id', $second->id)
+        ->click('@save-journal-entry-button-'.$entry->id)
+        ->assertSee('Journal entry updated.')
+        ->assertSee('Jan 16, 2026, 10:00 – 11:00 AM')
+        ->assertNoJavaScriptErrors();
+
+    expect($entry->refresh()->play_session_id)->toBe($second->id);
+
+    $page->click('@game-tab-sessions')
+        ->assertVisible('@play-session-journal-'.$second->id)
+        ->assertNoJavaScriptErrors();
+
+    $page = visit(route('games.show', ['game' => $game, 'tab' => 'journal']))
+        ->withTimezone('America/New_York');
+
+    $page->click('@journal-entry-'.$entry->id)
+        ->click('@edit-journal-entry-button-'.$entry->id)
+        ->select('play_session_id', 'none')
+        ->click('@save-journal-entry-button-'.$entry->id)
+        ->assertSee('Journal entry updated.')
+        ->assertNoJavaScriptErrors();
+
+    expect($entry->refresh()->play_session_id)->toBeNull();
+
+    $page->click('@game-tab-sessions')
+        ->assertVisible('@edit-play-session-button-'.$second->id)
+        ->assertNoJavaScriptErrors();
+
+    expect($page->script(<<<JS
+        (() => document.querySelector('[data-test="play-session-journal-{$second->id}"]') === null)()
+    JS))->toBeTrue();
 });
