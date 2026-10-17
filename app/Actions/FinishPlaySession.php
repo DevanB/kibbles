@@ -20,7 +20,7 @@ final readonly class FinishPlaySession
                 'ended_at' => now(),
             ]);
 
-            if (is_string($body) && $body !== '') {
+            if (is_string($body) && $body !== '' && $session->journalEntry()->doesntExist()) {
                 $session->game->journalEntries()->create([
                     'body' => $body,
                     'play_session_id' => $session->id,
