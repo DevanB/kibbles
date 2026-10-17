@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateJournalEntry;
 use App\Actions\DeleteJournalEntry;
+use App\Actions\ListLinkablePlaySessions;
 use App\Actions\UpdateJournalEntry;
 use App\Http\Requests\CreateJournalEntryRequest;
 use App\Http\Requests\DeleteJournalEntryRequest;
@@ -20,12 +21,13 @@ use InertiaUI\Modal\Modal;
 
 final readonly class JournalEntryController
 {
-    public function create(Game $game): Modal
+    public function create(Game $game, ListLinkablePlaySessions $list): Modal
     {
         Gate::authorize('create', [JournalEntry::class, $game]);
 
         return Inertia::modal('games/journal-entries/create', [
             'game' => $game->toWire(),
+            'playSessions' => $list->handle($game),
         ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
@@ -34,7 +36,7 @@ final readonly class JournalEntryController
         Game $game,
         CreateJournalEntry $action,
     ): RedirectResponse {
-        $action->handle($game, $request->string('body')->value());
+        $action->handle($game, $request->string('body')->value(), $request->playSessionId());
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -55,13 +57,14 @@ final readonly class JournalEntryController
         ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
-    public function edit(Game $game, JournalEntry $journalEntry): Modal
+    public function edit(Game $game, JournalEntry $journalEntry, ListLinkablePlaySessions $list): Modal
     {
         Gate::authorize('update', $journalEntry);
 
         return Inertia::modal('games/journal-entries/edit', [
             'game' => $game->toWire(),
             'journalEntry' => $journalEntry->toWire(),
+            'playSessions' => $list->handle($game, $journalEntry),
         ])->baseRoute('games.show', ['game' => $game, 'tab' => 'journal']);
     }
 
@@ -71,7 +74,7 @@ final readonly class JournalEntryController
         JournalEntry $journalEntry,
         UpdateJournalEntry $action,
     ): RedirectResponse {
-        $action->handle($journalEntry, $request->string('body')->value());
+        $action->handle($journalEntry, $request->string('body')->value(), $request->playSessionId());
 
         Inertia::flash('toast', [
             'type' => 'success',

@@ -8,10 +8,11 @@ use App\Models\JournalEntry;
 
 final readonly class UpdateJournalEntry
 {
-    public function handle(JournalEntry $entry, string $body): JournalEntry
+    public function handle(JournalEntry $entry, string $body, ?string $playSessionId = null): JournalEntry
     {
         $entry->update([
             'body' => $body,
+            'play_session_id' => $playSessionId,
         ]);
 
         return $entry;
