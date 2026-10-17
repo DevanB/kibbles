@@ -53,7 +53,7 @@ final class UpdateJournalEntryRequest extends FormRequest
         ];
     }
 
-    protected function prepareForValidation(): void
+    public function prepareForValidation(): void
     {
         if (in_array($this->input('play_session_id'), ['', 'none'], true)) {
             $this->merge(['play_session_id' => null]);
