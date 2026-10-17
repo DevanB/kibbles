@@ -4,16 +4,8 @@ import { cn } from 'cn';
 import { useState } from 'react';
 import JournalEntryController from '@/actions/App/Http/Controllers/JournalEntryController';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { formatListDate } from '@/lib/local-date-time';
 import type { Game, JournalEntry } from '@/types';
-
-function formatEntryDate(value: string): string {
-    return new Date(value).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        timeZone: 'UTC',
-    });
-}
 
 export default function Show({
     game,
@@ -77,7 +69,7 @@ export default function Show({
                 ) : (
                     <>
                         <p className="text-sm text-muted-foreground">
-                            {formatEntryDate(journalEntry.createdAt)}
+                            {formatListDate(journalEntry.createdAt)}
                         </p>
 
                         <p className="whitespace-pre-wrap">

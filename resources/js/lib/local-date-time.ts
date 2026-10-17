@@ -1,4 +1,4 @@
-import { format, isSameDay, isSameYear } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 
 export function browserTimeZone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -12,8 +12,8 @@ function meridem(date: Date): string {
     return format(date, 'a');
 }
 
-function formatDate(date: Date, now: Date): string {
-    return format(date, isSameYear(date, now) ? 'MMM d' : 'MMM d, yyyy');
+export function formatListDate(value: string): string {
+    return format(new Date(value), 'MMM d, yyyy');
 }
 
 function formatTime(date: Date, includeMeridem: boolean): string {
@@ -23,12 +23,11 @@ function formatTime(date: Date, includeMeridem: boolean): string {
 export function formatSessionRange(
     startedAt: string,
     endedAt: string | null,
-    now: Date = new Date(),
 ): string {
     const start = new Date(startedAt);
 
     if (endedAt === null) {
-        return `${formatDate(start, now)}, ${formatTime(start, true)} – now`;
+        return `${formatListDate(startedAt)}, ${formatTime(start, true)} – now`;
     }
 
     const end = new Date(endedAt);
@@ -36,10 +35,10 @@ export function formatSessionRange(
     const sameMeridem = meridem(start) === meridem(end);
 
     if (sameDay) {
-        return `${formatDate(start, now)}, ${formatTime(start, !sameMeridem)} – ${formatTime(end, true)}`;
+        return `${formatListDate(startedAt)}, ${formatTime(start, !sameMeridem)} – ${formatTime(end, true)}`;
     }
 
-    return `${formatDate(start, now)}, ${formatTime(start, true)} – ${formatDate(end, now)}, ${formatTime(end, true)}`;
+    return `${formatListDate(startedAt)}, ${formatTime(start, true)} – ${formatListDate(endedAt)}, ${formatTime(end, true)}`;
 }
 
 export function formatDuration(minutes: number): string {
@@ -55,23 +54,4 @@ export function formatDuration(minutes: number): string {
     }
 
     return `${remaining}m`;
-}
-
-export function formatSessionRow(
-    startedAt: string,
-    endedAt: string | null,
-    durationMinutes: number | null,
-    now: Date = new Date(),
-): string {
-    const range = formatSessionRange(startedAt, endedAt, now);
-
-    if (endedAt === null) {
-        return `${range} · Open`;
-    }
-
-    if (durationMinutes === null) {
-        return range;
-    }
-
-    return `${range} · ${formatDuration(durationMinutes)}`;
 }
