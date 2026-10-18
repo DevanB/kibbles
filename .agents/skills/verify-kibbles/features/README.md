@@ -65,3 +65,4 @@ There is **no** welcome / marketing page. `welcome.md` and `tests/Browser/Welcom
 - **Verify-email notice UI:** `tests/Browser/EmailVerificationTest.php` (unverified dashboard visit).
 - **2FA / passkeys:** Fortify views + custom settings pages. Password confirm required for both. Factory default has 2FA on.
 - **Passkey host:** `bin/check-passkey-host` (doctor). Matching browse host → `passkey:host_ok`. Mismatched browse host is a hard fail.
+- **Pest Browser plugin cache:** if `visit()` fails immediately with `WebSocket client is not connected`, `vendor/pest-plugins.json` is missing `Pest\Browser\Plugin` (Composer plugins skipped). Run `composer dump-autoload` with plugins enabled — this is not a missing Chromium binary.

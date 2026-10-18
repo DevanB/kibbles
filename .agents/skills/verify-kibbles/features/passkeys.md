@@ -10,7 +10,7 @@ Authenticated passkey management at `/settings/passkeys` (route `user-passkey.in
 
 ## How to get to it (user POV)
 
-While logged in and verified, open Settings → **Passkeys**. Sensitive-settings middleware may send you through password confirm first.
+While logged in and verified, open Settings → **Passkeys**. `password.confirm` on `UserPasskeyController@index` (and Fortify passkey management routes) may send you through `/password/confirm` first.
 
 ## Driving it with Pest Browser / Feature tests
 
