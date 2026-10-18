@@ -7,6 +7,7 @@ Guest request-reset page at `/forgot-password` (route `password.request`, Inerti
 - Email field + `data-test="email-password-reset-link-button"`
 - Generic status: **A reset link will be sent if the account exists.**
 - Linked from login when `canResetPassword` is true (`Route::has('password.request')`)
+- Link back to login (“Or, return to log in”)
 
 ## How to get to it (user POV)
 

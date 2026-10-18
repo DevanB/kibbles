@@ -1,13 +1,13 @@
 # Email verification
 
-Authenticated notice at `/verify-email` (route `verification.notice`, Inertia `user-email-verification-notification/create`). Signed GET `verification.verify` marks the email verified. `User` implements `MustVerifyEmail`; `dashboard` and `games` require `verified`.
+Authenticated notice at `/verify-email` (route `verification.notice`, Inertia `user-email-verification-notification/create`). Signed GET `verification.verify` marks the email verified. `User` implements `MustVerifyEmail`. The `auth` + `verified` group includes `dashboard`, `games` (plus nested journal/play-session and RAWG search), `bookmarks` / X connection, and settings except profile. `/settings/profile` is `auth` only.
 
 ## Sub-features
 
 - Notice page + resend POST `verification.send` (throttled)
 - Signed link verifies, then `redirect()->intended()` with fallback `dashboard?verified=1`. After a dashboard bounce the intended URL is `/dashboard` with no query string.
 - Already-verified users hitting the notice go to dashboard
-- Unverified users hitting `/dashboard` or `/games` go to this notice
+- Unverified users hitting `/dashboard`, `/games`, `/bookmarks`, or verified settings go to this notice. `/settings/profile` stays reachable.
 
 ## How to get to it (user POV)
 

@@ -150,6 +150,8 @@ php artisan test --compact --testsuite=Browser
 
 Pest Browser starts its own app server; it does not require `composer dev` or Herd. After `bun install`, if Browser tests fail with Playwright outdated / just-installed errors, run `bunx playwright install` (or `bunx playwright install chromium`) so browser binaries match the pinned `playwright` package. Browsers land under `~/Library/Caches/ms-playwright` (macOS) or `~/.cache/ms-playwright` (Linux).
 
+If Browser tests fail immediately with `WebSocket client is not connected`, Pest did not boot `Pest\Browser\Plugin`. Check `vendor/pest-plugins.json` lists that class; if the file is missing or stale (Composer plugins skipped), run `composer dump-autoload` with plugins enabled and retry. That is not a missing Chromium binary.
+
 **`public/hot` + Pest:** tests call `Http::preventStrayRequests()`. If `public/hot` exists (Vite from `composer dev`), Inertia SSR requests `http://[::1]:5173/__inertia_ssr` and both Browser tests and Feature page renders fail. The `bin/prove-*` helpers stash and restore `public/hot` around Pest so they can run while `composer dev` is up. If you invoke `php artisan test` yourself, stash `public/hot` first (or stop the Vite pane). Doctor and ad-hoc curls against `composer dev` still expect `public/hot`.
 
 **`@name` → `data-test`:** Pest `click('@login-button')` targets `data-test="login-button"`. Real attrs in this app:

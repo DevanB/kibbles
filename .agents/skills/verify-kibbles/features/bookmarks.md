@@ -1,6 +1,6 @@
 # X (bookmarks)
 
-Authenticated, verified catalog at `/bookmarks` (route `bookmarks.index`, Inertia `bookmarks/index`) inside `AppLayout`. Sidebar and mobile header label the item **X**; the page `<Head>`, heading, and breadcrumb say **Bookmarks**. Remove is a route-backed inertia-modal (`bookmarks/show` over index). Same `auth` + `verified` group as dashboard and games.
+Authenticated, verified catalog at `/bookmarks` (route `bookmarks.index`, Inertia `bookmarks/index`) inside `AppLayout` (`AppSidebarLayout`). Sidebar nav labels the item **X**; the page `<Head>`, heading, and breadcrumb say **Bookmarks**. The mobile top bar is the sidebar trigger plus that **Bookmarks** breadcrumb (`AppSidebarHeader`) — it does not repeat an **X** label. Remove is a route-backed inertia-modal (`bookmarks/show` over index). Same `auth` + `verified` group as dashboard and games.
 
 The index is **cursor-paginated** (20 newest-first on `(user_id, first_seen_at, id)`) and wrapped in `Inertia::scroll()` + `<InfiniteScroll data="bookmarks">`. Follow-up pages use `?cursor=…`. Sync walks X API pages; that is not the user-facing pager.
 
