@@ -26,12 +26,13 @@ final class CreateSessionRequest extends FormRequest
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{email: mixed, password: mixed, remember: bool}
      */
     public function validationData(): array
     {
         return [
-            ...parent::validationData(),
+            'email' => $this->input('email'),
+            'password' => $this->input('password'),
             'remember' => $this->boolean('remember'),
         ];
     }
