@@ -21,6 +21,23 @@ it('creates a session from the login form', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('creates a session when remember me is checked', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create([
+        'email' => 'login-remember@example.com',
+        'password' => Hash::make('password'),
+    ]);
+
+    $page = visit(route('login'));
+
+    $page->fill('email', $user->email)
+        ->fill('password', 'password')
+        ->click('Remember me')
+        ->click('@login-button')
+        ->assertPathIs('/dashboard')
+        ->assertSee('Dashboard')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows an error when login credentials are invalid', function (): void {
     $user = User::factory()->withoutTwoFactor()->create([
         'email' => 'login-failure@example.com',

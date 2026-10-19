@@ -27,6 +27,7 @@ Preconditions:
 - **User opens login in browser →** `php artisan test --compact --filter="renders auth pages" tests/Browser/LayoutTest.php` → **sees** `Log in to your account`, `Enter your email and password below to log in`, `Sign in with a passkey`; this case `Feature::define(Registration::class, true)` then click **Sign up** → **sees** `Create an account`
 - **User submits valid password →** Feature `may create a session` (same Feature file) → **redirect `dashboard`**, authenticated
 - **User submits valid password in browser →** `php artisan test --compact --filter="creates a session from the login form" tests/Browser/SessionTest.php` → fill email/password → `click('@login-button')` → **path `/dashboard`**, sees `Dashboard`
+- **User submits with Remember me checked →** Feature `--filter="remember=on"` (same Feature file) posts `remember=on` (the checkbox value) → **redirect `dashboard`**, authenticated, remember cookie set; a later request with only that cookie is still authenticated `viaRemember`. Browser `--filter="remember me is checked"` clicks **Remember me** then **Log in** → **path `/dashboard`**
 - **User submits invalid password in browser →** `--filter="shows an error when login credentials are invalid"` (same file) → stays `/login`, sees `__('auth.failed')`, guest
 - **2FA user →** Feature `redirects to two-factor challenge when enabled` → `two-factor.login`
 - **2FA user in browser →** `--filter="challenges a two-factor user" tests/Browser/SessionTest.php` → password submit → `/two-factor-challenge` → recovery code → `/dashboard`

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,7 +37,12 @@ it('may create a session', function (): void {
     $this->assertAuthenticatedAs($user);
 });
 
-it('may create a session with remember me', function (): void {
+it('creates a session with remember=on and the remember cookie keeps the user authenticated', function (): void {
+    config([
+        'session.encrypt' => true,
+        'session.secure' => true,
+    ]);
+
     $user = User::factory()->withoutTwoFactor()->create([
         'email' => 'test@example.com',
         'password' => Hash::make('password'),
@@ -46,12 +52,30 @@ it('may create a session with remember me', function (): void {
         ->post(route('login.store'), [
             'email' => 'test@example.com',
             'password' => 'password',
-            'remember' => true,
+            'remember' => 'on',
         ]);
 
     $response->assertRedirectToRoute('dashboard');
 
     $this->assertAuthenticatedAs($user);
+
+    $recaller = Auth::guard('web')->getRecallerName();
+    $response->assertCookie($recaller);
+
+    $cookie = $response->getCookie($recaller);
+
+    expect($cookie)->not->toBeNull();
+    assert($cookie !== null);
+
+    $this->flushSession();
+    $this->app['auth']->forgetGuards();
+
+    $this->withCookie($recaller, $cookie->getValue())
+        ->get(route('dashboard'))
+        ->assertOk();
+
+    $this->assertAuthenticatedAs($user);
+    expect(Auth::viaRemember())->toBeTrue();
 });
 
 it('redirects to two-factor challenge when enabled', function (): void {
