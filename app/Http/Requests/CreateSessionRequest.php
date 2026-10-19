@@ -25,6 +25,13 @@ final class CreateSessionRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation(): void
+    {
+        $this->merge([
+            'remember' => $this->boolean('remember'),
+        ]);
+    }
+
     /**
      * @throws ValidationException
      */
