@@ -25,11 +25,15 @@ final class CreateSessionRequest extends FormRequest
         ];
     }
 
-    public function prepareForValidation(): void
+    /**
+     * @return array<string, mixed>
+     */
+    public function validationData(): array
     {
-        $this->merge([
+        return [
+            ...parent::validationData(),
             'remember' => $this->boolean('remember'),
-        ]);
+        ];
     }
 
     /**
