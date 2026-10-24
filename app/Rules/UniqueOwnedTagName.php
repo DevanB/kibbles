@@ -11,25 +11,14 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Str;
 use Illuminate\Translation\PotentiallyTranslatedString;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 final readonly class UniqueOwnedTagName implements ValidationRule
 {
-    public function __construct(private User $owner, private ?Tag $ignore = null)
-    {
-        //
-    }
+    public function __construct(private User $owner, private string $ignoreId) {}
 
     public static function message(): string
     {
         return 'You already have a tag with this name.';
-    }
-
-    public static function conflict(): ValidationException
-    {
-        return ValidationException::withMessages([
-            'name' => [self::message()],
-        ]);
     }
 
     /**
@@ -41,16 +30,15 @@ final readonly class UniqueOwnedTagName implements ValidationRule
             return;
         }
 
-        $unique = Rule::unique(Tag::class, 'name_normalized')
-            ->where('user_id', $this->owner->id);
-
-        if ($this->ignore instanceof Tag) {
-            $unique->ignore($this->ignore);
-        }
-
         $validator = validator(
             [$attribute => Str::lower($value)],
-            [$attribute => [$unique]],
+            [
+                $attribute => [
+                    Rule::unique(Tag::class, 'name_normalized')
+                        ->where('user_id', $this->owner->id)
+                        ->ignore($this->ignoreId),
+                ],
+            ],
             [$attribute.'.unique' => self::message()],
         );
 

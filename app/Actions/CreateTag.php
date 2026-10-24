@@ -6,20 +6,14 @@ namespace App\Actions;
 
 use App\Models\Tag;
 use App\Models\User;
-use App\Rules\UniqueOwnedTagName;
-use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class CreateTag
 {
     public function handle(User $user, string $name): Tag
     {
-        try {
-            return $user->tags()->create([
-                'name' => $name,
-            ]);
-        } catch (UniqueConstraintViolationException) {
-            throw UniqueOwnedTagName::conflict();
-        }
+        return $user->tags()->create([
+            'name' => $name,
+        ]);
     }
 
     public function findOrCreate(User $user, string $name): Tag

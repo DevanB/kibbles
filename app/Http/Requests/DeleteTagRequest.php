@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Tag;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class DeleteTagRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize(#[CurrentUser] User $user): bool
     {
-        $tag = $this->route('tag');
-
-        return $tag instanceof Tag && ($this->user()?->can('delete', $tag) ?? false);
+        return $user->can('delete', $this->route('tag'));
     }
 
     /**
