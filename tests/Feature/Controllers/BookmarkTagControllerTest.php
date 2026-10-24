@@ -72,17 +72,35 @@ it('forbids another user from attaching a tag to a bookmark they do not own', fu
     expect($bookmark->tags()->count())->toBe(0);
 });
 
-it('forbids attaching another user tag to an owned bookmark', function (): void {
+it('rejects another user tag when attaching to an owned bookmark', function (): void {
     $owner = User::factory()->withoutTwoFactor()->create();
     $intruder = User::factory()->withoutTwoFactor()->create();
     $bookmark = XBookmark::factory()->recycle($owner)->create();
     $tag = Tag::factory()->recycle($intruder)->create(['name' => 'Secret']);
 
     $this->actingAs($owner)
+        ->fromRoute('bookmarks.index')
         ->post(route('bookmarks.tags.store', $bookmark), ['tag_id' => $tag->id])
-        ->assertForbidden();
+        ->assertRedirectToRoute('bookmarks.index')
+        ->assertSessionHasErrors(['tag_id' => 'The selected tag does not exist.']);
 
     expect($bookmark->tags()->count())->toBe(0);
+});
+
+it('allows another user to create the same tag name', function (): void {
+    $owner = User::factory()->withoutTwoFactor()->create();
+    $other = User::factory()->withoutTwoFactor()->create();
+    Tag::factory()->recycle($owner)->create(['name' => 'Laravel']);
+    $bookmark = XBookmark::factory()->recycle($other)->create();
+
+    $this->actingAs($other)
+        ->fromRoute('bookmarks.index')
+        ->post(route('bookmarks.tags.store', $bookmark), ['name' => 'Laravel'])
+        ->assertRedirectToRoute('bookmarks.index');
+
+    expect($other->tags()->named('Laravel')->count())->toBe(1)
+        ->and($owner->tags()->named('Laravel')->count())->toBe(1)
+        ->and($bookmark->tags()->count())->toBe(1);
 });
 
 it('rejects an invalid tag id when attaching', function (): void {
