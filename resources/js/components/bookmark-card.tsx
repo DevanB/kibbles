@@ -168,9 +168,11 @@ function QuotedCard({
 
 export function BookmarkCard({
     bookmark,
+    leadingActions,
     actions,
 }: {
     bookmark: Bookmark;
+    leadingActions?: ReactNode;
     actions?: ReactNode;
 }) {
     const [expanded, setExpanded] = useState(false);
@@ -185,39 +187,42 @@ export function BookmarkCard({
             data-test={`bookmark-${bookmark.id}`}
             className="space-y-3 rounded-xl border border-sidebar-border/70 bg-card p-4 dark:border-sidebar-border"
         >
-            <div className="flex items-start gap-3">
-                <Avatar className="size-10">
-                    {bookmark.authorAvatarUrl ? (
-                        <AvatarImage
-                            src={bookmark.authorAvatarUrl}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                        />
-                    ) : null}
-                    <AvatarFallback>
-                        {initials(
-                            bookmark.authorName || bookmark.authorUsername,
-                        )}
-                    </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
-                        {bookmark.authorName}
-                    </p>
-                    <p className="truncate text-sm text-muted-foreground">
-                        @{bookmark.authorUsername} ·{' '}
-                        {formatBookmarkTime(bookmark.postedAt)}
-                    </p>
-                    <p
-                        className="text-sm text-muted-foreground"
-                        data-test={`bookmark-saved-${bookmark.id}`}
-                    >
-                        Saved {formatBookmarkTime(bookmark.firstSeenAt)}
-                    </p>
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <Avatar className="size-10">
+                        {bookmark.authorAvatarUrl ? (
+                            <AvatarImage
+                                src={bookmark.authorAvatarUrl}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                referrerPolicy="no-referrer"
+                            />
+                        ) : null}
+                        <AvatarFallback>
+                            {initials(
+                                bookmark.authorName || bookmark.authorUsername,
+                            )}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">
+                            {bookmark.authorName}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                            @{bookmark.authorUsername} ·{' '}
+                            {formatBookmarkTime(bookmark.postedAt)}
+                        </p>
+                        <p
+                            className="text-sm text-muted-foreground"
+                            data-test={`bookmark-saved-${bookmark.id}`}
+                        >
+                            Saved {formatBookmarkTime(bookmark.firstSeenAt)}
+                        </p>
+                    </div>
                 </div>
                 <div className="flex shrink-0 items-center">
+                    {leadingActions}
                     <OpenOnX
                         href={bookmark.url}
                         testId={`open-on-x-${bookmark.id}`}
@@ -249,6 +254,23 @@ export function BookmarkCard({
                     {expanded ? 'Show less' : 'Show full post'}
                 </Button>
             )}
+
+            {bookmark.tags.length > 0 ? (
+                <div
+                    className="flex flex-wrap gap-1"
+                    data-test={`bookmark-tags-${bookmark.id}`}
+                >
+                    {bookmark.tags.map((tag) => (
+                        <Badge
+                            key={tag.id}
+                            variant="secondary"
+                            data-test={`bookmark-tag-${bookmark.id}-${tag.id}`}
+                        >
+                            {tag.name}
+                        </Badge>
+                    ))}
+                </div>
+            ) : null}
 
             <BookmarkMediaList
                 media={bookmark.media}

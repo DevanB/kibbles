@@ -13,10 +13,12 @@ use Carbon\CarbonInterface;
 use Database\Factories\XBookmarkFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property-read string $id
@@ -33,9 +35,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read User $user
+ * @property-read Collection<int, Tag> $tags
  *
  * @method static XBookmarkBuilder query()
  * @method static XBookmarkBuilder newestFirst()
+ * @method static XBookmarkBuilder tagged(Tag $tag)
+ * @method static XBookmarkBuilder untagged()
  */
 #[Fillable([
     'x_post_id',
@@ -64,16 +69,35 @@ final class XBookmark extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
     public function url(): string
     {
         return 'https://x.com/'.$this->author_username.'/status/'.$this->x_post_id;
     }
 
     /**
-     * @return array{id: string, xPostId: string, authorName: string, authorUsername: string, authorAvatarUrl: string|null, text: string, postedAt: string, firstSeenAt: string, media: list<array{type: string, url: string, previewUrl: string|null, width: int|null, height: int|null, mp4Url: string|null}>, quotedPost: array{authorName: string, authorUsername: string, authorAvatarUrl: string|null, text: string, postedAt: string, media: list<array{type: string, url: string, previewUrl: string|null, width: int|null, height: int|null, mp4Url: string|null}>, url: string}|null, url: string}
+     * @return array{id: string, xPostId: string, authorName: string, authorUsername: string, authorAvatarUrl: string|null, text: string, postedAt: string, firstSeenAt: string, media: list<array{type: string, url: string, previewUrl: string|null, width: int|null, height: int|null, mp4Url: string|null}>, quotedPost: array{authorName: string, authorUsername: string, authorAvatarUrl: string|null, text: string, postedAt: string, media: list<array{type: string, url: string, previewUrl: string|null, width: int|null, height: int|null, mp4Url: string|null}>, url: string}|null, url: string, tags: list<array{id: string, name: string}>}
      */
     public function toWire(): array
     {
+        $tags = [];
+
+        foreach (
+            $this->tags->sortBy([
+                ['name', 'asc'],
+                ['id', 'asc'],
+            ]) as $tag
+        ) {
+            $tags[] = $tag->toWire();
+        }
+
         return [
             'id' => $this->id,
             'xPostId' => $this->x_post_id,
@@ -89,6 +113,7 @@ final class XBookmark extends Model
             ),
             'quotedPost' => $this->quoted_post?->toWire(),
             'url' => $this->url(),
+            'tags' => $tags,
         ];
     }
 

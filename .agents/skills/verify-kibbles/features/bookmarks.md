@@ -4,6 +4,8 @@ Authenticated, verified catalog at `/bookmarks` (route `bookmarks.index`, Inerti
 
 The index is **cursor-paginated** (20 newest-first on `(user_id, first_seen_at, id)`) and wrapped in `Inertia::scroll()` + `<InfiniteScroll data="bookmarks">`. Follow-up pages use `?cursor=…`. Sync walks X API pages; that is not the user-facing pager.
 
+Sidebar **X** nests **All** (`/bookmarks`), **Untagged** (`/bookmarks?tag=untagged`), and one link per tag (`/bookmarks?tag={id}`), alphabetical. Filtering is one tag at a time and keeps cursor pages + lazy media. The heading stays **Bookmarks**; the active filter name is a badge (`data-test="active-tag-name"`). Tags are kibbles-only and never sync to or from X. Each card has a **Tags** control (`data-test="tag-bookmark-button-{id}"`, `aria-label="Tags"`) before Open / Remove; quoted inner cards do not. The popover toggles existing tags and creates a new one by typing. **Manage tags** (`/tags`) renames and deletes tags without deleting bookmarks. See `tags.md`.
+
 ## Sub-features
 
 - Disconnected empty state (`data-test="bookmarks-empty"`): **Connect X to see saved posts** / **Kibbles syncs your X bookmarks into a masonry grid here.** Header description **Connect X to sync your saved posts**. **Connect X** (`data-test="connect-x-button"`) is a top-level `<a>` to `x-connection.create` (not an Inertia visit).
@@ -29,8 +31,9 @@ Preconditions:
 - Pagination cases factory **25** bookmarks so the first cursor page is incomplete
 
 - **Empty + Connect + grid + remove (Browser) →** `php artisan test --compact tests/Browser/BookmarksTest.php` → sidebar **X** → `/bookmarks`; empty **Connect X**; mocked authorize is a **top-level** navigation; factory grid shows media / quoted / **Open on X** / expand / remove modal (cancel keeps the row; confirm toasts **Bookmark removed.** and DELETEs `https://api.x.com/2/users/{id}/bookmarks/{post}`)
+- **Tags (Browser) →** `php artisan test --compact tests/Browser/BookmarkTagsTest.php` → card **Tags** toggles an existing tag and creates one inline; sidebar **Laravel** / **Untagged** filters; **Manage tags** renames and deletes without removing bookmarks
 - **Cursor page + infinite scroll (Browser) →** same file `--filter="loads the next page of bookmarks on scroll"` → iPhone SE viewport; first page shows newest; `window.scrollTo(0, document.body.scrollHeight)` loads page two; remove on that page keeps a sibling; scroll-to-top still has the first page (Masonic virtualizes off-screen cards)
-- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, newest-first, cursor page + `next_cursor` then following page, cross-user 403, sync forbidden without a connection, connect scopes + Inertia `409` location, callback → dashboard, disconnect → `/bookmarks`
+- **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/BookmarkTagControllerTest.php tests/Feature/Controllers/TagControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, newest-first, cursor page + `next_cursor` then following page, tag filter + untagged + other-user tag 404, cross-user 403, sync forbidden without a connection, connect scopes + Inertia `409` location, callback → dashboard, disconnect → `/bookmarks`
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-bookmarks`
 - **Sync action/job (not a page) →** `php artisan test --compact tests/Feature/SyncXBookmarksTest.php`
 

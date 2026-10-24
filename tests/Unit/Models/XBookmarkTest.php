@@ -22,6 +22,7 @@ it('round-trips media and quoted posts through the custom casts', function (): v
         ->and($bookmark->url())->toBe('https://x.com/alice/status/123')
         ->and($bookmark->toWire()['url'])->toBe('https://x.com/alice/status/123')
         ->and($bookmark->toWire()['quotedPost']['url'])->toBe('https://x.com/quoted/status/99')
+        ->and($bookmark->toWire()['tags'])->toBeEmpty()
         ->and($bookmark->user)->toBeInstanceOf(User::class);
 });
 

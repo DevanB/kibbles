@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\BookmarkSyncController;
+use App\Http\Controllers\BookmarkTagController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\PlaySessionController;
 use App\Http\Controllers\RawgGameSearchController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserEmailResetNotificationController;
 use App\Http\Controllers\UserEmailVerificationController;
@@ -41,6 +43,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->only(['create', 'destroy']);
     Route::get('x-connection/callback', [XConnectionController::class, 'store'])->name('x-connection.store');
     Route::resource('bookmarks', BookmarkController::class)->only(['index', 'show', 'destroy']);
+    Route::resource('bookmarks.tags', BookmarkTagController::class)
+        ->only(['store', 'destroy'])
+        ->scoped();
+    Route::resource('tags', TagController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
     Route::resource('bookmark-syncs', BookmarkSyncController::class)->only(['store']);
 });
 

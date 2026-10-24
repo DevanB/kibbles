@@ -84,7 +84,7 @@ export function BookmarkMasonry({
                 columnCount={columns}
                 columnGutter={16}
                 rowGutter={16}
-                overscanBy={8}
+                overscanBy={16}
                 itemHeightEstimate={280}
                 ssrWidth={1280}
                 ssrHeight={720}

@@ -19,6 +19,11 @@ final class XBookmarkPolicy
         return $bookmark->user()->is($user);
     }
 
+    public function update(User $user, XBookmark $bookmark): bool
+    {
+        return $bookmark->user()->is($user);
+    }
+
     public function delete(User $user, XBookmark $bookmark): bool
     {
         return $bookmark->user()->is($user);

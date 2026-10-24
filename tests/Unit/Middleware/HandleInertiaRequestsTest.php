@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,8 @@ it('shares null user when guest', function (): void {
 
     expect($shared)->toHaveKey('auth')
         ->and($shared['auth'])->toHaveKey('user')
-        ->and($shared['auth']['user'])->toBeNull();
+        ->and($shared['auth']['user'])->toBeNull()
+        ->and($shared['tags'])->toBe([]);
 });
 
 it('shares authenticated user data', function (): void {
@@ -29,12 +31,19 @@ it('shares authenticated user data', function (): void {
     $request = Request::create('/', 'GET');
     $request->setUserResolver(fn () => $user);
 
+    $pest = Tag::factory()->recycle($user)->create(['name' => 'Pest']);
+    $laravel = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+
     $shared = $middleware->share($request);
 
     expect($shared['auth']['user'])->not->toBeNull()
         ->and($shared['auth']['user']->id)->toBe($user->id)
         ->and($shared['auth']['user']->name)->toBe('Test User')
-        ->and($shared['auth']['user']->email)->toBe('test@example.com');
+        ->and($shared['auth']['user']->email)->toBe('test@example.com')
+        ->and($shared['tags'])->toBe([
+            ['id' => $laravel->id, 'name' => 'Laravel'],
+            ['id' => $pest->id, 'name' => 'Pest'],
+        ]);
 });
 
 it('defaults sidebarOpen to true when no cookie', function (): void {
