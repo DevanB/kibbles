@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -24,13 +26,23 @@ final class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'tags' => $user instanceof User
+                ? $user->tags()
+                    ->alphabetical()
+                    ->get()
+                    ->map(fn (Tag $tag): array => $tag->toWire())
+                    ->values()
+                    ->all()
+                : [],
         ];
     }
 }

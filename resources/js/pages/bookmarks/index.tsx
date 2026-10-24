@@ -1,4 +1,10 @@
-import { Form, Head, InfiniteScroll, setLayoutProps } from '@inertiajs/react';
+import {
+    Form,
+    Head,
+    InfiniteScroll,
+    Link,
+    setLayoutProps,
+} from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { Bookmark as BookmarkIcon, Plus, Trash2 } from 'lucide-react';
 import { show } from '@/actions/App/Http/Controllers/BookmarkController';
@@ -13,11 +19,14 @@ import {
     formatSyncedAt,
 } from '@/components/bookmark-card';
 import { BookmarkMasonry } from '@/components/bookmark-masonry';
+import { BookmarkTagPicker } from '@/components/bookmark-tag-picker';
 import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/bookmarks';
-import type { BookmarkPage, BreadcrumbItem, XConnection } from '@/types';
+import { index as tagsIndex } from '@/routes/tags';
+import type { BookmarkPage, BreadcrumbItem, Tag, XConnection } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -41,9 +50,11 @@ function headerDescription(connection: XConnection | null): string {
 export default function Index({
     bookmarks,
     xConnection,
+    activeTag,
 }: {
     bookmarks: BookmarkPage;
     xConnection: XConnection | null;
+    activeTag: Tag | null;
 }) {
     setLayoutProps({ breadcrumbs });
 
@@ -53,12 +64,29 @@ export default function Index({
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                    <Heading
-                        title="Bookmarks"
-                        description={headerDescription(xConnection)}
-                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Heading
+                            title="Bookmarks"
+                            description={headerDescription(xConnection)}
+                        />
+                        {activeTag ? (
+                            <Badge
+                                variant="secondary"
+                                data-test="active-tag-name"
+                            >
+                                {activeTag.name}
+                            </Badge>
+                        ) : null}
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            asChild
+                            variant="outline"
+                            data-test="manage-tags-button"
+                        >
+                            <Link href={tagsIndex()}>Manage tags</Link>
+                        </Button>
                         {xConnection ? (
                             <>
                                 <Form
@@ -107,14 +135,20 @@ export default function Index({
                     >
                         <BookmarkIcon className="mb-3 size-8 text-muted-foreground" />
                         <p className="text-lg font-medium">
-                            {xConnection
-                                ? 'No bookmarks yet'
-                                : 'Connect X to see saved posts'}
+                            {activeTag?.id === 'untagged'
+                                ? 'No untagged bookmarks'
+                                : activeTag
+                                  ? `No bookmarks tagged ${activeTag.name}`
+                                  : xConnection
+                                    ? 'No bookmarks yet'
+                                    : 'Connect X to see saved posts'}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {xConnection
-                                ? 'Sync now to pull in the latest bookmarks from X.'
-                                : 'Kibbles syncs your X bookmarks into a masonry grid here.'}
+                            {activeTag
+                                ? 'Try another tag or add one from a bookmark card.'
+                                : xConnection
+                                  ? 'Sync now to pull in the latest bookmarks from X.'
+                                  : 'Kibbles syncs your X bookmarks into a masonry grid here.'}
                         </p>
                     </div>
                 ) : (
@@ -134,6 +168,11 @@ export default function Index({
                             {(bookmark) => (
                                 <BookmarkCard
                                     bookmark={bookmark}
+                                    leadingActions={
+                                        <BookmarkTagPicker
+                                            bookmark={bookmark}
+                                        />
+                                    }
                                     actions={
                                         <ModalLink
                                             href={show.url(bookmark)}

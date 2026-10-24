@@ -13,7 +13,9 @@ it('allows the owner to view or delete a bookmark', function (): void {
     $policy = new XBookmarkPolicy;
 
     expect($policy->view($owner, $bookmark))->toBeTrue()
+        ->and($policy->update($owner, $bookmark))->toBeTrue()
         ->and($policy->delete($owner, $bookmark))->toBeTrue()
         ->and($policy->view($other, $bookmark))->toBeFalse()
+        ->and($policy->update($other, $bookmark))->toBeFalse()
         ->and($policy->delete($other, $bookmark))->toBeFalse();
 });

@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { Tag } from '@/types/tag';
 import type { FlashToast } from '@/types/ui';
 
 declare module 'react' {
@@ -16,6 +17,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            tags: Tag[];
             [key: string]: unknown;
         };
     }

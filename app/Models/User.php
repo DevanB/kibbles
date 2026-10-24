@@ -33,6 +33,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read CarbonInterface $updated_at
  * @property-read Collection<int, Game> $games
  * @property-read Collection<int, PlaySession> $playSessions
+ * @property-read Collection<int, Tag> $tags
  * @property-read Collection<int, XBookmark> $xBookmarks
  * @property-read XConnection|null $xConnection
  */
@@ -82,6 +83,14 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function xBookmarks(): HasMany
     {
         return $this->hasMany(XBookmark::class);
+    }
+
+    /**
+     * @return HasMany<Tag, $this>
+     */
+    public function tags(): HasMany
+    {
+        return $this->hasMany(Tag::class);
     }
 
     /**

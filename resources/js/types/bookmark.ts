@@ -7,6 +7,8 @@ export type BookmarkMedia = {
     mp4Url: string | null;
 };
 
+import type { Tag } from './tag';
+
 export type QuotedBookmark = {
     authorName: string;
     authorUsername: string;
@@ -29,6 +31,7 @@ export type Bookmark = {
     media: BookmarkMedia[];
     quotedPost: QuotedBookmark | null;
     url: string;
+    tags: Tag[];
 };
 
 export type BookmarkPage = {

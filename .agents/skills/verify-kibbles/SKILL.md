@@ -141,6 +141,7 @@ php artisan test --compact tests/Browser/GameCatalogTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/PlaySessionsTest.php
 php artisan test --compact tests/Browser/BookmarksTest.php
+php artisan test --compact tests/Browser/BookmarkTagsTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -232,6 +233,16 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `remove-bookmark-button-{id}` | bookmarks card remove (`aria-label="Remove bookmark"`) |
 | `bookmark-modal-{id}` | bookmarks remove modal |
 | `confirm-remove-bookmark-button-{id}` / `cancel-remove-bookmark-button-{id}` | bookmarks remove confirm |
+| `tag-bookmark-button-{id}` | bookmarks card tag control (`aria-label="Tags"`) |
+| `tag-combobox-{id}` / `tag-combobox-input-{id}` | bookmark tag popover / filter input |
+| `tag-option-{id}` / `create-tag-option-{id}` | toggle existing tag / create typed tag |
+| `bookmark-tags-{id}` / `bookmark-tag-{id}-{tagId}` | card tag badges |
+| `sidebar-x` / `sidebar-x-all` / `sidebar-x-untagged` / `sidebar-x-tag-{id}` | X nav + nested All / Untagged / tag |
+| `active-tag-name` | bookmarks heading badge for the active filter |
+| `manage-tags-button` | bookmarks header → `/tags` |
+| `tags-empty` / `tag-row-{id}` | tags index empty / row |
+| `rename-tag-button-{id}` / `tag-name-input-{id}` / `save-tag-button-{id}` | tag rename modal |
+| `delete-tag-button-{id}` / `tag-modal-{id}` / `confirm-delete-tag-button-{id}` / `cancel-delete-tag-button-{id}` | tag delete modal |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 
@@ -250,6 +261,8 @@ php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.p
 php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTest.php
 php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/BookmarkSyncControllerTest.php
+php artisan test --compact tests/Feature/Controllers/BookmarkTagControllerTest.php
+php artisan test --compact tests/Feature/Controllers/TagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XConnectionControllerTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
@@ -270,7 +283,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
 curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, profile-settings, password-settings, passkeys, appearance).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, tags, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -312,6 +325,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
-| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `XConnectionControllerTest` + `BookmarksTest` (empty/connect/grid/remove + cursor page + scroll-load). Doctor is logged only. |
+| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `BookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `BookmarksTest` + `BookmarkTagsTest` (empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.

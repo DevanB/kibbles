@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Builders;
 
+use App\Models\Tag;
 use App\Models\XBookmark;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -16,6 +17,18 @@ final class XBookmarkBuilder extends Builder
     public function newestFirst(): static
     {
         return $this->latest('first_seen_at')->orderByDesc('id');
+    }
+
+    public function tagged(Tag $tag): static
+    {
+        return $this->whereHas('tags', function (Builder $query) use ($tag): void {
+            $query->whereKey($tag->getKey());
+        });
+    }
+
+    public function untagged(): static
+    {
+        return $this->whereDoesntHave('tags');
     }
 
     /**

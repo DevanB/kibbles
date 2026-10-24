@@ -8,6 +8,10 @@ export type IsCurrentUrlFn = (
     startsWith?: boolean,
 ) => boolean;
 
+export type IsCurrentHrefFn = (
+    urlToCheck: NonNullable<InertiaLinkProps['href']>,
+) => boolean;
+
 export type IsCurrentOrParentUrlFn = (
     urlToCheck: NonNullable<InertiaLinkProps['href']>,
     currentUrl?: string,
@@ -22,18 +26,19 @@ export type WhenCurrentUrlFn = <TIfTrue, TIfFalse = null>(
 export type UseCurrentUrlReturn = {
     currentUrl: string;
     isCurrentUrl: IsCurrentUrlFn;
+    isCurrentHref: IsCurrentHrefFn;
     isCurrentOrParentUrl: IsCurrentOrParentUrlFn;
     whenCurrentUrl: WhenCurrentUrlFn;
 };
 
 export function useCurrentUrl(): UseCurrentUrlReturn {
     const page = usePage();
-    const currentUrlPath = new URL(
-        page.url,
+    const origin =
         typeof window !== 'undefined'
             ? window.location.origin
-            : 'http://localhost',
-    ).pathname;
+            : 'http://localhost';
+    const currentLocation = new URL(page.url, origin);
+    const currentUrlPath = currentLocation.pathname;
 
     const isCurrentUrl: IsCurrentUrlFn = (
         urlToCheck: NonNullable<InertiaLinkProps['href']>,
@@ -74,9 +79,22 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         return isCurrentUrl(urlToCheck) ? ifTrue : ifFalse;
     };
 
+    const isCurrentHref: IsCurrentHrefFn = (urlToCheck) => {
+        const urlString = toUrl(urlToCheck);
+        const target = urlString.startsWith('http')
+            ? new URL(urlString)
+            : new URL(urlString, origin);
+
+        return (
+            currentLocation.pathname === target.pathname &&
+            currentLocation.search === target.search
+        );
+    };
+
     return {
         currentUrl: currentUrlPath,
         isCurrentUrl,
+        isCurrentHref,
         isCurrentOrParentUrl,
         whenCurrentUrl,
     };

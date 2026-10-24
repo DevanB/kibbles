@@ -6,6 +6,7 @@ use App\Actions\DispatchXBookmarkSyncs;
 use App\Actions\SyncXBookmarks;
 use App\Exceptions\XClientException;
 use App\Jobs\SyncXBookmarks as SyncXBookmarksJob;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\XBookmark;
 use App\Models\XConnection;
@@ -40,6 +41,32 @@ it('upserts bookmarks from X and records first_seen_at', function (): void {
         ->and($bookmark->media[0]->url)->toBe('https://pbs.twimg.com/media/demo.jpg')
         ->and($connection->refresh()->last_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString())
         ->and($connection->last_full_synced_at)->toBeNull();
+});
+
+it('keeps tag associations when an incremental sync sees an existing bookmark', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    $existing = XBookmark::factory()->recycle($user)->create([
+        'x_post_id' => '100',
+        'text' => 'Old text',
+    ]);
+    $tag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+    $existing->tags()->attach($tag);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+            [xTweet('100', ['text' => 'Updated text']), xTweet('101')],
+            ['users' => [xAuthor('author-100'), xAuthor('author-101')]],
+        )),
+    ]);
+
+    resolve(SyncXBookmarks::class)->handle($user);
+
+    expect($existing->refresh()->text)->toBe('Old text')
+        ->and($existing->tags()->whereKey($tag)->exists())->toBeTrue()
+        ->and($tag->fresh())->not->toBeNull();
 });
 
 it('does not rewrite an existing bookmark during an incremental sync that stops on a known id', function (): void {
@@ -93,6 +120,31 @@ it('stops an incremental sync at the first already-known post', function (): voi
         ->and($user->xBookmarks()->where('x_post_id', 'older-should-not-sync')->exists())->toBeFalse();
 
     Http::assertSentCount(1);
+});
+
+it('keeps tag associations on bookmarks a full sync still sees and drops pivot rows for removed posts', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    $keep = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'keep']);
+    $gone = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'gone']);
+    $keepTag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+    $goneTag = Tag::factory()->recycle($user)->create(['name' => 'Pest']);
+    $keep->tags()->attach($keepTag);
+    $gone->tags()->attach($goneTag);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([xTweet('keep')])),
+    ]);
+
+    resolve(SyncXBookmarks::class)->handle($user, true);
+
+    expect($keep->fresh())->not->toBeNull()
+        ->and($keep->tags()->whereKey($keepTag)->exists())->toBeTrue()
+        ->and($gone->fresh())->toBeNull()
+        ->and($goneTag->fresh())->not->toBeNull()
+        ->and($goneTag->xBookmarks()->count())->toBe(0);
 });
 
 it('pages a full sync without expansions and deletes local bookmarks X no longer returns', function (): void {

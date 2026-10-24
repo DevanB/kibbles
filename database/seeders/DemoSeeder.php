@@ -92,6 +92,7 @@ final class DemoSeeder extends Seeder
         }
 
         $this->seedBookmarks($user);
+        $this->seedTags($user);
     }
 
     private function seedPlaySessions(User $user): void
@@ -225,6 +226,25 @@ final class DemoSeeder extends Seeder
             640,
             480,
         ));
+    }
+
+    private function seedTags(User $user): void
+    {
+        $laravel = $user->tags()->named('Laravel')->first()
+            ?? $user->tags()->create(['name' => 'Laravel']);
+        $pest = $user->tags()->named('Pest')->first()
+            ?? $user->tags()->create(['name' => 'Pest']);
+
+        $taylor = $user->xBookmarks()->where('x_post_id', '1001')->first();
+        $nuno = $user->xBookmarks()->where('x_post_id', '1002')->first();
+
+        if ($taylor instanceof XBookmark) {
+            $taylor->tags()->syncWithoutDetaching([$laravel->id]);
+        }
+
+        if ($nuno instanceof XBookmark) {
+            $nuno->tags()->syncWithoutDetaching([$pest->id]);
+        }
     }
 
     /**

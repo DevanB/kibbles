@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\DeleteXBookmark;
 use App\Http\Requests\DeleteXBookmarkRequest;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\XBookmark;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -19,14 +21,30 @@ use InertiaUI\Modal\Modal;
 
 final readonly class BookmarkController
 {
-    public function index(#[CurrentUser] User $user): Response
+    public function index(Request $request, #[CurrentUser] User $user): Response
     {
         Gate::authorize('viewAny', XBookmark::class);
 
-        /** @var CursorPaginator<int, XBookmark> $paginator */
-        $paginator = $user->xBookmarks()
+        $raw = $request->query('tag');
+        $tagFilter = is_string($raw) ? $raw : null;
+        $activeTag = null;
+
+        $query = $user->xBookmarks()
             ->newestFirst()
-            ->cursorPaginate(20);
+            ->with('tags');
+
+        if ($tagFilter === 'untagged') {
+            $query->untagged();
+        } elseif (is_string($tagFilter) && $tagFilter !== '') {
+            $activeTag = $user->tags()->whereKey($tagFilter)->first();
+
+            abort_unless($activeTag instanceof Tag, 404);
+
+            $query->tagged($activeTag);
+        }
+
+        /** @var CursorPaginator<int, XBookmark> $paginator */
+        $paginator = $query->cursorPaginate(20);
 
         return Inertia::render('bookmarks/index', [
             'bookmarks' => Inertia::scroll(
@@ -41,12 +59,17 @@ final readonly class BookmarkController
                 metadata: ScrollMetadata::fromPaginator($paginator),
             ),
             'xConnection' => $user->xConnection?->toWire(),
+            'activeTag' => $tagFilter === 'untagged'
+                ? ['id' => 'untagged', 'name' => 'Untagged']
+                : $activeTag?->toWire(),
         ]);
     }
 
     public function show(XBookmark $bookmark): Modal
     {
         Gate::authorize('view', $bookmark);
+
+        $bookmark->load('tags');
 
         return Inertia::modal('bookmarks/show', [
             'bookmark' => $bookmark->toWire(),
