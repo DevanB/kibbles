@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\BookmarkReviewController;
 use App\Http\Controllers\BookmarkSyncController;
 use App\Http\Controllers\BookmarkTagController;
 use App\Http\Controllers\DashboardController;
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('bookmarks.tags', BookmarkTagController::class)
         ->only(['store', 'destroy'])
         ->scoped();
+    Route::resource('bookmark-reviews', BookmarkReviewController::class)->only(['index', 'store']);
     Route::resource('tags', TagController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
     Route::resource('bookmark-syncs', BookmarkSyncController::class)->only(['store']);
 });

@@ -142,6 +142,7 @@ php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/PlaySessionsTest.php
 php artisan test --compact tests/Browser/BookmarksTest.php
 php artisan test --compact tests/Browser/BookmarkTagsTest.php
+php artisan test --compact tests/Browser/BookmarkReviewsTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -237,7 +238,9 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `tag-combobox-{id}` / `tag-combobox-input-{id}` | bookmark tag popover / filter input |
 | `tag-option-{id}` / `create-tag-option-{id}` | toggle existing tag / create typed tag |
 | `bookmark-tags-{id}` / `bookmark-tag-{id}-{tagId}` | card tag badges |
-| `sidebar-x` / `sidebar-x-all` / `sidebar-x-untagged` / `sidebar-x-tag-{id}` | X nav + nested All / Untagged / tag |
+| `sidebar-x` / `sidebar-x-all` / `sidebar-x-review` / `sidebar-x-untagged` / `sidebar-x-tag-{id}` | X nav + nested All / Review / Untagged / tag |
+| `keep-bookmark-button` / `remove-review-button` | `/bookmark-reviews` Keep / Remove |
+| `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-empty` | review page / remaining count / All caught up |
 | `active-tag-name` | bookmarks heading badge for the active filter |
 | `manage-tags-button` | bookmarks header → `/tags` |
 | `tags-empty` / `tag-row-{id}` | tags index empty / row |
@@ -261,6 +264,7 @@ php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.p
 php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTest.php
 php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/BookmarkSyncControllerTest.php
+php artisan test --compact tests/Feature/Controllers/BookmarkReviewControllerTest.php
 php artisan test --compact tests/Feature/Controllers/BookmarkTagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/TagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XConnectionControllerTest.php
@@ -325,6 +329,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
-| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `BookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `BookmarksTest` + `BookmarkTagsTest` (empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename). Doctor is logged only. |
+| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `BookmarkReviewControllerTest` + `BookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `BookmarksTest` + `BookmarkReviewsTest` + `BookmarkTagsTest` (empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename + review queue). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.

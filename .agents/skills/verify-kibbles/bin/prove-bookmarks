@@ -23,7 +23,7 @@ DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature Bookmark/Sync/XConnection/Tag + Browser Bookmarks and BookmarkTags (empty/connect/grid/remove + cursor infinite scroll + tagging/filter/rename); doctor is informational"
+  echo "note=Feature Bookmark/Sync/XConnection/Tag/Review + Browser Bookmarks, BookmarkTags, and BookmarkReviews (empty/connect/grid/remove + cursor infinite scroll + tagging/filter/rename + review queue); doctor is informational"
 } | tee "$ART/bookmarks-summary.txt"
 
 set +e
@@ -39,10 +39,12 @@ set +e
 php artisan test --compact \
   tests/Feature/Controllers/BookmarkControllerTest.php \
   tests/Feature/Controllers/BookmarkSyncControllerTest.php \
+  tests/Feature/Controllers/BookmarkReviewControllerTest.php \
   tests/Feature/Controllers/BookmarkTagControllerTest.php \
   tests/Feature/Controllers/TagControllerTest.php \
   tests/Feature/Controllers/XConnectionControllerTest.php \
   tests/Browser/BookmarksTest.php \
+  tests/Browser/BookmarkReviewsTest.php \
   tests/Browser/BookmarkTagsTest.php \
   > "$ART/bookmarks-tests.log" 2>&1
 TEST_RC=$?
@@ -53,9 +55,9 @@ cat "$ART/bookmarks-tests.log"
   echo "doctor_rc=$DOCTOR_RC"
   echo "doctor_required=0"
   echo "tests_rc=$TEST_RC"
-  echo "feature=tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/BookmarkTagControllerTest.php tests/Feature/Controllers/TagControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php"
-  echo "browser=tests/Browser/BookmarksTest.php tests/Browser/BookmarkTagsTest.php"
-  echo "verified=guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove, cursor page + scroll-load page two, tag/create/filter sidebar, rename/delete tag"
+  echo "feature=tests/Feature/Controllers/BookmarkControllerTest.php tests/Feature/Controllers/BookmarkSyncControllerTest.php tests/Feature/Controllers/BookmarkReviewControllerTest.php tests/Feature/Controllers/BookmarkTagControllerTest.php tests/Feature/Controllers/TagControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php"
+  echo "browser=tests/Browser/BookmarksTest.php tests/Browser/BookmarkReviewsTest.php tests/Browser/BookmarkTagsTest.php"
+  echo "verified=guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove, cursor page + scroll-load page two, tag/create/filter sidebar, rename/delete tag, review queue keep/remove/tag until caught up"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi

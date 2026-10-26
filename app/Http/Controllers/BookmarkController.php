@@ -87,7 +87,7 @@ final readonly class BookmarkController
                 'message' => __('Could not remove the bookmark from X.'),
             ]);
 
-            return to_route('bookmarks.index')->withErrors([
+            return back(fallback: route('bookmarks.index'))->withErrors([
                 'bookmark' => __('Could not remove the bookmark from X.'),
             ]);
         }
@@ -97,6 +97,6 @@ final readonly class BookmarkController
             'message' => __('Bookmark removed.'),
         ]);
 
-        return to_route('bookmarks.index');
+        return back(fallback: route('bookmarks.index'));
     }
 }
