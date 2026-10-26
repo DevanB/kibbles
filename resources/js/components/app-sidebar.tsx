@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { dashboard } from '@/routes';
+import { index as bookmarkReviews } from '@/routes/bookmark-reviews';
 import { index as bookmarks } from '@/routes/bookmarks';
 import { index as games } from '@/routes/games';
 import { index as tagsIndex } from '@/routes/tags';
@@ -42,6 +43,11 @@ function bookmarkNavItems(tags: Tag[], xIsActive: boolean): NavItem[] {
                     title: 'All',
                     href: bookmarks(),
                     testId: 'sidebar-x-all',
+                },
+                {
+                    title: 'Review',
+                    href: bookmarkReviews(),
+                    testId: 'sidebar-x-review',
                 },
                 {
                     title: 'Untagged',
@@ -81,6 +87,7 @@ export function AppSidebar() {
                     items={bookmarkNavItems(
                         tags,
                         isCurrentOrParentUrl(bookmarks()) ||
+                            isCurrentUrl(bookmarkReviews()) ||
                             isCurrentUrl(tagsIndex()),
                     )}
                 />

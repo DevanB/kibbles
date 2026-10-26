@@ -29,9 +29,24 @@ function replaceBookmarkTags(bookmarkId: string, tags: Tag[]): void {
     );
 }
 
-export function BookmarkTagPicker({ bookmark }: { bookmark: Bookmark }) {
+export function BookmarkTagPicker({
+    bookmark,
+    open: controlledOpen,
+    onOpenChange,
+    onTagsChange,
+}: {
+    bookmark: Bookmark;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    onTagsChange?: (tags: Tag[]) => void;
+}) {
     const { tags } = usePage<{ tags: Tag[] }>().props;
-    const [open, setOpen] = useState(false);
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+    const open =
+        onOpenChange === undefined
+            ? uncontrolledOpen
+            : (controlledOpen ?? false);
+    const setOpen = onOpenChange ?? setUncontrolledOpen;
     const [query, setQuery] = useState('');
     const attachedIds = new Set(bookmark.tags.map((tag) => tag.id));
     const trimmedQuery = query.trim();
@@ -52,14 +67,23 @@ export function BookmarkTagPicker({ bookmark }: { bookmark: Bookmark }) {
             (tag) => tag.name.toLowerCase() === trimmedQuery.toLowerCase(),
         );
 
+    const applyTags = (nextTags: Tag[]): void => {
+        if (onTagsChange) {
+            onTagsChange(nextTags);
+
+            return;
+        }
+
+        replaceBookmarkTags(bookmark.id, nextTags);
+    };
+
     const toggle = (tag: Tag): void => {
         if (attachedIds.has(tag.id)) {
             router.delete(destroy.url({ bookmark: bookmark.id, tag: tag.id }), {
                 preserveScroll: true,
                 except: ['bookmarks'],
                 onSuccess: () => {
-                    replaceBookmarkTags(
-                        bookmark.id,
+                    applyTags(
                         bookmark.tags.filter((item) => item.id !== tag.id),
                     );
                 },
@@ -75,7 +99,7 @@ export function BookmarkTagPicker({ bookmark }: { bookmark: Bookmark }) {
                 preserveScroll: true,
                 except: ['bookmarks'],
                 onSuccess: () => {
-                    replaceBookmarkTags(bookmark.id, [...bookmark.tags, tag]);
+                    applyTags([...bookmark.tags, tag]);
                 },
             },
         );
@@ -96,10 +120,7 @@ export function BookmarkTagPicker({ bookmark }: { bookmark: Bookmark }) {
                     );
 
                     if (created) {
-                        replaceBookmarkTags(bookmark.id, [
-                            ...bookmark.tags,
-                            created,
-                        ]);
+                        applyTags([...bookmark.tags, created]);
                     }
 
                     setQuery('');

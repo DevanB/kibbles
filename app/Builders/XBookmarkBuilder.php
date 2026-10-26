@@ -19,6 +19,16 @@ final class XBookmarkBuilder extends Builder
         return $this->latest('first_seen_at')->orderByDesc('id');
     }
 
+    public function oldestFirst(): static
+    {
+        return $this->oldest('first_seen_at')->orderBy('id');
+    }
+
+    public function unreviewed(): static
+    {
+        return $this->whereNull('reviewed_at');
+    }
+
     public function tagged(Tag $tag): static
     {
         return $this->whereHas('tags', function (Builder $query) use ($tag): void {

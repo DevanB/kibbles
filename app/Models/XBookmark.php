@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read string $text
  * @property-read CarbonInterface $posted_at
  * @property-read CarbonInterface $first_seen_at
+ * @property-read CarbonInterface|null $reviewed_at
  * @property-read list<XMediaValue> $media
  * @property-read XPostValue|null $quoted_post
  * @property-read CarbonInterface $created_at
@@ -39,6 +40,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @method static XBookmarkBuilder query()
  * @method static XBookmarkBuilder newestFirst()
+ * @method static XBookmarkBuilder oldestFirst()
+ * @method static XBookmarkBuilder unreviewed()
  * @method static XBookmarkBuilder tagged(Tag $tag)
  * @method static XBookmarkBuilder untagged()
  */
@@ -50,6 +53,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     'text',
     'posted_at',
     'first_seen_at',
+    'reviewed_at',
     'media',
     'quoted_post',
 ])]
@@ -132,6 +136,7 @@ final class XBookmark extends Model
             'text' => 'string',
             'posted_at' => 'datetime',
             'first_seen_at' => 'datetime',
+            'reviewed_at' => 'datetime',
             'media' => XMedia::class,
             'quoted_post' => XPost::class,
             'created_at' => 'datetime',

@@ -76,6 +76,13 @@ final class XBookmarkFactory extends Factory
         ]);
     }
 
+    public function reviewed(): self
+    {
+        return $this->state(fn (): array => [
+            'reviewed_at' => now(),
+        ]);
+    }
+
     public function quoted(): self
     {
         return $this->state(fn (): array => [
