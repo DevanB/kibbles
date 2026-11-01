@@ -18,11 +18,13 @@ final readonly class BookmarkSyncController
         #[CurrentUser] User $user,
         CreateBookmarkSync $action,
     ): RedirectResponse {
-        $action->handle($user);
+        $full = $request->boolean('full');
+
+        $action->handle($user, $full);
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => __('Bookmark sync started.'),
+            'message' => $full ? __('Full bookmark sync started.') : __('Bookmark sync started.'),
         ]);
 
         return back();
