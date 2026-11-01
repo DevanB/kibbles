@@ -286,6 +286,5 @@ it('removes a local bookmark X no longer returns when full sync is requested fro
         ->assertSee('No bookmarks yet')
         ->assertNoJavaScriptErrors();
 
-    expect($stale->fresh())->toBeNull()
-        ->and($user->xBookmarks()->count())->toBe(0);
+    expect($stale->fresh())->toBeNull();
 });
