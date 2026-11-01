@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 use App\Enums\GameStatus;
 use App\Models\Game;
+use Database\Seeders\DatabaseSeeder;
 
 it('does not create demo data when the environment is production', function (): void {
     $this->app->detectEnvironment(fn (): string => 'production');
 
-    $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
+    $this->artisan('db:seed', ['--force' => true])
+        ->expectsOutputToContain('Skipping demo seed in production.')
+        ->assertSuccessful();
+
+    $this->assertDatabaseMissing('users', ['email' => 'devan@localhost.test']);
+    $this->assertDatabaseCount('games', 0);
+});
+
+it('skips demo data in production when the seeder has no console command', function (): void {
+    $this->app->detectEnvironment(fn (): string => 'production');
+
+    (new DatabaseSeeder)->run();
 
     $this->assertDatabaseMissing('users', ['email' => 'devan@localhost.test']);
     $this->assertDatabaseCount('games', 0);
