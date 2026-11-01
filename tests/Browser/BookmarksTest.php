@@ -243,3 +243,49 @@ it('loads the next page of bookmarks on scroll and removes a card from that page
     Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
         && $request->url() === 'https://api.x.com/2/users/42/bookmarks/'.$oldest->x_post_id);
 });
+
+it('removes a local bookmark X no longer returns when full sync is requested from the page', function (): void {
+    configureX();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    XConnection::factory()->recycle($user)->synced()->create([
+        'username' => 'devan',
+        'x_user_id' => '42',
+    ]);
+    $stale = XBookmark::factory()->recycle($user)->withoutMedia()->create([
+        'author_name' => 'Stale Author',
+        'author_username' => 'staleuser',
+        'author_avatar_url' => 'https://avatars.githubusercontent.com/u/354652?s=96&v=4',
+        'text' => 'Unbookmarked on X but still here.',
+        'first_seen_at' => now()->subHour(),
+    ]);
+
+    Http::fake([
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([])),
+    ]);
+
+    $this->actingAs($user);
+
+    $page = visit(route('bookmarks.index'));
+
+    $page->assertPresent('@bookmark-'.$stale->id)
+        ->click('@sync-bookmarks-button')
+        ->assertSee('Bookmark sync started.')
+        ->assertPresent('@bookmark-'.$stale->id)
+        ->assertNoJavaScriptErrors();
+
+    expect($stale->fresh())->not->toBeNull();
+
+    $page->click('@sync-bookmarks-actions-button')
+        ->assertSee('Full sync')
+        ->assertSee("Also removes posts you've unbookmarked on X")
+        ->screenshot(filename: 'bookmarks-full-sync-control')
+        ->click('@full-sync-bookmarks-button')
+        ->assertSee('Full bookmark sync started.')
+        ->assertMissing('@bookmark-'.$stale->id)
+        ->assertSee('No bookmarks yet')
+        ->assertNoJavaScriptErrors();
+
+    expect($stale->fresh())->toBeNull()
+        ->and($user->xBookmarks()->count())->toBe(0);
+});
