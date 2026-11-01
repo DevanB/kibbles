@@ -3,10 +3,11 @@ import {
     Head,
     InfiniteScroll,
     Link,
+    router,
     setLayoutProps,
 } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
-import { Bookmark as BookmarkIcon, Plus, Trash2 } from 'lucide-react';
+import { Bookmark as BookmarkIcon, Ellipsis, Plus, Trash2 } from 'lucide-react';
 import { show } from '@/actions/App/Http/Controllers/BookmarkController';
 import { store as storeBookmarkSync } from '@/actions/App/Http/Controllers/BookmarkSyncController';
 import {
@@ -23,6 +24,13 @@ import { BookmarkTagPicker } from '@/components/bookmark-tag-picker';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/bookmarks';
 import { index as tagsIndex } from '@/routes/tags';
@@ -94,14 +102,56 @@ export default function Index({
                                     options={{ preserveScroll: true }}
                                 >
                                     {({ processing }) => (
-                                        <Button
-                                            type="submit"
-                                            variant="outline"
-                                            disabled={processing}
-                                            data-test="sync-bookmarks-button"
-                                        >
-                                            Sync now
-                                        </Button>
+                                        <ButtonGroup aria-label="Bookmark sync">
+                                            <Button
+                                                type="submit"
+                                                variant="outline"
+                                                disabled={processing}
+                                                data-test="sync-bookmarks-button"
+                                            >
+                                                Sync now
+                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="px-2"
+                                                        aria-label="More sync options"
+                                                        data-test="sync-bookmarks-actions-button"
+                                                    >
+                                                        <Ellipsis />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem
+                                                        title="Also removes posts you've unbookmarked on X"
+                                                        data-test="full-sync-bookmarks-button"
+                                                        onSelect={() => {
+                                                            router.post(
+                                                                storeBookmarkSync.url(),
+                                                                { full: true },
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            );
+                                                        }}
+                                                    >
+                                                        <span className="flex flex-col items-start gap-0.5">
+                                                            <span>
+                                                                Full sync
+                                                            </span>
+                                                            <span className="text-xs font-normal text-muted-foreground">
+                                                                Also removes
+                                                                posts you've
+                                                                unbookmarked on
+                                                                X
+                                                            </span>
+                                                        </span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </ButtonGroup>
                                     )}
                                 </Form>
                                 <Form {...destroyXConnection.form()}>
