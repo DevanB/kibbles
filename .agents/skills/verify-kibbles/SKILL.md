@@ -221,6 +221,8 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `edit-{id}-body` | journal edit modal textarea |
 | `connect-x-button` | `/bookmarks` Connect X (disconnected) |
 | `sync-bookmarks-button` | `/bookmarks` Sync now |
+| `sync-bookmarks-actions-button` | `/bookmarks` Sync button-group ellipsis (Full sync lives in the menu) |
+| `full-sync-bookmarks-button` | `/bookmarks` Full sync |
 | `disconnect-x-button` | `/bookmarks` Disconnect X |
 | `bookmarks-empty` | `/bookmarks` empty state |
 | `bookmark-masonry` | `/bookmarks` Masonic grid wrapper |
