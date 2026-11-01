@@ -27,14 +27,4 @@ final class StoreBookmarkSyncRequest extends FormRequest
             'full' => ['sometimes', 'boolean'],
         ];
     }
-
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'full.boolean' => 'The full field must be true or false.',
-        ];
-    }
 }

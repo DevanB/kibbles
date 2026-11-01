@@ -125,7 +125,6 @@ export default function Index({
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem
-                                                        title="Also removes posts you've unbookmarked on X"
                                                         data-test="full-sync-bookmarks-button"
                                                         onSelect={() => {
                                                             router.post(

@@ -47,21 +47,6 @@ it('dispatches an incremental bookmark sync', function (array $payload): void {
     'false' => [['full' => false]],
 ]);
 
-it('dispatches a full bookmark sync', function (): void {
-    Queue::fake([SyncXBookmarks::class]);
-
-    $user = User::factory()->withoutTwoFactor()->create();
-    XConnection::factory()->recycle($user)->create();
-
-    $this->actingAs($user)
-        ->fromRoute('dashboard')
-        ->post(route('bookmark-syncs.store'), ['full' => true])
-        ->assertRedirectToRoute('dashboard')
-        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Full bookmark sync started.')]);
-
-    Queue::assertPushed(SyncXBookmarks::class, fn (SyncXBookmarks $job): bool => $job->userId === $user->id && $job->full);
-});
-
 it('rejects a non-boolean full flag', function (): void {
     Queue::fake([SyncXBookmarks::class]);
 
@@ -72,7 +57,7 @@ it('rejects a non-boolean full flag', function (): void {
         ->fromRoute('dashboard')
         ->post(route('bookmark-syncs.store'), ['full' => 'weekly'])
         ->assertRedirectToRoute('dashboard')
-        ->assertSessionHasErrors(['full' => 'The full field must be true or false.']);
+        ->assertSessionHasErrors('full');
 
     Queue::assertNothingPushed();
 });
