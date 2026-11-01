@@ -4,7 +4,7 @@ Authenticated, verified tag manager at `/tags` (route `tags.index`, Inertia `tag
 
 ## Sub-features
 
-- Sidebar **X** nests **All**, **Untagged**, and one item per tag (alphabetical). Links: `/bookmarks`, `/bookmarks?tag=untagged`, `/bookmarks?tag={id}`.
+- Sidebar **X** nests **All**, **Review**, **Untagged**, and one item per tag (alphabetical). Links: `/bookmarks`, `/bookmark-reviews`, `/bookmarks?tag=untagged`, `/bookmarks?tag={id}`.
 - Bookmark cards show tag badges and a **Tags** combobox (`aria-label="Tags"`) in the action cluster: Tag, Open on X, Remove. Quoted-post inner cards have no tag control.
 - Creating a tag happens by typing in that combobox (`POST bookmarks.tags.store` with `name`). Toggling an existing tag attaches or detaches it. Attach/detach is scoped to the owning user.
 - `/tags` lists tags. Rename is an inertia-modal (`tags.edit` → `PUT tags.update`). Delete is an inertia-modal (`tags.show` → `DELETE tags.destroy`) and removes only the tag; bookmarks stay. Pivot rows go away when a bookmark is removed (Remove or sync) via FK cascade.
@@ -12,7 +12,7 @@ Authenticated, verified tag manager at `/tags` (route `tags.index`, Inertia `tag
 
 ## How to get to it (user POV)
 
-Log in as a verified user. Open **X** in the sidebar (All / Untagged / a tag) or **Manage tags** from `/bookmarks`.
+Log in as a verified user. Open **X** in the sidebar (All / Review / Untagged / a tag) or **Manage tags** from `/bookmarks`.
 
 ## Driving it with Pest Browser / Feature tests
 
