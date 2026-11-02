@@ -47,4 +47,9 @@ return [
         'redirect' => env('X_REDIRECT_URI', '/x-connection/callback'),
     ],
 
+    'kibbles_api' => [
+        'token' => env('KIBBLES_API_TOKEN'),
+        'user_id' => env('KIBBLES_API_USER_ID'),
+    ],
+
 ];
