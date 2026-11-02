@@ -13,15 +13,19 @@ final readonly class RandomBookmarkController
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = config('services.kibbles_api.user_id');
-        $user = User::query()->findOrFail(is_string($userId) ? $userId : '');
-        $tag = $user->tags()->named($request->string('tag', 'read')->value())->first();
+        $owners = User::query()->limit(2)->get();
+        $owner = $owners->count() === 1 ? $owners->first() : null;
+
+        abort_unless($owner instanceof User, 500, 'owner_not_found');
+
+        $tagName = $request->filled('tag') ? $request->string('tag')->value() : 'read';
+        $tag = $owner->tags()->named($tagName)->first();
 
         if (! $tag instanceof Tag) {
             return response()->json(['error' => 'tag_not_found'], 404);
         }
 
-        $bookmark = $user->xBookmarks()
+        $bookmark = $owner->xBookmarks()
             ->tagged($tag)
             ->with('tags')
             ->inRandomOrder()

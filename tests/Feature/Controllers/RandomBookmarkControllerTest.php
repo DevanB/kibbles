@@ -37,43 +37,50 @@ it('returns 401 when the token config is empty', function (mixed $token): void {
     'null' => null,
 ]);
 
+it('returns 500 when the owner cannot be resolved', function (int $users): void {
+    User::factory()->count($users)->create();
+
+    $this->withToken(KIBBLES_API_TOKEN)
+        ->getJson(route('bookmarks.random'))
+        ->assertInternalServerError()
+        ->assertJson(['message' => 'owner_not_found']);
+})->with([
+    'no users' => 0,
+    'two users' => 2,
+]);
+
 it('returns a bookmark tagged read', function (): void {
     $user = User::factory()->create();
     $tag = Tag::factory()->recycle($user)->create(['name' => 'read']);
-    $bookmark = XBookmark::factory()->recycle($user)->create();
+    $bookmark = XBookmark::factory()->recycle($user)->create([
+        'x_post_id' => '1234567890',
+        'author_name' => 'Ada Lovelace',
+        'author_username' => 'ada',
+        'text' => 'Notes on the engine.',
+    ]);
     $bookmark->tags()->attach($tag);
-    $bookmark->load('tags');
-
-    config(['services.kibbles_api.user_id' => $user->id]);
 
     $this->withToken(KIBBLES_API_TOKEN)
         ->getJson(route('bookmarks.random'))
         ->assertOk()
-        ->assertExactJson(['data' => $bookmark->toWire()]);
+        ->assertJson([
+            'data' => [
+                'id' => $bookmark->id,
+                'url' => 'https://x.com/ada/status/1234567890',
+                'text' => 'Notes on the engine.',
+                'authorName' => 'Ada Lovelace',
+                'authorUsername' => 'ada',
+                'tags' => [
+                    ['id' => $tag->id, 'name' => 'read'],
+                ],
+            ],
+        ]);
 });
 
 it('does not return untagged bookmarks', function (): void {
     $user = User::factory()->create();
     Tag::factory()->recycle($user)->create(['name' => 'read']);
     XBookmark::factory()->recycle($user)->create();
-
-    config(['services.kibbles_api.user_id' => $user->id]);
-
-    $this->withToken(KIBBLES_API_TOKEN)
-        ->getJson(route('bookmarks.random'))
-        ->assertOk()
-        ->assertExactJson(['data' => null]);
-});
-
-it('does not return another users read-tagged bookmarks', function (): void {
-    $owner = User::factory()->create();
-    $other = User::factory()->create();
-    Tag::factory()->recycle($owner)->create(['name' => 'read']);
-    $foreignTag = Tag::factory()->recycle($other)->create(['name' => 'read']);
-    $foreignBookmark = XBookmark::factory()->recycle($other)->create();
-    $foreignBookmark->tags()->attach($foreignTag);
-
-    config(['services.kibbles_api.user_id' => $owner->id]);
 
     $this->withToken(KIBBLES_API_TOKEN)
         ->getJson(route('bookmarks.random'))
@@ -84,22 +91,33 @@ it('does not return another users read-tagged bookmarks', function (): void {
 it('matches the tag name case-insensitively', function (): void {
     $user = User::factory()->create();
     $tag = Tag::factory()->recycle($user)->create(['name' => 'Read']);
-    $bookmark = XBookmark::factory()->recycle($user)->create();
+    $bookmark = XBookmark::factory()->recycle($user)->create([
+        'x_post_id' => '9876543210',
+        'author_name' => 'Grace Hopper',
+        'author_username' => 'grace',
+        'text' => 'A compiler note.',
+    ]);
     $bookmark->tags()->attach($tag);
-    $bookmark->load('tags');
-
-    config(['services.kibbles_api.user_id' => $user->id]);
 
     $this->withToken(KIBBLES_API_TOKEN)
         ->getJson(route('bookmarks.random', ['tag' => 'READ']))
         ->assertOk()
-        ->assertExactJson(['data' => $bookmark->toWire()]);
+        ->assertJson([
+            'data' => [
+                'id' => $bookmark->id,
+                'url' => 'https://x.com/grace/status/9876543210',
+                'text' => 'A compiler note.',
+                'authorName' => 'Grace Hopper',
+                'authorUsername' => 'grace',
+                'tags' => [
+                    ['id' => $tag->id, 'name' => 'Read'],
+                ],
+            ],
+        ]);
 });
 
 it('returns 404 when the tag is unknown', function (): void {
-    $user = User::factory()->create();
-
-    config(['services.kibbles_api.user_id' => $user->id]);
+    User::factory()->create();
 
     $this->withToken(KIBBLES_API_TOKEN)
         ->getJson(route('bookmarks.random', ['tag' => 'missing']))
