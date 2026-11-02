@@ -44,6 +44,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 | Games | `/games` | [games.md](./games.md) |
 | Play sessions | `/games/{game}` | [play-sessions.md](./play-sessions.md) |
 | X (bookmarks) | `/bookmarks` + `/bookmark-reviews` | [bookmarks.md](./bookmarks.md) |
+| Random bookmark API | `/api/bookmarks/random` | [random-bookmark-api.md](./random-bookmark-api.md) |
 | Tags (X bookmarks) | `/tags` | [tags.md](./tags.md) |
 | Profile settings | `/settings/profile` | [profile-settings.md](./profile-settings.md) |
 | Password settings | `/settings/password` | [password-settings.md](./password-settings.md) |
@@ -61,6 +62,7 @@ There is **no** welcome / marketing page. `welcome.md` and `tests/Browser/Welcom
 - **Games:** user-owned catalog (`GameController`, unique title per user). **Show is the hub** — create/update redirect to `games.show`; edit is title + status. Drive with `GameControllerTest` + `JournalEntryControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `GameCatalogTest` + `JournalEntriesTest` and `bin/prove-games`. Sidebar nav, not `AppHeader`.
 - **Play sessions:** one open session per user on the show hub. Drive with `PlaySessionControllerTest` + `PlaySessionsTest`. Production DB is SQLite (generated `open_user_id` unique column, not a MySQL `is_open` column).
 - **X (bookmarks):** sidebar label **X**, page title **Bookmarks**. Connect/disconnect/sync + Masonic masonry + cursor infinite scroll (20) + **Review** queue at `/bookmark-reviews`. Drive with `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `BookmarkReviewControllerTest` + `BookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `BookmarksTest` + `BookmarkReviewsTest` + `BookmarkTagsTest` and `bin/prove-bookmarks`. Completing a real x.com grant needs `X_CLIENT_ID` / `X_CLIENT_SECRET`.
+- **Random bookmark API:** token-authed `GET /api/bookmarks/random?tag=read` (`AuthenticateKibblesApi`, `throttle:60,1`). Bearer must match `config('services.kibbles_api.token')`. Set `KIBBLES_API_TOKEN` locally with `openssl rand -hex 32`. Never commit or print the value. Drive with `RandomBookmarkControllerTest` and `bin/prove-bookmarks`. Live curl needs the token in the serve process env, exactly one user, and a `read` tag. Session auth does not apply.
 - **Tags:** user-owned, kibbles-only (`/tags` + `/bookmarks?tag=`). Sidebar **X** nests All / Review / Untagged / tags. Drive with `BookmarkTagsTest` + `TagControllerTest` + `BookmarkTagControllerTest` and `bin/prove-bookmarks`.
 - **Profile delete:** `UserController@destroy` (`user.destroy`); Browser lands on `/login` after the home redirect.
 - **Appearance GET:** `tests/Feature/Controllers/AppearanceTest.php` (guest → login, verified → Inertia `appearance/update`, unverified → `verification.notice`).
