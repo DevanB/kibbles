@@ -4,14 +4,15 @@ Authenticated notice at `/verify-email` (route `verification.notice`, Inertia `u
 
 ## Sub-features
 
-- Notice page + resend POST `verification.send` (throttled)
-- Signed link verifies, then `redirect()->intended()` with fallback `dashboard?verified=1`. After a dashboard bounce the intended URL is `/dashboard` with no query string.
+- Notice page + resend POST `verification.send` (throttled `6,1`). Success copy on the notice is **A new verification link has been sent to the email address you provided during registration.**
+- Profile also resends while unverified (`Click here to resend the verification email.`). That POST stays on `/settings/profile` with **A new verification link has been sent to your email address.**
+- Signed GET `verification.verify` is also throttled `6,1`. It marks the email verified, then `redirect()->intended()` with fallback `dashboard?verified=1`. After a dashboard bounce the intended URL is `/dashboard` with no query string.
 - Already-verified users hitting the notice go to dashboard
 - Unverified users hitting `/dashboard`, `/games`, `/bookmarks`, or verified settings go to this notice. `/settings/profile` stays reachable.
 
 ## How to get to it (user POV)
 
-Register (when Pennant is on) or sign in with `email_verified_at` null, then open `/dashboard`.
+Register (when Pennant is on) or sign in with `email_verified_at` null, then open `/dashboard`. Changing email on `/settings/profile` also clears verification and sends a new link. The next verified route then lands here.
 
 ## Driving it with Pest Browser / Feature tests
 

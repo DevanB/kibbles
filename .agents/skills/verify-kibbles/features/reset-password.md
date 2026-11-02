@@ -10,7 +10,7 @@ Guest set-new-password page at `/reset-password/{token}` (route `password.reset`
 
 ## How to get to it (user POV)
 
-Open the signed reset link from the forgot-password email (tests mint a token with `Password::createToken($user)`).
+Open the reset link from the forgot-password email (token plus `email` query, not a signed URL). Tests mint a token with `Password::createToken($user)`.
 
 ## Driving it with Pest Browser / Feature tests
 
