@@ -49,7 +49,6 @@ return [
 
     'kibbles_api' => [
         'token' => env('KIBBLES_API_TOKEN'),
-        'user_id' => env('KIBBLES_API_USER_ID'),
     ],
 
 ];
