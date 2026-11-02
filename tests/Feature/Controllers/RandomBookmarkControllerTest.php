@@ -37,17 +37,22 @@ it('returns 401 when the token config is empty', function (mixed $token): void {
     'null' => null,
 ]);
 
-it('returns 500 when the owner cannot be resolved', function (int $users): void {
-    User::factory()->count($users)->create();
+it('returns 500 when no user exists', function (): void {
+    $this->withToken(KIBBLES_API_TOKEN)
+        ->getJson(route('bookmarks.random'))
+        ->assertInternalServerError()
+        ->assertExactJson(['error' => 'owner_unresolved']);
+});
+
+it('returns 500 when more than one user exists', function (): void {
+    User::factory()->create();
+    User::factory()->create();
 
     $this->withToken(KIBBLES_API_TOKEN)
         ->getJson(route('bookmarks.random'))
         ->assertInternalServerError()
-        ->assertJson(['message' => 'owner_not_found']);
-})->with([
-    'no users' => 0,
-    'two users' => 2,
-]);
+        ->assertExactJson(['error' => 'owner_unresolved']);
+});
 
 it('returns a bookmark tagged read', function (): void {
     $user = User::factory()->create();
