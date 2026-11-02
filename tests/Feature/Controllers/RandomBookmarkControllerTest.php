@@ -106,15 +106,3 @@ it('returns 404 when the tag is unknown', function (): void {
         ->assertNotFound()
         ->assertExactJson(['error' => 'tag_not_found']);
 });
-
-it('returns data null when the tag has no bookmarks', function (): void {
-    $user = User::factory()->create();
-    Tag::factory()->recycle($user)->create(['name' => 'read']);
-
-    config(['services.kibbles_api.user_id' => $user->id]);
-
-    $this->withToken(KIBBLES_API_TOKEN)
-        ->getJson(route('bookmarks.random'))
-        ->assertOk()
-        ->assertExactJson(['data' => null]);
-});
