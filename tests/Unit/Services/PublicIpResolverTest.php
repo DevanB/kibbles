@@ -54,9 +54,12 @@ it('accepts a public decimal IPv4 address', function (): void {
 it('resolves a public hostname to public addresses', function (): void {
     $ips = resolve(PublicIpResolver::class)->resolve('one.one.one.one');
 
-    expect($ips)->not->toBeEmpty()
-        ->and($ips)->each->toBeString()
-        ->and(collect($ips)->every(fn (string $ip): bool => PublicIpResolver::isPublic($ip)))->toBeTrue();
+    expect($ips)->not->toBeEmpty();
+
+    foreach ($ips as $ip) {
+        expect(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE))
+            ->not->toBeFalse();
+    }
 });
 
 it('refuses a hostname that does not resolve', function (): void {
