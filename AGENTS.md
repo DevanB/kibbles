@@ -11,7 +11,9 @@ Before claiming done on user-facing UI, auth, routing, Inertia pages, or feature
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
 ```
 
-If Pest Browser errors about missing or outdated browsers: `bunx playwright install`. CI (`.github/workflows/tests.yml`) runs `composer test` on PRs and fails on red; that is the merge gate, not a substitute for a local verify run. Always-applied Cursor rule: `.cursor/rules/verify-kibbles.mdc`.
+If Pest Browser errors about missing or outdated browsers: `bunx playwright install`. CI (`.github/workflows/tests.yml`) runs `composer test` on PRs into `master` and fails on red; that is the merge gate, not a substitute for a local verify run. Always-applied Cursor rule: `.cursor/rules/verify-kibbles.mdc`.
+
+Never remove or widen `on.pull_request.branches` in `.github/workflows/tests.yml` (it must stay `[master]`) so stacked PRs get CI. Stacked children get this workflow when they retarget `master`. Devan restored that filter in `b1b7e76`.
 
 ## Cursor Cloud environment
 
