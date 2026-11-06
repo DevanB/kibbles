@@ -35,7 +35,7 @@ Preconditions:
 - Live curl also needs exactly one `User`, a tag named `read` (any casing), and at least one bookmark on that tag when you want a non-null `data` object.
 
 - **HTTP contract (Feature) →** `php artisan test --compact tests/Feature/Controllers/RandomBookmarkControllerTest.php` → 401 without/wrong/empty token, 500 when the owner is unresolved, 200 with a `read`-tagged bookmark, 200 `data: null` when the tag exists but no bookmark is tagged, case-insensitive `tag=READ`, 404 unknown tag
-- **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-bookmarks` (includes that Feature file)
+- **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-x-bookmarks` (includes that Feature file)
 - **Live instance (after doctor) →** curl the long-lived base URL. Replace `$BASE` with `http://localhost:8000` or the isolated `http://localhost:$PORT`. Do not print `$KIBBLES_API_TOKEN`.
 
 ```bash

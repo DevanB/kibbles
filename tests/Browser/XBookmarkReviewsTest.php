@@ -27,7 +27,7 @@ it('keeps, removes, and tags through the review queue until it is empty', functi
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmark-reviews.index'));
+    $page = visit(route('x-bookmark-reviews.index'));
 
     $page->assertSee('Review')
         ->assertSee('3 left · 3 bookmarks')

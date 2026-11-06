@@ -12,16 +12,16 @@ use Illuminate\Support\Str;
 it('redirects guests to login', function (string $method, string $route, array $parameters = []): void {
     $this->{$method}(route($route, $parameters))->assertRedirectToRoute('login');
 })->with([
-    'index' => ['get', 'bookmarks.index'],
-    'show' => ['get', 'bookmarks.show', ['bookmark' => '00000000-0000-0000-0000-000000000001']],
-    'destroy' => ['delete', 'bookmarks.destroy', ['bookmark' => '00000000-0000-0000-0000-000000000001']],
+    'index' => ['get', 'x-bookmarks.index'],
+    'show' => ['get', 'x-bookmarks.show', ['bookmark' => '00000000-0000-0000-0000-000000000001']],
+    'destroy' => ['delete', 'x-bookmarks.destroy', ['bookmark' => '00000000-0000-0000-0000-000000000001']],
 ]);
 
 it('redirects unverified users to the verification notice', function (): void {
     $user = User::factory()->unverified()->withoutTwoFactor()->create();
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index'))
+        ->get(route('x-bookmarks.index'))
         ->assertRedirectToRoute('verification.notice');
 });
 
@@ -29,7 +29,7 @@ it('returns 404 for a missing bookmark', function (): void {
     $user = User::factory()->withoutTwoFactor()->create();
 
     $this->actingAs($user)
-        ->get(route('bookmarks.show', Str::uuid()->toString()))
+        ->get(route('x-bookmarks.show', Str::uuid()->toString()))
         ->assertNotFound();
 });
 
@@ -40,10 +40,10 @@ it('lists only the authenticated user bookmarks and connection', function (): vo
     XBookmark::factory()->create(['text' => 'Someone else']);
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index'))
+        ->get(route('x-bookmarks.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('bookmarks/index')
+            ->component('x-bookmarks/index')
             ->has('bookmarks.data', 1)
             ->has('bookmarks.data.0', fn ($bookmark) => $bookmark
                 ->where('id', $owned->id)
@@ -63,7 +63,7 @@ it('lists bookmarks newest first', function (): void {
     $newer = XBookmark::factory()->recycle($user)->create(['first_seen_at' => now()]);
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index'))
+        ->get(route('x-bookmarks.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('bookmarks.data.0.id', $newer->id)
@@ -84,7 +84,7 @@ it('returns a cursor page of bookmarks and the following page in newest-first or
         ->create();
 
     $first = $this->actingAs($user)
-        ->get(route('bookmarks.index'))
+        ->get(route('x-bookmarks.index'))
         ->assertOk();
 
     $nextCursor = null;
@@ -103,7 +103,7 @@ it('returns a cursor page of bookmarks and the following page in newest-first or
     });
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['cursor' => $nextCursor]))
+        ->get(route('x-bookmarks.index', ['cursor' => $nextCursor]))
         ->assertOk()
         ->assertInertia(function ($page) use ($bookmarks, $firstPageSize): void {
             $props = $page->toArray()['props']['bookmarks'];
@@ -123,7 +123,7 @@ it('includes attached tags on the bookmark payload', function (): void {
     $bookmark->tags()->attach($tag);
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index'))
+        ->get(route('x-bookmarks.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('bookmarks.data.0.tags.0.id', $tag->id)
@@ -131,7 +131,7 @@ it('includes attached tags on the bookmark payload', function (): void {
 
     $this->actingAs($user)
         ->withHeaders(['X-InertiaUI-Modal' => 'true'])
-        ->get(route('bookmarks.show', $bookmark))
+        ->get(route('x-bookmarks.show', $bookmark))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('bookmark.tags.0.id', $tag->id)
@@ -149,7 +149,7 @@ it('filters bookmarks to one tag at a time', function (): void {
     $taggedPest->tags()->attach($pest);
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => $laravel->id]))
+        ->get(route('x-bookmarks.index', ['tag' => $laravel->id]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('bookmarks.data', 1)
@@ -158,7 +158,7 @@ it('filters bookmarks to one tag at a time', function (): void {
             ->where('activeTag.name', 'Laravel'));
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => 'untagged']))
+        ->get(route('x-bookmarks.index', ['tag' => 'untagged']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('bookmarks.data', 1)
@@ -188,7 +188,7 @@ it('returns a cursor page of tagged bookmarks and the following page', function 
     }
 
     $first = $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => $tag->id]))
+        ->get(route('x-bookmarks.index', ['tag' => $tag->id]))
         ->assertOk();
 
     $nextCursor = null;
@@ -206,7 +206,7 @@ it('returns a cursor page of tagged bookmarks and the following page', function 
     });
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => $tag->id, 'cursor' => $nextCursor]))
+        ->get(route('x-bookmarks.index', ['tag' => $tag->id, 'cursor' => $nextCursor]))
         ->assertOk()
         ->assertInertia(function ($page) use ($tagged, $firstPageSize): void {
             $props = $page->toArray()['props']['bookmarks'];
@@ -222,7 +222,7 @@ it('returns 404 when filtering by another user tag', function (): void {
     $foreign = Tag::factory()->create(['name' => 'Secret']);
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => $foreign->id]))
+        ->get(route('x-bookmarks.index', ['tag' => $foreign->id]))
         ->assertNotFound();
 });
 
@@ -231,7 +231,7 @@ it('lists every bookmark when the tag query is empty', function (): void {
     $bookmark = XBookmark::factory()->recycle($user)->create();
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => '']))
+        ->get(route('x-bookmarks.index', ['tag' => '']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('bookmarks.data', 1)
@@ -244,7 +244,7 @@ it('ignores a non-string tag query and lists every bookmark', function (): void 
     $bookmark = XBookmark::factory()->recycle($user)->create();
 
     $this->actingAs($user)
-        ->get(route('bookmarks.index', ['tag' => ['laravel']]))
+        ->get(route('x-bookmarks.index', ['tag' => ['laravel']]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('bookmarks.data', 1)
@@ -258,11 +258,11 @@ it('forbids another user from viewing or removing a bookmark', function (): void
     $bookmark = XBookmark::factory()->recycle($owner)->create();
 
     $this->actingAs($intruder)
-        ->get(route('bookmarks.show', $bookmark))
+        ->get(route('x-bookmarks.show', $bookmark))
         ->assertForbidden();
 
     $this->actingAs($intruder)
-        ->delete(route('bookmarks.destroy', $bookmark))
+        ->delete(route('x-bookmarks.destroy', $bookmark))
         ->assertForbidden();
 
     expect($bookmark->fresh())->not->toBeNull();
@@ -280,9 +280,9 @@ it('keeps the local bookmark when X refuses the delete', function (): void {
     ]);
 
     $this->actingAs($user)
-        ->fromRoute('bookmarks.index')
-        ->delete(route('bookmarks.destroy', $bookmark))
-        ->assertRedirectToRoute('bookmarks.index')
+        ->fromRoute('x-bookmarks.index')
+        ->delete(route('x-bookmarks.destroy', $bookmark))
+        ->assertRedirectToRoute('x-bookmarks.index')
         ->assertSessionHasErrors('bookmark');
 
     expect($bookmark->fresh())->not->toBeNull();
@@ -295,8 +295,8 @@ it('removes a local bookmark when X is not connected', function (): void {
     $bookmark->tags()->attach($tag);
 
     $this->actingAs($user)
-        ->delete(route('bookmarks.destroy', $bookmark))
-        ->assertRedirectToRoute('bookmarks.index');
+        ->delete(route('x-bookmarks.destroy', $bookmark))
+        ->assertRedirectToRoute('x-bookmarks.index');
 
     expect($bookmark->fresh())->toBeNull()
         ->and($tag->fresh())->not->toBeNull()

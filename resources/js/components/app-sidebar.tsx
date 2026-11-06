@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { dashboard } from '@/routes';
-import { index as bookmarkReviews } from '@/routes/bookmark-reviews';
-import { index as bookmarks } from '@/routes/bookmarks';
+import { index as bookmarkReviews } from '@/routes/x-bookmark-reviews';
+import { index as bookmarks } from '@/routes/x-bookmarks';
 import { index as games } from '@/routes/games';
 import { index as tagsIndex } from '@/routes/tags';
 import type { NavItem, Tag } from '@/types';

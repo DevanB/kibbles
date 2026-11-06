@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import {
     destroy,
     store,
-} from '@/actions/App/Http/Controllers/BookmarkTagController';
+} from '@/actions/App/Http/Controllers/XBookmarkTagController';
 import { bookmarkIconActionClassName } from '@/components/bookmark-card';
 import {
     Command,

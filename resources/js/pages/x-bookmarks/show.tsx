@@ -1,6 +1,6 @@
 import { Form, Head, router } from '@inertiajs/react';
 import { Modal, useModal } from '@inertiaui/modal-react';
-import { destroy } from '@/actions/App/Http/Controllers/BookmarkController';
+import { destroy } from '@/actions/App/Http/Controllers/XBookmarkController';
 import { BookmarkCard } from '@/components/bookmark-card';
 import { Button } from '@/components/ui/button';
 import type { Bookmark } from '@/types';

@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\BookmarkController;
-use App\Http\Controllers\BookmarkReviewController;
-use App\Http\Controllers\BookmarkSyncController;
-use App\Http\Controllers\BookmarkTagController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
@@ -21,6 +17,10 @@ use App\Http\Controllers\UserPasskeyController;
 use App\Http\Controllers\UserPasswordController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserTwoFactorAuthenticationController;
+use App\Http\Controllers\XBookmarkController;
+use App\Http\Controllers\XBookmarkReviewController;
+use App\Http\Controllers\XBookmarkSyncController;
+use App\Http\Controllers\XBookmarkTagController;
 use App\Http\Controllers\XConnectionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -43,13 +43,22 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->creatable()
         ->only(['create', 'destroy']);
     Route::get('x-connection/callback', [XConnectionController::class, 'store'])->name('x-connection.store');
-    Route::resource('bookmarks', BookmarkController::class)->only(['index', 'show', 'destroy']);
-    Route::resource('bookmarks.tags', BookmarkTagController::class)
+    Route::resource('x', XBookmarkController::class)
+        ->parameters(['x' => 'bookmark'])
+        ->names('x-bookmarks')
+        ->only(['index', 'show', 'destroy']);
+    Route::resource('x.tags', XBookmarkTagController::class)
+        ->parameters(['x' => 'bookmark'])
+        ->names('x-bookmarks.tags')
         ->only(['store', 'destroy'])
         ->scoped();
-    Route::resource('bookmark-reviews', BookmarkReviewController::class)->only(['index', 'store']);
+    Route::resource('x-reviews', XBookmarkReviewController::class)
+        ->only(['index', 'store'])
+        ->names('x-bookmark-reviews');
     Route::resource('tags', TagController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
-    Route::resource('bookmark-syncs', BookmarkSyncController::class)->only(['store']);
+    Route::resource('x-syncs', XBookmarkSyncController::class)
+        ->only(['store'])
+        ->names('x-bookmark-syncs');
 });
 
 Route::middleware('auth')->group(function (): void {

@@ -26,10 +26,10 @@ it('queues the authenticated user unreviewed bookmarks oldest first', function (
     ]);
 
     $this->actingAs($user)
-        ->get(route('bookmark-reviews.index'))
+        ->get(route('x-bookmark-reviews.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('bookmark-reviews/index')
+            ->component('x-bookmark-reviews/index')
             ->where('bookmark.id', $older->id)
             ->where('bookmark.text', 'Oldest unreviewed')
             ->where('remaining', 2)
@@ -42,7 +42,7 @@ it('rejects storing a review for another user bookmark', function (): void {
     $bookmark = XBookmark::factory()->recycle($owner)->create();
 
     $this->actingAs($intruder)
-        ->post(route('bookmark-reviews.store'), ['bookmark_id' => $bookmark->id])
+        ->post(route('x-bookmark-reviews.store'), ['bookmark_id' => $bookmark->id])
         ->assertForbidden();
 
     expect($bookmark->fresh()?->reviewed_at)->toBeNull();

@@ -4,13 +4,13 @@ import { edit, show } from '@/actions/App/Http/Controllers/TagController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { index as bookmarks } from '@/routes/bookmarks';
+import { index as bookmarks } from '@/routes/x-bookmarks';
 import { index } from '@/routes/tags';
 import type { BreadcrumbItem, Tag } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Bookmarks',
+        title: 'X',
         href: bookmarks(),
     },
     {

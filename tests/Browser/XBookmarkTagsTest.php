@@ -30,10 +30,9 @@ it('tags a bookmark, creates a tag inline, and filters from the sidebar', functi
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('x-bookmarks.index'));
 
-    $page->assertSee('Bookmarks')
-        ->assertSee('Taylor Otwell')
+    $page->assertSee('Taylor Otwell')
         ->assertSee('Laravel')
         ->assertPresent('@sidebar-x-all')
         ->assertPresent('@sidebar-x-untagged')
@@ -62,8 +61,7 @@ it('tags a bookmark, creates a tag inline, and filters from the sidebar', functi
         ->and($untagged->tags()->whereKey($pest)->exists())->toBeTrue();
 
     $page->click('@sidebar-x-tag-'.$laravel->id)
-        ->assertPathIs('/bookmarks')
-        ->assertSee('Bookmarks')
+        ->assertPathIs('/x')
         ->assertSee('Laravel')
         ->assertPresent('@active-tag-name')
         ->assertPresent('@bookmark-'.$tagged->id)
@@ -90,7 +88,7 @@ it('renames and deletes a tag without deleting bookmarks', function (): void {
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('x-bookmarks.index'));
 
     $page->click('@manage-tags-button')
         ->assertPathIs('/tags')

@@ -11,7 +11,7 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
-final readonly class BookmarkSyncController
+final readonly class XBookmarkSyncController
 {
     public function store(
         StoreBookmarkSyncRequest $request,

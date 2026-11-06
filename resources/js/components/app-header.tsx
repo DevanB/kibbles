@@ -28,7 +28,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { dashboard } from '@/routes';
-import { index as bookmarks } from '@/routes/bookmarks';
+import { index as bookmarks } from '@/routes/x-bookmarks';
 import { index as games } from '@/routes/games';
 import type { BreadcrumbItem, NavItem } from '@/types';
 

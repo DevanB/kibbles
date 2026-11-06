@@ -19,7 +19,7 @@ use Inertia\Response;
 use Inertia\ScrollMetadata;
 use InertiaUI\Modal\Modal;
 
-final readonly class BookmarkController
+final readonly class XBookmarkController
 {
     public function index(Request $request, #[CurrentUser] User $user): Response
     {
@@ -46,7 +46,7 @@ final readonly class BookmarkController
         /** @var CursorPaginator<int, XBookmark> $paginator */
         $paginator = $query->cursorPaginate(20);
 
-        return Inertia::render('bookmarks/index', [
+        return Inertia::render('x-bookmarks/index', [
             'bookmarks' => Inertia::scroll(
                 [
                     ...$paginator->toArray(),
@@ -71,9 +71,9 @@ final readonly class BookmarkController
 
         $bookmark->load('tags');
 
-        return Inertia::modal('bookmarks/show', [
+        return Inertia::modal('x-bookmarks/show', [
             'bookmark' => $bookmark->toWire(),
-        ])->baseRoute('bookmarks.index');
+        ])->baseRoute('x-bookmarks.index');
     }
 
     public function destroy(
@@ -87,7 +87,7 @@ final readonly class BookmarkController
                 'message' => __('Could not remove the bookmark from X.'),
             ]);
 
-            return back(fallback: route('bookmarks.index'))->withErrors([
+            return back(fallback: route('x-bookmarks.index'))->withErrors([
                 'bookmark' => __('Could not remove the bookmark from X.'),
             ]);
         }
@@ -97,6 +97,6 @@ final readonly class BookmarkController
             'message' => __('Bookmark removed.'),
         ]);
 
-        return back(fallback: route('bookmarks.index'));
+        return back(fallback: route('x-bookmarks.index'));
     }
 }

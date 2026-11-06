@@ -8,7 +8,7 @@ use App\Models\XConnection;
 use Illuminate\Support\Facades\Queue;
 
 it('redirects guests to login', function (): void {
-    $this->post(route('bookmark-syncs.store'))
+    $this->post(route('x-bookmark-syncs.store'))
         ->assertRedirectToRoute('login');
 });
 
@@ -16,7 +16,7 @@ it('redirects unverified users to the verification notice', function (): void {
     $user = User::factory()->unverified()->withoutTwoFactor()->create();
 
     $this->actingAs($user)
-        ->post(route('bookmark-syncs.store'))
+        ->post(route('x-bookmark-syncs.store'))
         ->assertRedirectToRoute('verification.notice');
 });
 
@@ -25,7 +25,7 @@ it('forbids syncing without an X connection', function (): void {
 
     $this->actingAs($user)
         ->fromRoute('dashboard')
-        ->post(route('bookmark-syncs.store'))
+        ->post(route('x-bookmark-syncs.store'))
         ->assertForbidden();
 });
 
@@ -37,7 +37,7 @@ it('dispatches an incremental bookmark sync', function (array $payload): void {
 
     $this->actingAs($user)
         ->fromRoute('dashboard')
-        ->post(route('bookmark-syncs.store'), $payload)
+        ->post(route('x-bookmark-syncs.store'), $payload)
         ->assertRedirectToRoute('dashboard')
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('Bookmark sync started.')]);
 
@@ -55,7 +55,7 @@ it('rejects a non-boolean full flag', function (): void {
 
     $this->actingAs($user)
         ->fromRoute('dashboard')
-        ->post(route('bookmark-syncs.store'), ['full' => 'weekly'])
+        ->post(route('x-bookmark-syncs.store'), ['full' => 'weekly'])
         ->assertRedirectToRoute('dashboard')
         ->assertSessionHasErrors('full');
 

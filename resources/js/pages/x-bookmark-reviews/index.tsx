@@ -1,14 +1,14 @@
 import { Head, router, setLayoutProps, useForm } from '@inertiajs/react';
 import { Bookmark as BookmarkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { destroy } from '@/actions/App/Http/Controllers/BookmarkController';
-import { store } from '@/actions/App/Http/Controllers/BookmarkReviewController';
+import { destroy } from '@/actions/App/Http/Controllers/XBookmarkController';
+import { store } from '@/actions/App/Http/Controllers/XBookmarkReviewController';
 import { BookmarkCard } from '@/components/bookmark-card';
 import { BookmarkTagPicker } from '@/components/bookmark-tag-picker';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/bookmark-reviews';
+import { index } from '@/routes/x-bookmark-reviews';
 import type { Bookmark, BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
