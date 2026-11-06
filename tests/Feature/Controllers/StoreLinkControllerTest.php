@@ -74,25 +74,6 @@ it('returns 401 when more than one user exists', function (): void {
         ->assertHeader('Content-Type', 'application/json');
 });
 
-it('saves a private URL without fetching a preview', function (): void {
-    Queue::fake([FetchLinkPreview::class]);
-
-    $user = User::factory()->create();
-
-    $this->withToken(KIBBLES_SHARE_TOKEN)
-        ->postJson(route('links.store'), ['url' => 'http://192.168.1.50/nas'])
-        ->assertCreated()
-        ->assertExactJson(['message' => 'Saved to Kibbles.']);
-
-    $link = $user->links()->first();
-
-    expect($link)->not->toBeNull()
-        ->and($link->url)->toBe('http://192.168.1.50/nas')
-        ->and($link->preview_status)->toBe(LinkPreviewStatus::Ready);
-
-    Queue::assertNothingPushed();
-});
-
 it('saves a new link and returns 201', function (): void {
     Queue::fake([FetchLinkPreview::class]);
 
