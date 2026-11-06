@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
  * @property-read User $user
+ * @property-read Collection<int, Link> $links
  * @property-read Collection<int, XBookmark> $xBookmarks
  *
  * @method static TagBuilder query()
@@ -58,6 +59,14 @@ final class Tag extends Model
     public function xBookmarks(): BelongsToMany
     {
         return $this->belongsToMany(XBookmark::class);
+    }
+
+    /**
+     * @return BelongsToMany<Link, $this>
+     */
+    public function links(): BelongsToMany
+    {
+        return $this->belongsToMany(Link::class);
     }
 
     /**

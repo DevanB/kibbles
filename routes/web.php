@@ -5,6 +5,9 @@ declare(strict_types=1);
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\JournalEntryController;
+use App\Http\Controllers\LinkController;
+use App\Http\Controllers\LinkPreviewController;
+use App\Http\Controllers\LinkTagController;
 use App\Http\Controllers\PlaySessionController;
 use App\Http\Controllers\RawgGameSearchController;
 use App\Http\Controllers\SessionController;
@@ -43,6 +46,17 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         ->creatable()
         ->only(['create', 'destroy']);
     Route::get('x-connection/callback', [XConnectionController::class, 'store'])->name('x-connection.store');
+    Route::resource('bookmarks', LinkController::class)
+        ->parameters(['bookmarks' => 'link'])
+        ->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::resource('bookmarks.tags', LinkTagController::class)
+        ->parameters(['bookmarks' => 'link'])
+        ->only(['store', 'destroy'])
+        ->scoped();
+    Route::resource('bookmarks.previews', LinkPreviewController::class)
+        ->parameters(['bookmarks' => 'link'])
+        ->only(['store'])
+        ->scoped();
     Route::resource('x', XBookmarkController::class)
         ->parameters(['x' => 'bookmark'])
         ->names('x-bookmarks')

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Bookmark, Gamepad2, LayoutGrid } from 'lucide-react';
+import { Bookmark, Gamepad2, LayoutGrid, Link2 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,13 +14,17 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { dashboard } from '@/routes';
+import { index as savedLinks } from '@/routes/bookmarks';
 import { index as games } from '@/routes/games';
-import { index as tagsIndex } from '@/routes/tags';
 import { index as bookmarkReviews } from '@/routes/x-bookmark-reviews';
 import { index as bookmarks } from '@/routes/x-bookmarks';
 import type { NavItem, Tag } from '@/types';
 
-function bookmarkNavItems(tags: Tag[], xIsActive: boolean): NavItem[] {
+function bookmarkNavItems(
+    tags: Tag[],
+    xIsActive: boolean,
+    bookmarksActive: boolean,
+): NavItem[] {
     return [
         {
             title: 'Dashboard',
@@ -31,6 +35,30 @@ function bookmarkNavItems(tags: Tag[], xIsActive: boolean): NavItem[] {
             title: 'Games',
             href: games(),
             icon: Gamepad2,
+        },
+        {
+            title: 'Bookmarks',
+            href: savedLinks(),
+            icon: Link2,
+            testId: 'sidebar-bookmarks',
+            isActive: bookmarksActive,
+            items: [
+                {
+                    title: 'All',
+                    href: savedLinks(),
+                    testId: 'sidebar-bookmarks-all',
+                },
+                {
+                    title: 'Untagged',
+                    href: savedLinks({ query: { tag: 'untagged' } }),
+                    testId: 'sidebar-bookmarks-untagged',
+                },
+                ...tags.map((tag) => ({
+                    title: tag.name,
+                    href: savedLinks({ query: { tag: tag.id } }),
+                    testId: `sidebar-bookmarks-tag-${tag.id}`,
+                })),
+            ],
         },
         {
             title: 'X',
@@ -87,8 +115,8 @@ export function AppSidebar() {
                     items={bookmarkNavItems(
                         tags,
                         isCurrentOrParentUrl(bookmarks()) ||
-                            isCurrentUrl(bookmarkReviews()) ||
-                            isCurrentUrl(tagsIndex()),
+                            isCurrentUrl(bookmarkReviews()),
+                        isCurrentOrParentUrl(savedLinks()),
                     )}
                 />
             </SidebarContent>
