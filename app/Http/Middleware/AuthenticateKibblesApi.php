@@ -13,9 +13,11 @@ final readonly class AuthenticateKibblesApi
     /**
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $audience = 'read'): Response
     {
-        $expected = config('services.kibbles_api.token');
+        $expected = $audience === 'share'
+            ? config('services.kibbles_api.share_token')
+            : config('services.kibbles_api.token');
         $provided = $request->bearerToken();
 
         abort_if(

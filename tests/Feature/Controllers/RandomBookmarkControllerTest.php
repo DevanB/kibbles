@@ -25,6 +25,15 @@ it('returns 401 when the token is wrong', function (): void {
         ->assertHeader('Content-Type', 'application/json');
 });
 
+it('returns 401 when the share token is used', function (): void {
+    config(['services.kibbles_api.share_token' => 'test-kibbles-share-token']);
+
+    $this->withToken('test-kibbles-share-token')
+        ->getJson(route('bookmarks.random'))
+        ->assertUnauthorized()
+        ->assertHeader('Content-Type', 'application/json');
+});
+
 it('returns 401 when the token config is empty', function (mixed $token): void {
     config(['services.kibbles_api.token' => $token]);
 

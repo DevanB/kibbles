@@ -6,7 +6,7 @@ The handler resolves the sole `User` in the database, finds that owner's tag (qu
 
 ## Sub-features
 
-- Missing, empty, or wrong Bearer token → `401` JSON
+- Missing, empty, wrong, or **share** (`KIBBLES_SHARE_TOKEN`) Bearer token → `401` JSON
 - Empty `KIBBLES_API_TOKEN` / `services.kibbles_api.token` → `401` even if the caller sends a token
 - Default `tag=read` when the query string omits `tag`
 - Tag match is case-insensitive (`tags.name_normalized`)

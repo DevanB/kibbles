@@ -49,6 +49,7 @@ return [
 
     'kibbles_api' => [
         'token' => env('KIBBLES_API_TOKEN'),
+        'share_token' => env('KIBBLES_SHARE_TOKEN'),
     ],
 
 ];
