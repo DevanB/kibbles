@@ -1,11 +1,11 @@
 ---
 name: verify-kibbles
-description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving home/login/register/dashboard/games/bookmarks/settings, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + guest / 302 + /login 200 + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
+description: "REQUIRED before claiming UI, auth, or feature work done. Verify kibbles locally via composer dev (php artisan serve + queue + pail + Vite) at http://localhost:8000, using Pest Browser + Feature tests. Use when checking the app still boots, driving home/login/register/dashboard/games/bookmarks/x/settings, or collecting proof artifacts after UI or auth changes. Covers doctor (curl /up + guest / 302 + /login 200 + Vite), drive (php artisan test Browser/Feature), evidence under artifacts/verify-kibbles/, and PID-safe cleanup. Herd is optional, not the default."
 ---
 
 # Verify kibbles
 
-Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys + Pennant registration + user-owned Games + X bookmarks. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
+Project-local verification for **kibbles**: Laravel 13 + Inertia React + Fortify/passkeys + Pennant registration + user-owned Games + saved-link Bookmarks + X bookmarks. Preferred local stack is **`composer dev`** at `http://localhost:8000` (`php artisan serve` + queue + pail + Vite). Front-end via vite-plus (`vp`) / bun. Prefer existing **Pest Browser** and **Feature** tests over a new Playwright CLI harness.
 
 ## Required before claiming done
 
@@ -21,6 +21,7 @@ How to invoke:
 .agents/skills/verify-kibbles/bin/prove-home
 .agents/skills/verify-kibbles/bin/prove-dashboard
 .agents/skills/verify-kibbles/bin/prove-games
+.agents/skills/verify-kibbles/bin/prove-bookmarks
 .agents/skills/verify-kibbles/bin/prove-x-bookmarks
 # or the mapped Pest files this skill names, e.g.:
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
@@ -219,14 +220,31 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `game-status` / `game-status-{id}` | games show badge / index tile badge |
 | `game-tabs` | games show Play Sessions / Journal tabs wrapper |
 | `edit-{id}-body` | journal edit modal textarea |
-| `connect-x-button` | `/bookmarks` Connect X (disconnected) |
-| `sync-bookmarks-button` | `/bookmarks` Sync now |
-| `sync-bookmarks-actions-button` | `/bookmarks` Sync button-group ellipsis (Full sync lives in the menu) |
-| `full-sync-bookmarks-button` | `/bookmarks` Full sync |
-| `disconnect-x-button` | `/bookmarks` Disconnect X |
-| `bookmarks-empty` | `/bookmarks` empty state |
-| `bookmark-masonry` | `/bookmarks` Masonic grid wrapper |
-| `bookmarks-load-more` | `/bookmarks` InfiniteScroll loading copy (**Loading more…**) |
+| `add-link-button` | `/bookmarks` Add link |
+| `link-url-input` / `save-link-button` | `/bookmarks` add-link modal |
+| `links-empty` | `/bookmarks` empty state |
+| `links-load-more` | `/bookmarks` InfiniteScroll loading copy (**Loading more…**) |
+| `link-{id}` | saved-link card |
+| `link-pending-{id}` | saved-link **Fetching preview…** |
+| `link-image-{id}` | saved-link hotlinked og:image |
+| `open-link-{id}` | saved-link Open (`aria-label="Open link"`) |
+| `remove-link-button-{id}` | saved-link Remove (`aria-label="Remove"`) |
+| `retry-link-preview-{id}` | saved-link **Retry** (failed preview) |
+| `link-modal-{id}` | saved-link remove modal |
+| `confirm-remove-link-button-{id}` / `cancel-remove-link-button-{id}` | saved-link remove confirm |
+| `tag-link-button-{id}` | saved-link card tag control (`aria-label="Tags"`) |
+| `link-tag-combobox-{id}` / `link-tag-combobox-input-{id}` | saved-link tag popover / filter input |
+| `link-tag-option-{id}` / `create-link-tag-option-{id}` | toggle existing tag / create typed tag |
+| `link-tag-{id}-{tagId}` | saved-link card tag badge |
+| `sidebar-bookmarks` / `sidebar-bookmarks-all` / `sidebar-bookmarks-untagged` / `sidebar-bookmarks-tag-{id}` | Bookmarks nav + nested All / Untagged / tag |
+| `connect-x-button` | `/x` Connect X (disconnected) |
+| `sync-bookmarks-button` | `/x` Sync now |
+| `sync-bookmarks-actions-button` | `/x` Sync button-group ellipsis (Full sync lives in the menu) |
+| `full-sync-bookmarks-button` | `/x` Full sync |
+| `disconnect-x-button` | `/x` Disconnect X |
+| `bookmarks-empty` | `/x` empty state |
+| `bookmark-masonry` | `/x` Masonic grid wrapper |
+| `bookmarks-load-more` | `/x` InfiniteScroll loading copy (**Loading more…**) |
 | `bookmark-{id}` | bookmarks card |
 | `bookmark-text-{id}` / `bookmark-saved-{id}` | bookmarks card body / saved date |
 | `bookmark-media-{id}` / `bookmark-video-{id}` / `bookmark-gif-{id}` | bookmarks card media |
@@ -241,8 +259,8 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `tag-option-{id}` / `create-tag-option-{id}` | toggle existing tag / create typed tag |
 | `bookmark-tags-{id}` / `bookmark-tag-{id}-{tagId}` | card tag badges |
 | `sidebar-x` / `sidebar-x-all` / `sidebar-x-review` / `sidebar-x-untagged` / `sidebar-x-tag-{id}` | X nav + nested All / Review / Untagged / tag |
-| `keep-bookmark-button` / `remove-review-button` | `/bookmark-reviews` Keep / Remove |
-| `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-empty` | review page / remaining count / All caught up |
+| `keep-bookmark-button` / `remove-review-button` | `/x-reviews` Keep / Remove |
+| `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-empty` | `/x-reviews` review page / remaining count / All caught up |
 | `active-tag-name` | bookmarks heading badge for the active filter |
 | `manage-tags-button` | bookmarks header → `/tags` |
 | `tags-empty` / `tag-row-{id}` | tags index empty / row |
@@ -264,6 +282,10 @@ php artisan test --compact tests/Feature/Controllers/GameControllerTest.php
 php artisan test --compact tests/Feature/Controllers/JournalEntryControllerTest.php
 php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.php
 php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTest.php
+php artisan test --compact tests/Feature/Controllers/LinkControllerTest.php
+php artisan test --compact tests/Feature/Controllers/LinkTagControllerTest.php
+php artisan test --compact tests/Feature/Controllers/LinkPreviewControllerTest.php
+php artisan test --compact tests/Browser/LinksTest.php
 php artisan test --compact tests/Feature/Controllers/RandomBookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XBookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XBookmarkSyncControllerTest.php
@@ -290,7 +312,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
 curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, x-bookmarks, random-bookmark-api, tags, profile-settings, password-settings, passkeys, appearance).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, x-bookmarks, random-bookmark-api, tags, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -332,6 +354,7 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
+| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `LinkControllerTest` + `LinkTagControllerTest` + `LinkPreviewControllerTest` + `FetchLinkPreviewTest` + `SaveLinkTest` + `LinkUrlTest` + `PublicIpResolverTest` + `LinkPreviewClientTest` + `LinksTest` (empty/add/pending/retry/remove + tagging/filter + SSRF). Doctor is logged only. |
 | Prove X bookmarks | `.agents/skills/verify-kibbles/bin/prove-x-bookmarks` — `RandomBookmarkControllerTest` + `XBookmarkControllerTest` + `XBookmarkSyncControllerTest` + `XBookmarkReviewControllerTest` + `XBookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `XBookmarksTest` + `XBookmarkReviewsTest` + `XBookmarkTagsTest` (token API random bookmark + empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename + review queue). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.
