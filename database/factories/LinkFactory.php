@@ -27,7 +27,7 @@ final class LinkFactory extends Factory
             'title' => fake()->sentence(6),
             'site_name' => fake()->company(),
             'description' => fake()->sentence(),
-            'image_url' => 'https://'.$host.'/og.png',
+            'image_url' => null,
             'preview_status' => LinkPreviewStatus::Ready,
         ];
     }
