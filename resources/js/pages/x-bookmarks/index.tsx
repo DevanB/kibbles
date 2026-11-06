@@ -32,8 +32,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/x-bookmarks';
 import { index as tagsIndex } from '@/routes/tags';
+import { index } from '@/routes/x-bookmarks';
 import type { BookmarkPage, BreadcrumbItem, Tag, XConnection } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
