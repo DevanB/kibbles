@@ -62,23 +62,9 @@ final readonly class XClient
         'variants',
     ];
 
-    public function bookmarks(XConnection $connection, ?string $paginationToken = null): XBookmarksPage
-    {
-        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $this->bookmarkQuery($paginationToken, true));
-        $includes = $this->objectFromJson($response->json('includes'));
-
-        return new XBookmarksPage(
-            bookmarks: array_map(
-                fn (mixed $tweet): FetchedXBookmark => $this->bookmarkFromTweet($tweet, $includes),
-                $this->listFromJson($response->json('data')),
-            ),
-            nextToken: $this->stringOrNull($response->json('meta.next_token')),
-        );
-    }
-
     public function bookmarkIds(XConnection $connection, ?string $paginationToken = null): XBookmarkIdsPage
     {
-        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $this->bookmarkQuery($paginationToken, false));
+        $response = $this->send($connection, 'get', '/users/'.$connection->x_user_id.'/bookmarks', $this->bookmarkQuery($paginationToken));
         $ids = [];
 
         foreach ($this->listFromJson($response->json('data')) as $tweet) {
@@ -168,15 +154,11 @@ final readonly class XClient
     /**
      * @return array<string, int|string>
      */
-    private function bookmarkQuery(?string $paginationToken, bool $expanded): array
+    private function bookmarkQuery(?string $paginationToken): array
     {
         $query = [
             'max_results' => 100,
         ];
-
-        if ($expanded) {
-            $query = [...$query, ...$this->expansionQuery()];
-        }
 
         if ($paginationToken !== null) {
             $query['pagination_token'] = $paginationToken;

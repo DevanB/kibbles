@@ -21,7 +21,8 @@ it('upserts bookmarks from X and records first_seen_at', function (): void {
     $connection = XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([xTweet('100')])),
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [xTweet('100', ['attachments' => ['media_keys' => ['3_1']]])],
             [
                 'users' => [xAuthor('author-100')],
@@ -41,6 +42,14 @@ it('upserts bookmarks from X and records first_seen_at', function (): void {
         ->and($bookmark->media[0]->url)->toBe('https://pbs.twimg.com/media/demo.jpg')
         ->and($connection->refresh()->last_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString())
         ->and($connection->last_full_synced_at)->toBeNull();
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/users/42/bookmarks')
+        && ! array_key_exists('expansions', $request->data())
+        && ! array_key_exists('tweet.fields', $request->data())
+        && ! array_key_exists('user.fields', $request->data())
+        && ! array_key_exists('media.fields', $request->data()));
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/tweets')
+        && ($request->data()['ids'] ?? null) === '100');
 });
 
 it('keeps tag associations when an incremental sync sees an existing bookmark', function (): void {
@@ -56,10 +65,10 @@ it('keeps tag associations when an incremental sync sees an existing bookmark', 
     $existing->tags()->attach($tag);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
-            [xTweet('100', ['text' => 'Updated text']), xTweet('101')],
-            ['users' => [xAuthor('author-100'), xAuthor('author-101')]],
-        )),
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([
+            xTweet('100', ['text' => 'Updated text']),
+            xTweet('101'),
+        ])),
     ]);
 
     resolve(SyncXBookmarks::class)->handle($user);
@@ -83,7 +92,6 @@ it('does not rewrite an existing bookmark during an incremental sync that stops 
     Http::fake([
         'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
             [xTweet('100', ['text' => 'Updated text'])],
-            ['users' => [xAuthor('author-100')]],
         )),
     ]);
 
@@ -91,6 +99,8 @@ it('does not rewrite an existing bookmark during an incremental sync that stops 
 
     expect($existing->refresh()->text)->toBe('Old text')
         ->and($existing->first_seen_at->toDateTimeString())->toBe(now()->subDay()->toDateTimeString());
+
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/tweets'));
 });
 
 it('stops an incremental sync at the first already-known post', function (): void {
@@ -101,7 +111,21 @@ it('stops an incremental sync at the first already-known post', function (): voi
     XBookmark::factory()->recycle($user)->create(['x_post_id' => 'known']);
 
     Http::fake(function (Request $request) {
-        expect($request->data()['pagination_token'] ?? null)->toBeNull();
+        if (str_contains($request->url(), '/tweets')) {
+            expect($request->data()['ids'] ?? null)->toBe('new')
+                ->and($request->data())->toHaveKey('expansions');
+
+            return Http::response(xBookmarksPayload(
+                [xTweet('new')],
+                ['users' => [xAuthor('author-new')]],
+            ));
+        }
+
+        expect($request->data()['pagination_token'] ?? null)->toBeNull()
+            ->and($request->data())->not->toHaveKey('expansions')
+            ->and($request->data())->not->toHaveKey('tweet.fields')
+            ->and($request->data())->not->toHaveKey('user.fields')
+            ->and($request->data())->not->toHaveKey('media.fields');
 
         return Http::response(xBookmarksPayload(
             [
@@ -109,8 +133,7 @@ it('stops an incremental sync at the first already-known post', function (): voi
                 xTweet('known'),
                 xTweet('older-should-not-sync'),
             ],
-            ['users' => [xAuthor('author-new'), xAuthor('author-known'), xAuthor('author-older-should-not-sync')]],
-            'page-2',
+            nextToken: 'page-2',
         ));
     });
 
@@ -119,7 +142,43 @@ it('stops an incremental sync at the first already-known post', function (): voi
     expect($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['new', 'known'])
         ->and($user->xBookmarks()->where('x_post_id', 'older-should-not-sync')->exists())->toBeFalse();
 
-    Http::assertSentCount(1);
+    Http::assertSentCount(2);
+});
+
+it('pages an incremental id list until a known post and hydrates only the new ids', function (): void {
+    configureX();
+
+    $user = User::factory()->create();
+    XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
+    XBookmark::factory()->recycle($user)->create(['x_post_id' => 'known']);
+
+    Http::fake(function (Request $request) {
+        if (str_contains($request->url(), '/tweets')) {
+            expect($request->data()['ids'] ?? null)->toBe('fresh,newer');
+
+            return Http::response(xBookmarksPayload(
+                [xTweet('fresh'), xTweet('newer')],
+                ['users' => [xAuthor('author-fresh'), xAuthor('author-newer')]],
+            ));
+        }
+
+        expect($request->data())->not->toHaveKey('expansions');
+
+        if (($request->data()['pagination_token'] ?? null) === 'page-2') {
+            return Http::response(xBookmarksPayload([xTweet('newer'), xTweet('known')]));
+        }
+
+        return Http::response(xBookmarksPayload([xTweet('fresh')], nextToken: 'page-2'));
+    });
+
+    resolve(SyncXBookmarks::class)->handle($user);
+
+    expect($user->xBookmarks()->pluck('x_post_id')->all())->toEqualCanonicalizing(['fresh', 'newer', 'known']);
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/users/42/bookmarks')
+        && ($request->data()['pagination_token'] ?? null) === 'page-2');
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/tweets')
+        && ($request->data()['ids'] ?? null) === 'fresh,newer');
 });
 
 it('keeps tag associations on bookmarks a full sync still sees and drops pivot rows for removed posts', function (): void {
@@ -157,24 +216,25 @@ it('pages a full sync without expansions and deletes local bookmarks X no longer
 
     Http::fake(function (Request $request) {
         if (str_contains($request->url(), '/tweets')) {
+            expect($request->data()['ids'] ?? null)->toBe('fresh')
+                ->and($request->data())->toHaveKey('expansions');
+
             return Http::response(xBookmarksPayload(
                 [xTweet('fresh')],
                 ['users' => [xAuthor('author-fresh')]],
             ));
         }
 
-        if (! array_key_exists('expansions', $request->data())) {
-            if (($request->data()['pagination_token'] ?? null) === 'page-2') {
-                return Http::response(xBookmarksPayload([xTweet('keep')]));
-            }
+        expect($request->data())->not->toHaveKey('expansions')
+            ->and($request->data())->not->toHaveKey('tweet.fields')
+            ->and($request->data())->not->toHaveKey('user.fields')
+            ->and($request->data())->not->toHaveKey('media.fields');
 
-            return Http::response(xBookmarksPayload([xTweet('fresh')], nextToken: 'page-2'));
+        if (($request->data()['pagination_token'] ?? null) === 'page-2') {
+            return Http::response(xBookmarksPayload([xTweet('keep')]));
         }
 
-        return Http::response(xBookmarksPayload(
-            [xTweet('fresh'), xTweet('keep')],
-            ['users' => [xAuthor('author-fresh'), xAuthor('author-keep')]],
-        ));
+        return Http::response(xBookmarksPayload([xTweet('fresh')], nextToken: 'page-2'));
     });
 
     resolve(SyncXBookmarks::class)->handle($user, true);
@@ -217,14 +277,9 @@ it('looks up a new bookmark that incremental sync cannot reach after a full id w
             ));
         }
 
-        if (! array_key_exists('expansions', $request->data())) {
-            return Http::response(xBookmarksPayload([xTweet('known'), xTweet('hole')]));
-        }
+        expect($request->data())->not->toHaveKey('expansions');
 
-        return Http::response(xBookmarksPayload(
-            [xTweet('known'), xTweet('hole')],
-            ['users' => [xAuthor('author-known'), xAuthor('author-hole')]],
-        ));
+        return Http::response(xBookmarksPayload([xTweet('known'), xTweet('hole')]));
     });
 
     resolve(SyncXBookmarks::class)->handle($user, true);
@@ -289,7 +344,8 @@ it('refreshes and persists a rotated token before calling X', function (): void 
             'refresh_token' => 'rotated-refresh',
             'expires_in' => 7200,
         ]),
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([xTweet('100')])),
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [xTweet('100')],
             ['users' => [xAuthor('author-100')]],
         )),
@@ -325,7 +381,11 @@ it('retries a bookmarks request after an unauthorized response rotates the token
         ]),
         'https://api.x.com/2/users/42/bookmarks*' => Http::sequence()
             ->push(['title' => 'unauthorized'], 401)
-            ->push(xBookmarksPayload([xTweet('100')], ['users' => [xAuthor('author-100')]])),
+            ->push(xBookmarksPayload([xTweet('100')])),
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
+            [xTweet('100')],
+            ['users' => [xAuthor('author-100')]],
+        )),
     ]);
 
     resolve(SyncXBookmarks::class)->handle($user);
@@ -340,16 +400,15 @@ it('skips bookmarks that have no X post id', function (): void {
     XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
-            [xTweet('')],
-            ['users' => [xAuthor('author-')]],
-        )),
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([xTweet('')])),
     ]);
 
     resolve(SyncXBookmarks::class)->handle($user);
 
     expect($user->xBookmarks()->count())->toBe(0)
         ->and($user->xConnection?->last_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString());
+
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/tweets'));
 });
 
 it('skips work when the user has no X connection', function (): void {
@@ -373,7 +432,8 @@ it('runs the queued job for an existing user', function (): void {
     XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload([xTweet('100')])),
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [xTweet('100')],
             ['users' => [xAuthor('author-100')]],
         )),

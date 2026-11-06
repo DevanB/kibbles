@@ -35,25 +35,24 @@ final readonly class SyncXBookmarks
     private function pullNew(User $user, XConnection $connection): void
     {
         $known = XBookmark::query()->whereBelongsTo($user)->xPostIds();
+        $unknown = [];
         $paginationToken = null;
 
         do {
-            $page = $this->x->bookmarks($connection, $paginationToken);
+            $page = $this->x->bookmarkIds($connection, $paginationToken);
 
-            foreach ($page->bookmarks as $bookmark) {
-                if ($bookmark->xPostId === '') {
-                    continue;
+            foreach ($page->ids as $id) {
+                if ($known->contains($id)) {
+                    break 2;
                 }
 
-                if ($known->contains($bookmark->xPostId)) {
-                    return;
-                }
-
-                $this->upsert($user, $bookmark);
+                $unknown[] = $id;
             }
 
             $paginationToken = $page->nextToken;
         } while ($paginationToken !== null);
+
+        $this->hydrate($user, $connection, $unknown);
     }
 
     private function reconcile(User $user, XConnection $connection): void
@@ -86,9 +85,7 @@ final readonly class SyncXBookmarks
             fn (string $id): bool => $known->doesntContain($id),
         ));
 
-        if ($unknown !== []) {
-            $this->hydrate($user, $connection, $unknown);
-        }
+        $this->hydrate($user, $connection, $unknown);
     }
 
     /**
@@ -96,15 +93,7 @@ final readonly class SyncXBookmarks
      */
     private function hydrate(User $user, XConnection $connection, array $unknown): void
     {
-        $this->pullNew($user, $connection);
-
-        $stored = XBookmark::query()->whereBelongsTo($user)->xPostIds();
-        $missing = array_values(array_filter(
-            $unknown,
-            fn (string $id): bool => $stored->doesntContain($id),
-        ));
-
-        foreach (array_chunk($missing, 100) as $chunk) {
+        foreach (array_chunk($unknown, 100) as $chunk) {
             foreach ($this->x->tweets($connection, $chunk) as $bookmark) {
                 if ($bookmark->xPostId === '') {
                     continue;

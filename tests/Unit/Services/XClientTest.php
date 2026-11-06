@@ -15,7 +15,7 @@ it('parses photos, videos, gifs, and quoted posts from X', function (): void {
     $connection = XConnection::factory()->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [
                 xTweet('1', [
                     'attachments' => ['media_keys' => ['3_1', '13_1', '16_1', 'missing']],
@@ -54,26 +54,25 @@ it('parses photos, videos, gifs, and quoted posts from X', function (): void {
                     xPhotoMedia('3_2'),
                 ],
             ],
-            'next-page',
         )),
     ]);
 
-    $page = resolve(XClient::class)->bookmarks($connection, 'cursor-1');
+    $tweets = resolve(XClient::class)->tweets($connection, ['1']);
 
-    expect($page->nextToken)->toBe('next-page')
-        ->and($page->bookmarks)->toHaveCount(2)
-        ->and($page->bookmarks[0]->authorUsername)->toBe('alice')
-        ->and($page->bookmarks[0]->media)->toHaveCount(3)
-        ->and($page->bookmarks[0]->media[0]->type)->toBe(XMediaType::Photo)
-        ->and($page->bookmarks[0]->media[1]->type)->toBe(XMediaType::Video)
-        ->and($page->bookmarks[0]->media[1]->mp4Url)->toBe('https://video.twimg.com/high.mp4')
-        ->and($page->bookmarks[0]->media[2]->type)->toBe(XMediaType::Gif)
-        ->and($page->bookmarks[0]->media[2]->mp4Url)->toBe('https://video.twimg.com/gif.mp4')
-        ->and($page->bookmarks[0]->quotedPost?->url)->toBe('https://x.com/quoted/status/9')
-        ->and($page->bookmarks[0]->quotedPost?->text)->toBe('Quoted text')
-        ->and($page->bookmarks[1]->xPostId)->toBeEmpty();
+    expect($tweets)->toHaveCount(2)
+        ->and($tweets[0]->authorUsername)->toBe('alice')
+        ->and($tweets[0]->media)->toHaveCount(3)
+        ->and($tweets[0]->media[0]->type)->toBe(XMediaType::Photo)
+        ->and($tweets[0]->media[1]->type)->toBe(XMediaType::Video)
+        ->and($tweets[0]->media[1]->mp4Url)->toBe('https://video.twimg.com/high.mp4')
+        ->and($tweets[0]->media[2]->type)->toBe(XMediaType::Gif)
+        ->and($tweets[0]->media[2]->mp4Url)->toBe('https://video.twimg.com/gif.mp4')
+        ->and($tweets[0]->quotedPost?->url)->toBe('https://x.com/quoted/status/9')
+        ->and($tweets[0]->quotedPost?->text)->toBe('Quoted text')
+        ->and($tweets[1]->xPostId)->toBeEmpty();
 
-    Http::assertSent(fn (Request $request): bool => ($request->data()['pagination_token'] ?? null) === 'cursor-1'
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/tweets')
+        && ($request->data()['ids'] ?? null) === '1'
         && array_key_exists('expansions', $request->data()));
 });
 
@@ -143,7 +142,7 @@ it('uses now when X omits created_at and skips a quoted post that was not includ
     $connection = XConnection::factory()->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [
                 xTweet('1', [
                     'created_at' => null,
@@ -154,11 +153,11 @@ it('uses now when X omits created_at and skips a quoted post that was not includ
         )),
     ]);
 
-    $page = resolve(XClient::class)->bookmarks($connection);
+    $tweets = resolve(XClient::class)->tweets($connection, ['1']);
 
-    expect($page->bookmarks[0]->postedAt->toDateTimeString())->toBe(now()->toDateTimeString())
-        ->and($page->bookmarks[0]->authorUsername)->toBeEmpty()
-        ->and($page->bookmarks[0]->quotedPost)->toBeNull();
+    expect($tweets[0]->postedAt->toDateTimeString())->toBe(now()->toDateTimeString())
+        ->and($tweets[0]->authorUsername)->toBeEmpty()
+        ->and($tweets[0]->quotedPost)->toBeNull();
 });
 
 it('fails to refresh when OAuth credentials are missing', function (): void {
@@ -211,7 +210,7 @@ it('fails to refresh when the token endpoint cannot be reached', function (): vo
         ->toThrow(XClientException::class, 'Unable to refresh the X access token.');
 });
 
-it('fails when the bookmarks endpoint cannot be reached', function (): void {
+it('fails when the bookmark ids endpoint cannot be reached', function (): void {
     configureX();
 
     $connection = XConnection::factory()->create(['x_user_id' => '42']);
@@ -220,7 +219,7 @@ it('fails when the bookmarks endpoint cannot be reached', function (): void {
         'https://api.x.com/2/users/42/bookmarks*' => Http::failedConnection(),
     ]);
 
-    expect(fn () => resolve(XClient::class)->bookmarks($connection))
+    expect(fn () => resolve(XClient::class)->bookmarkIds($connection))
         ->toThrow(XClientException::class, 'Unable to reach the X API.');
 });
 
@@ -249,7 +248,7 @@ it('falls back to preview or mp4 urls and ignores unusable media variants', func
     $connection = XConnection::factory()->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [
                 xTweet('1', [
                     'attachments' => ['media_keys' => ['13_1', '', 7, 'missing']],
@@ -277,14 +276,14 @@ it('falls back to preview or mp4 urls and ignores unusable media variants', func
         )),
     ]);
 
-    $page = resolve(XClient::class)->bookmarks($connection);
+    $tweets = resolve(XClient::class)->tweets($connection, ['1']);
 
-    expect($page->bookmarks[0]->media)->toHaveCount(1)
-        ->and($page->bookmarks[0]->media[0]->type)->toBe(XMediaType::Video)
-        ->and($page->bookmarks[0]->media[0]->url)->toBe('https://pbs.twimg.com/ext_tw_video_thumb/fallback.jpg')
-        ->and($page->bookmarks[0]->media[0]->mp4Url)->toBe('https://video.twimg.com/plain.mp4')
-        ->and($page->bookmarks[0]->media[0]->width)->toBeNull()
-        ->and($page->bookmarks[0]->media[0]->height)->toBeNull();
+    expect($tweets[0]->media)->toHaveCount(1)
+        ->and($tweets[0]->media[0]->type)->toBe(XMediaType::Video)
+        ->and($tweets[0]->media[0]->url)->toBe('https://pbs.twimg.com/ext_tw_video_thumb/fallback.jpg')
+        ->and($tweets[0]->media[0]->mp4Url)->toBe('https://video.twimg.com/plain.mp4')
+        ->and($tweets[0]->media[0]->width)->toBeNull()
+        ->and($tweets[0]->media[0]->height)->toBeNull();
 });
 
 it('keeps posts with no media keys and uses an empty url when X omits every media url', function (): void {
@@ -293,7 +292,7 @@ it('keeps posts with no media keys and uses an empty url when X omits every medi
     $connection = XConnection::factory()->create(['x_user_id' => '42']);
 
     Http::fake([
-        'https://api.x.com/2/users/42/bookmarks*' => Http::response(xBookmarksPayload(
+        'https://api.x.com/2/tweets*' => Http::response(xBookmarksPayload(
             [
                 xTweet('1'),
                 xTweet('2', [
@@ -312,11 +311,11 @@ it('keeps posts with no media keys and uses an empty url when X omits every medi
         )),
     ]);
 
-    $page = resolve(XClient::class)->bookmarks($connection);
+    $tweets = resolve(XClient::class)->tweets($connection, ['1', '2']);
 
-    expect($page->bookmarks[0]->media)->toBeEmpty()
-        ->and($page->bookmarks[1]->media[0]->url)->toBeEmpty()
-        ->and($page->bookmarks[1]->media[0]->mp4Url)->toBeNull();
+    expect($tweets[0]->media)->toBeEmpty()
+        ->and($tweets[1]->media[0]->url)->toBeEmpty()
+        ->and($tweets[1]->media[0]->mp4Url)->toBeNull();
 });
 
 it('treats a non-object X payload as an empty page', function (): void {
@@ -329,12 +328,18 @@ it('treats a non-object X payload as an empty page', function (): void {
             'data' => 'nope',
             'includes' => 'nope',
         ]),
+        'https://api.x.com/2/tweets*' => Http::response([
+            'data' => 'nope',
+            'includes' => 'nope',
+        ]),
     ]);
 
-    $page = resolve(XClient::class)->bookmarks($connection);
+    $page = resolve(XClient::class)->bookmarkIds($connection);
+    $tweets = resolve(XClient::class)->tweets($connection, ['1']);
 
-    expect($page->bookmarks)->toBeEmpty()
-        ->and($page->nextToken)->toBeNull();
+    expect($page->ids)->toBeEmpty()
+        ->and($page->nextToken)->toBeNull()
+        ->and($tweets)->toBeEmpty();
 });
 
 it('fails when the unauthorized retry cannot reach X', function (): void {
@@ -353,6 +358,6 @@ it('fails when the unauthorized retry cannot reach X', function (): void {
             ->pushFailedConnection(),
     ]);
 
-    expect(fn () => resolve(XClient::class)->bookmarks($connection))
+    expect(fn () => resolve(XClient::class)->bookmarkIds($connection))
         ->toThrow(XClientException::class, 'Unable to reach the X API.');
 });
