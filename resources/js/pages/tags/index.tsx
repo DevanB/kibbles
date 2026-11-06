@@ -4,8 +4,8 @@ import { edit, show } from '@/actions/App/Http/Controllers/TagController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { index as bookmarks } from '@/routes/x-bookmarks';
 import { index } from '@/routes/tags';
+import { index as bookmarks } from '@/routes/x-bookmarks';
 import type { BreadcrumbItem, Tag } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
