@@ -140,13 +140,12 @@ final readonly class LinkPreviewClient
 
     private function parse(string $html, string $finalUrl): LinkPreview
     {
-        $document = new DOMDocument;
-
-        try {
-            @$document->loadHTML($html);
-        } catch (Throwable) {
+        if ($html === '') {
             return new LinkPreview(title: null, siteName: null, description: null, imageUrl: null);
         }
+
+        $document = new DOMDocument;
+        @$document->loadHTML($html);
 
         $og = [];
 
