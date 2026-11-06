@@ -22,6 +22,7 @@ How to invoke:
 .agents/skills/verify-kibbles/bin/prove-dashboard
 .agents/skills/verify-kibbles/bin/prove-games
 .agents/skills/verify-kibbles/bin/prove-bookmarks
+.agents/skills/verify-kibbles/bin/prove-share-api
 .agents/skills/verify-kibbles/bin/prove-x-bookmarks
 # or the mapped Pest files this skill names, e.g.:
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
@@ -286,6 +287,7 @@ php artisan test --compact tests/Feature/Controllers/LinkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/LinkTagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/LinkPreviewControllerTest.php
 php artisan test --compact tests/Browser/LinksTest.php
+php artisan test --compact tests/Feature/Controllers/StoreLinkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/RandomBookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XBookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XBookmarkSyncControllerTest.php
@@ -312,7 +314,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
 curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, x-bookmarks, random-bookmark-api, tags, profile-settings, password-settings, passkeys, appearance).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, x-bookmarks, random-bookmark-api, share-api, tags, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -355,6 +357,7 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
 | Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `LinkControllerTest` + `LinkTagControllerTest` + `LinkPreviewControllerTest` + `FetchLinkPreviewTest` + `SaveLinkTest` + `LinkUrlTest` + `PublicIpResolverTest` + `LinkPreviewClientTest` + `LinksTest` (empty/add/pending/retry/remove + tagging/filter + SSRF). Doctor is logged only. |
+| Prove share API | `.agents/skills/verify-kibbles/bin/prove-share-api` — `StoreLinkControllerTest` (share token 201/200/422/401). Doctor is logged only. |
 | Prove X bookmarks | `.agents/skills/verify-kibbles/bin/prove-x-bookmarks` — `RandomBookmarkControllerTest` + `XBookmarkControllerTest` + `XBookmarkSyncControllerTest` + `XBookmarkReviewControllerTest` + `XBookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `XBookmarksTest` + `XBookmarkReviewsTest` + `XBookmarkTagsTest` (token API random bookmark + empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename + review queue). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.

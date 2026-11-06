@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\VersionController;
+use App\Http\Middleware\AuthenticateKibblesApi;
+use App\Http\Middleware\AuthenticateSoleOwner;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -25,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->alias([
+            'AuthenticateKibblesApi' => AuthenticateKibblesApi::class,
+            'AuthenticateSoleOwner' => AuthenticateSoleOwner::class,
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
