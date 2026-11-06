@@ -28,6 +28,7 @@ export function LinkCard({
                     <img
                         src={link.imageUrl}
                         alt=""
+                        loading="lazy"
                         className="aspect-2/1 w-full object-cover"
                         data-test={`link-image-${link.id}`}
                     />
