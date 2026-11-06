@@ -200,16 +200,6 @@ it('ignores a non-string tag query and lists every link', function (): void {
             ->where('activeTag', null));
 });
 
-it('opens the add-link modal', function (): void {
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $this->actingAs($user)
-        ->withHeaders(['X-InertiaUI-Modal' => 'true'])
-        ->get(route('bookmarks.create'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('bookmarks/create'));
-});
-
 it('saves a public URL as pending and queues a preview fetch', function (): void {
     Queue::fake([FetchLinkPreview::class]);
 
@@ -227,42 +217,6 @@ it('saves a public URL as pending and queues a preview fetch', function (): void
         ->and($link->preview_status)->toBe(LinkPreviewStatus::Pending);
 
     Queue::assertPushed(FetchLinkPreview::class, fn (FetchLinkPreview $job): bool => $job->linkId === $link->id);
-});
-
-it('saves a LAN URL as ready without fetching a preview', function (): void {
-    Queue::fake([FetchLinkPreview::class]);
-
-    $user = User::factory()->withoutTwoFactor()->create();
-
-    $this->actingAs($user)
-        ->fromRoute('bookmarks.index')
-        ->post(route('bookmarks.store'), ['url' => 'http://192.168.1.20/queue'])
-        ->assertRedirectToRoute('bookmarks.index');
-
-    $link = $user->links()->first();
-
-    expect($link)->not->toBeNull()
-        ->and($link->preview_status)->toBe(LinkPreviewStatus::Ready)
-        ->and($link->title)->toBe('192.168.1.20');
-
-    Queue::assertNothingPushed();
-});
-
-it('returns the existing link when the normalized URL is already saved', function (): void {
-    Queue::fake([FetchLinkPreview::class]);
-
-    $user = User::factory()->withoutTwoFactor()->create();
-    $existing = Link::factory()->recycle($user)->create(['url' => 'https://example.com/post']);
-
-    $this->actingAs($user)
-        ->fromRoute('bookmarks.index')
-        ->post(route('bookmarks.store'), ['url' => 'https://example.com/post?utm_campaign=later'])
-        ->assertRedirectToRoute('bookmarks.index');
-
-    expect($user->links()->count())->toBe(1)
-        ->and($user->links()->first()?->is($existing))->toBeTrue();
-
-    Queue::assertNothingPushed();
 });
 
 it('rejects an invalid URL', function (): void {

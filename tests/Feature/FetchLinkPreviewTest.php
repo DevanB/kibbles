@@ -26,7 +26,9 @@ it('stores title, site name, description, and image from a public fetch', functi
     $job = new FetchLinkPreview($link->id);
     $job->handle(resolve(LinkPreviewClient::class));
 
-    expect($job->uniqueId())->toBe($link->id)
+    expect($job->uniqueId())
+        ->toBe(new FetchLinkPreview($link->id)->uniqueId())
+        ->and($job->uniqueId())->not->toBe(new FetchLinkPreview('00000000-0000-0000-0000-000000000099')->uniqueId())
         ->and($link->refresh()->preview_status)->toBe(LinkPreviewStatus::Ready)
         ->and($link->title)->toBe('Fetched')
         ->and($link->site_name)->toBe('News')

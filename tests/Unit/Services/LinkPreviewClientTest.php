@@ -171,7 +171,7 @@ it('refuses a non-success response', function (): void {
 
 it('refuses a body larger than one mebibyte', function (): void {
     Http::fake([
-        'http://1.1.1.1/*' => Http::response(str_repeat('a', LinkPreviewClient::MAX_BYTES + 1), 200),
+        'http://1.1.1.1/*' => Http::response(str_repeat('a', 1_048_577), 200),
     ]);
 
     expect(fn () => resolve(LinkPreviewClient::class)->fetch('http://1.1.1.1/start'))
@@ -206,7 +206,7 @@ it('does not fetch when DNS resolves to a private address', function (): void {
 });
 
 it('aborts a download that exceeds the size cap', function (): void {
-    expect(fn () => LinkPreviewClient::abortIfTooLarge(0, LinkPreviewClient::MAX_BYTES + 1))
+    expect(fn () => LinkPreviewClient::abortIfTooLarge(0, 1_048_577))
         ->toThrow(LinkPreviewFailed::class);
 
     LinkPreviewClient::abortIfTooLarge(0, 'chunk');
