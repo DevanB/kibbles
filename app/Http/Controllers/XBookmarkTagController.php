@@ -12,7 +12,7 @@ use App\Models\Tag;
 use App\Models\XBookmark;
 use Illuminate\Http\RedirectResponse;
 
-final readonly class BookmarkTagController
+final readonly class XBookmarkTagController
 {
     public function store(
         StoreBookmarkTagRequest $request,

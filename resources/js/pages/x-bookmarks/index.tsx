@@ -8,8 +8,8 @@ import {
 } from '@inertiajs/react';
 import { ModalLink } from '@inertiaui/modal-react';
 import { Bookmark as BookmarkIcon, Ellipsis, Plus, Trash2 } from 'lucide-react';
-import { show } from '@/actions/App/Http/Controllers/BookmarkController';
-import { store as storeBookmarkSync } from '@/actions/App/Http/Controllers/BookmarkSyncController';
+import { show } from '@/actions/App/Http/Controllers/XBookmarkController';
+import { store as storeBookmarkSync } from '@/actions/App/Http/Controllers/XBookmarkSyncController';
 import {
     create as createXConnection,
     destroy as destroyXConnection,
@@ -32,13 +32,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
-import { index } from '@/routes/bookmarks';
+import { index } from '@/routes/x-bookmarks';
 import { index as tagsIndex } from '@/routes/tags';
 import type { BookmarkPage, BreadcrumbItem, Tag, XConnection } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Bookmarks',
+        title: 'X',
         href: index(),
     },
 ];
@@ -68,13 +68,13 @@ export default function Index({
 
     return (
         <>
-            <Head title="Bookmarks" />
+            <Head title="X" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-2">
                         <Heading
-                            title="Bookmarks"
+                            title="X"
                             description={headerDescription(xConnection)}
                         />
                         {activeTag ? (

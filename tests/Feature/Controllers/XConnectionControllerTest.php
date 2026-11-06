@@ -240,7 +240,7 @@ it('disconnects X and deletes local bookmarks', function (): void {
 
     $this->actingAs($user)
         ->delete(route('x-connection.destroy'))
-        ->assertRedirect('/bookmarks');
+        ->assertRedirectToRoute('x-bookmarks.index');
 
     expect($user->fresh()->xConnection)->toBeNull()
         ->and($user->xBookmarks()->count())->toBe(0);

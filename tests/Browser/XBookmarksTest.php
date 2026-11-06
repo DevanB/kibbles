@@ -20,8 +20,7 @@ it('renders the empty bookmarks page and the connect action', function (): void 
     $page = visit(route('dashboard'));
 
     $page->click('X')
-        ->assertPathIs('/bookmarks')
-        ->assertSee('Bookmarks')
+        ->assertPathIs('/x')
         ->assertSee('Connect X to see saved posts')
         ->assertSee('Connect X')
         ->assertPresent('@connect-x-button')
@@ -44,7 +43,7 @@ it('opens X authorize in the top-level window from Connect X', function (): void
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('x-bookmarks.index'));
 
     $page->click('@connect-x-button')
         ->assertPathIs('/i/oauth2/authorize')
@@ -128,7 +127,7 @@ it('shows saved posts, media, expands long text, and removes a bookmark', functi
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('x-bookmarks.index'));
 
     $page->assertSee('Saved posts from @devan')
         ->assertSee('Synced')
@@ -209,7 +208,7 @@ it('loads the next page of bookmarks on scroll and removes a card from that page
     $oldest = $bookmarks->last();
     $nextOldest = $bookmarks[$bookmarks->count() - 2];
 
-    $page = visit(route('bookmarks.index'))
+    $page = visit(route('x-bookmarks.index'))
         ->on()
         ->iPhoneSE();
 
@@ -266,7 +265,7 @@ it('removes a local bookmark X no longer returns when full sync is requested fro
 
     $this->actingAs($user);
 
-    $page = visit(route('bookmarks.index'));
+    $page = visit(route('x-bookmarks.index'));
 
     $page->assertPresent('@bookmark-'.$stale->id)
         ->click('@sync-bookmarks-button')

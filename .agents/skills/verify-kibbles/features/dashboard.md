@@ -19,7 +19,7 @@ Adjacent (still true, not the dashboard proof):
 
 - `SessionControllerTest` / `UserControllerTest` success paths `assertRedirectToRoute('dashboard')`
 - `LayoutTest` starts on settings (same app layout), not the dashboard page
-- Sidebar links to **Games** (`games.index`) and **X** (`bookmarks.index`) — see [games.md](./games.md) and [bookmarks.md](./bookmarks.md). `AppLayout` mounts the sidebar shell, not `AppHeader`.
+- Sidebar links to **Games** (`games.index`) and **X** (`x-bookmarks.index`) — see [games.md](./games.md) and [x-bookmarks.md](./x-bookmarks.md). `AppLayout` mounts the sidebar shell, not `AppHeader`.
 
 ## Sub-features
 

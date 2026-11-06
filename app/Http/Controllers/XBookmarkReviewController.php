@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
-final readonly class BookmarkReviewController
+final readonly class XBookmarkReviewController
 {
     public function index(#[CurrentUser] User $user): Response
     {
@@ -26,7 +26,7 @@ final readonly class BookmarkReviewController
             ->with('tags')
             ->first();
 
-        return Inertia::render('bookmark-reviews/index', [
+        return Inertia::render('x-bookmark-reviews/index', [
             'bookmark' => $current?->toWire(),
             'remaining' => $user->xBookmarks()->unreviewed()->count(),
             'total' => $user->xBookmarks()->count(),
@@ -37,6 +37,6 @@ final readonly class BookmarkReviewController
     {
         $action->handle($request->bookmark());
 
-        return to_route('bookmark-reviews.index');
+        return to_route('x-bookmark-reviews.index');
     }
 }

@@ -21,7 +21,7 @@ How to invoke:
 .agents/skills/verify-kibbles/bin/prove-home
 .agents/skills/verify-kibbles/bin/prove-dashboard
 .agents/skills/verify-kibbles/bin/prove-games
-.agents/skills/verify-kibbles/bin/prove-bookmarks
+.agents/skills/verify-kibbles/bin/prove-x-bookmarks
 # or the mapped Pest files this skill names, e.g.:
 php artisan test --compact tests/Feature/Controllers/DashboardTest.php tests/Browser/DashboardTest.php
 ```
@@ -140,9 +140,9 @@ php artisan test --compact tests/Browser/GamesTest.php
 php artisan test --compact tests/Browser/GameCatalogTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/PlaySessionsTest.php
-php artisan test --compact tests/Browser/BookmarksTest.php
-php artisan test --compact tests/Browser/BookmarkTagsTest.php
-php artisan test --compact tests/Browser/BookmarkReviewsTest.php
+php artisan test --compact tests/Browser/XBookmarksTest.php
+php artisan test --compact tests/Browser/XBookmarkTagsTest.php
+php artisan test --compact tests/Browser/XBookmarkReviewsTest.php
 php artisan test --compact tests/Browser/LayoutTest.php
 php artisan test --compact tests/Browser/SessionTest.php
 php artisan test --compact tests/Browser/RegistrationTest.php
@@ -265,10 +265,10 @@ php artisan test --compact tests/Feature/Controllers/JournalEntryControllerTest.
 php artisan test --compact tests/Feature/Controllers/PlaySessionControllerTest.php
 php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTest.php
 php artisan test --compact tests/Feature/Controllers/RandomBookmarkControllerTest.php
-php artisan test --compact tests/Feature/Controllers/BookmarkControllerTest.php
-php artisan test --compact tests/Feature/Controllers/BookmarkSyncControllerTest.php
-php artisan test --compact tests/Feature/Controllers/BookmarkReviewControllerTest.php
-php artisan test --compact tests/Feature/Controllers/BookmarkTagControllerTest.php
+php artisan test --compact tests/Feature/Controllers/XBookmarkControllerTest.php
+php artisan test --compact tests/Feature/Controllers/XBookmarkSyncControllerTest.php
+php artisan test --compact tests/Feature/Controllers/XBookmarkReviewControllerTest.php
+php artisan test --compact tests/Feature/Controllers/XBookmarkTagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/TagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XConnectionControllerTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
@@ -290,7 +290,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8000/login     # 200
 curl -sS http://localhost:8000/login | rg -o "Log in to your account|Sign in with a passkey|Log in" | head
 ```
 
-Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, bookmarks, random-bookmark-api, tags, profile-settings, password-settings, passkeys, appearance).
+Feature map: `.agents/skills/verify-kibbles/features/` (home, login, register, forgot-password, reset-password, email-verification, two-factor, dashboard, games, play-sessions, x-bookmarks, random-bookmark-api, tags, profile-settings, password-settings, passkeys, appearance).
 
 ## Evidence
 
@@ -332,6 +332,6 @@ rm -f "$DB_FILE" /tmp/kibbles-verify-${RUN_ID}.port /tmp/kibbles-verify-${RUN_ID
 | Prove home | `.agents/skills/verify-kibbles/bin/prove-home` — `tests/Browser/HomeTest.php` (Pest boots its own server). Doctor against `http://localhost:8000` is logged only. |
 | Prove dashboard | `.agents/skills/verify-kibbles/bin/prove-dashboard` — `tests/Feature/Controllers/DashboardTest.php` + `tests/Browser/DashboardTest.php`. Doctor is logged only. |
 | Prove games | `.agents/skills/verify-kibbles/bin/prove-games` — `GameControllerTest` + `JournalEntryControllerTest` + `PlaySessionControllerTest` + `RawgGameSearchControllerTest` + `GamesTest` + `JournalEntriesTest` + `PlaySessionsTest` + `GameCatalogTest`. Doctor is logged only. |
-| Prove bookmarks | `.agents/skills/verify-kibbles/bin/prove-bookmarks` — `RandomBookmarkControllerTest` + `BookmarkControllerTest` + `BookmarkSyncControllerTest` + `BookmarkReviewControllerTest` + `BookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `BookmarksTest` + `BookmarkReviewsTest` + `BookmarkTagsTest` (token API random bookmark + empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename + review queue). Doctor is logged only. |
+| Prove X bookmarks | `.agents/skills/verify-kibbles/bin/prove-x-bookmarks` — `RandomBookmarkControllerTest` + `XBookmarkControllerTest` + `XBookmarkSyncControllerTest` + `XBookmarkReviewControllerTest` + `XBookmarkTagControllerTest` + `TagControllerTest` + `XConnectionControllerTest` + `XBookmarksTest` + `XBookmarkReviewsTest` + `XBookmarkTagsTest` (token API random bookmark + empty/connect/grid/remove + cursor page + scroll-load + tagging/filter/rename + review queue). Doctor is logged only. |
 
 Helpers are executable and `cd` to the kibbles project root. Set `RUN_ID` / `VERIFY_BASE_URL` to control artifact folder and base URL (default `http://localhost:8000`). Do **not** pipe `php artisan test` (Browser) through `tee`: leftover Playwright `run-server` inherits the pipe and the helper never exits. Redirect Pest to a log file, then `cat` it. Prove helpers stash `public/hot` for the Pest process and restore it afterward so `composer dev` Vite does not break Inertia SSR.
