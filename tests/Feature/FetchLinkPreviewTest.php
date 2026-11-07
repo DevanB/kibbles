@@ -3,13 +3,17 @@
 declare(strict_types=1);
 
 use App\Enums\LinkPreviewStatus;
+use App\Exceptions\InvalidLinkUrl;
+use App\Exceptions\LinkPreviewFailed;
 use App\Jobs\FetchLinkPreview;
 use App\Models\Link;
 use App\Models\User;
 use App\Services\LinkPreviewClient;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 
 it('stores title, site name, description, and image from a public fetch', function (): void {
+    Exceptions::fake();
     Http::fake([
         'http://1.1.1.1/*' => Http::response(
             '<html><head><meta property="og:title" content="Fetched"><meta property="og:site_name" content="News"><meta property="og:description" content="Body"><meta property="og:image" content="https://example.com/cover.jpg"></head></html>',
@@ -34,9 +38,12 @@ it('stores title, site name, description, and image from a public fetch', functi
         ->and($link->site_name)->toBe('News')
         ->and($link->description)->toBe('Body')
         ->and($link->image_url)->toBe('https://example.com/cover.jpg');
+
+    Exceptions::assertNothingReported();
 });
 
 it('marks the preview failed when the fetch is refused', function (): void {
+    Exceptions::fake();
     Http::fake();
 
     $user = User::factory()->create();
@@ -49,9 +56,11 @@ it('marks the preview failed when the fetch is refused', function (): void {
     expect($link->refresh()->preview_status)->toBe(LinkPreviewStatus::Failed);
 
     Http::assertNothingSent();
+    Exceptions::assertReported(LinkPreviewFailed::class);
 });
 
 it('marks the preview failed when the stored URL is not fetchable as a link', function (): void {
+    Exceptions::fake();
     Http::fake();
 
     $user = User::factory()->create();
@@ -64,6 +73,7 @@ it('marks the preview failed when the stored URL is not fetchable as a link', fu
     expect($link->refresh()->preview_status)->toBe(LinkPreviewStatus::Failed);
 
     Http::assertNothingSent();
+    Exceptions::assertReported(InvalidLinkUrl::class);
 });
 
 it('ignores a job whose link was removed', function (): void {

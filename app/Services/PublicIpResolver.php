@@ -4,19 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\ResolvesPublicIps;
 use App\Exceptions\LinkPreviewFailed;
 
-final readonly class PublicIpResolver
+final readonly class PublicIpResolver implements ResolvesPublicIps
 {
-    public static function curlPrereq(mixed $handle, string $connectedIp): int
-    {
-        unset($handle);
-
-        return self::isPublic($connectedIp)
-            ? CURL_PREREQFUNC_OK
-            : CURL_PREREQFUNC_ABORT;
-    }
-
     public static function isPublic(string $ip): bool
     {
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
@@ -32,6 +24,15 @@ final readonly class PublicIpResolver
         }
 
         return true;
+    }
+
+    public function curlPrereq(mixed $handle, string $connectedIp): int
+    {
+        unset($handle);
+
+        return self::isPublic($connectedIp)
+            ? CURL_PREREQFUNC_OK
+            : CURL_PREREQFUNC_ABORT;
     }
 
     /**
