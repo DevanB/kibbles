@@ -34,7 +34,9 @@ final class FetchLinkPreview implements ShouldBeUnique, ShouldQueue
 
         try {
             $preview = $client->fetch($link->url);
-        } catch (LinkPreviewFailed|InvalidLinkUrl) {
+        } catch (LinkPreviewFailed|InvalidLinkUrl $e) {
+            report($e);
+
             $link->update([
                 'preview_status' => LinkPreviewStatus::Failed,
             ]);

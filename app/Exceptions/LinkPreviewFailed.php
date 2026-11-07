@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Exceptions;
 
 use RuntimeException;
+use Throwable;
 
 final class LinkPreviewFailed extends RuntimeException
 {
@@ -23,9 +24,9 @@ final class LinkPreviewFailed extends RuntimeException
         return new self('Too many redirects while fetching the preview.');
     }
 
-    public static function http(int $status): self
+    public static function http(int $status, ?Throwable $previous = null): self
     {
-        return new self('Preview fetch failed with HTTP '.$status.'.');
+        return new self('Preview fetch failed with HTTP '.$status.'.', previous: $previous);
     }
 
     public static function tooLarge(): self

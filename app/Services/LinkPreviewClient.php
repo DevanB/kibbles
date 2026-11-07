@@ -105,10 +105,9 @@ final readonly class LinkPreviewClient
                 ])
                 ->withOptions([
                     'allow_redirects' => false,
+                    'protocols' => ['http', 'https'],
                     'curl' => [
                         CURLOPT_RESOLVE => [$this->curlResolve($parsed->host, $port, $ip)],
-                        CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-                        CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                         CURLOPT_PREREQFUNCTION => $this->ips->curlPrereq(...),
                     ],
                     'progress' => self::abortIfTooLarge(...),
@@ -116,8 +115,8 @@ final readonly class LinkPreviewClient
                 ->get($url);
         } catch (LinkPreviewFailed $failed) {
             throw $failed;
-        } catch (Throwable) {
-            throw LinkPreviewFailed::http(0);
+        } catch (Throwable $e) {
+            throw LinkPreviewFailed::http(0, $e);
         }
     }
 
