@@ -22,8 +22,10 @@ it('treats only routable public addresses as fetchable', function (string $ip, b
 ]);
 
 it('aborts curl when the connected peer is not public', function (): void {
-    expect(PublicIpResolver::curlPrereq(null, '1.1.1.1'))->toBe(CURL_PREREQFUNC_OK)
-        ->and(PublicIpResolver::curlPrereq(null, '127.0.0.1'))->toBe(CURL_PREREQFUNC_ABORT);
+    $resolver = resolve(PublicIpResolver::class);
+
+    expect($resolver->curlPrereq(null, '1.1.1.1'))->toBe(CURL_PREREQFUNC_OK)
+        ->and($resolver->curlPrereq(null, '127.0.0.1'))->toBe(CURL_PREREQFUNC_ABORT);
 });
 
 it('refuses a hostname that resolves to loopback', function (): void {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Contracts\ResolvesPublicIps;
 use App\Exceptions\LinkPreviewFailed;
 use App\Services\LinkPreviewClient;
 use Illuminate\Http\Client\Request;
@@ -183,8 +184,13 @@ it('wraps a connection failure', function (): void {
         'http://1.1.1.1/*' => Http::failedConnection(),
     ]);
 
-    expect(fn () => resolve(LinkPreviewClient::class)->fetch('http://1.1.1.1/start'))
-        ->toThrow(LinkPreviewFailed::class);
+    try {
+        resolve(LinkPreviewClient::class)->fetch('http://1.1.1.1/start');
+        $this->fail('The fetch did not throw.');
+    } catch (LinkPreviewFailed $linkPreviewFailed) {
+        expect($linkPreviewFailed->getMessage())->toBe('Preview fetch failed with HTTP 0.')
+            ->and($linkPreviewFailed->getPrevious())->not->toBeNull();
+    }
 });
 
 it('rethrows a preview failure raised during the request', function (): void {
@@ -211,3 +217,110 @@ it('aborts a download that exceeds the size cap', function (): void {
 
     LinkPreviewClient::abortIfTooLarge(0, 'chunk');
 });
+
+it('returns open graph tags from a curl fetch of a loopback fixture', function (): void {
+    $server = startLinkPreviewFixtureServer();
+
+    try {
+        Http::allowStrayRequests([
+            "http://127.0.0.1:{$server['port']}/*",
+        ]);
+
+        $this->app->instance(ResolvesPublicIps::class, new class implements ResolvesPublicIps
+        {
+            public function resolve(string $host): array
+            {
+                return ['127.0.0.1'];
+            }
+
+            public function curlPrereq(mixed $handle, string $connectedIp): int
+            {
+                unset($handle, $connectedIp);
+
+                return CURL_PREREQFUNC_OK;
+            }
+        });
+
+        $preview = resolve(LinkPreviewClient::class)->fetch($server['url']);
+
+        expect($preview->title)->toBe('Loopback Preview')
+            ->and($preview->siteName)->toBe('Fixture')
+            ->and($preview->description)->toBe('From curl.');
+    } finally {
+        stopLinkPreviewFixtureServer($server);
+    }
+});
+
+/**
+ * @return array{port: int, url: string, process: resource, pipes: list<mixed>}
+ */
+function startLinkPreviewFixtureServer(): array
+{
+    $docRoot = base_path('tests/Fixtures/link-preview-og');
+    $socket = stream_socket_server('tcp://127.0.0.1:0');
+
+    throw_if($socket === false, RuntimeException::class, 'Could not reserve a loopback port for the preview fixture.');
+
+    $name = stream_socket_get_name($socket, false);
+    fclose($socket);
+
+    throw_if(! is_string($name) || ! str_contains($name, ':'), RuntimeException::class, 'Could not read the reserved loopback port.');
+
+    $port = (int) mb_substr($name, (int) mb_strrpos($name, ':') + 1);
+    $command = PHP_BINARY.' -S 127.0.0.1:'.$port.' -t '.escapeshellarg($docRoot);
+    $pipes = [];
+    $process = proc_open($command, [
+        0 => ['pipe', 'r'],
+        1 => ['file', '/dev/null', 'w'],
+        2 => ['file', '/dev/null', 'w'],
+    ], $pipes);
+
+    throw_unless(is_resource($process), RuntimeException::class, 'Could not start the preview fixture server.');
+
+    for ($attempt = 0; $attempt < 50; $attempt++) {
+        $probe = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
+        unset($errno, $errstr);
+
+        if (is_resource($probe)) {
+            fclose($probe);
+
+            return [
+                'port' => $port,
+                'url' => 'http://127.0.0.1:'.$port.'/article.html',
+                'process' => $process,
+                'pipes' => $pipes,
+            ];
+        }
+
+        time_nanosleep(0, 50_000_000);
+    }
+
+    stopLinkPreviewFixtureServer([
+        'port' => $port,
+        'url' => '',
+        'process' => $process,
+        'pipes' => $pipes,
+    ]);
+
+    throw new RuntimeException('The preview fixture server did not become ready.');
+}
+
+/**
+ * @param  array{process: resource, pipes: list<mixed>}  $server
+ */
+function stopLinkPreviewFixtureServer(array $server): void
+{
+    foreach ($server['pipes'] as $pipe) {
+        if (is_resource($pipe)) {
+            fclose($pipe);
+        }
+    }
+
+    $status = proc_get_status($server['process']);
+
+    if ($status['running'] ?? false) {
+        posix_kill((int) $status['pid'], SIGTERM);
+    }
+
+    proc_close($server['process']);
+}

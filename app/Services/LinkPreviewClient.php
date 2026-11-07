@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\ResolvesPublicIps;
 use App\Exceptions\InvalidLinkUrl;
 use App\Exceptions\LinkPreviewFailed;
 use App\ValueObjects\LinkPreview;
@@ -23,7 +24,7 @@ final readonly class LinkPreviewClient
 
     public const int TOTAL_TIMEOUT = 5;
 
-    public function __construct(private PublicIpResolver $ips) {}
+    public function __construct(private ResolvesPublicIps $ips) {}
 
     public static function abortIfTooLarge(mixed $downloadTotal, mixed $downloaded): void
     {
@@ -108,7 +109,7 @@ final readonly class LinkPreviewClient
                         CURLOPT_RESOLVE => [$this->curlResolve($parsed->host, $port, $ip)],
                         CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                         CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-                        CURLOPT_PREREQFUNCTION => PublicIpResolver::curlPrereq(...),
+                        CURLOPT_PREREQFUNCTION => $this->ips->curlPrereq(...),
                     ],
                     'progress' => self::abortIfTooLarge(...),
                 ])
