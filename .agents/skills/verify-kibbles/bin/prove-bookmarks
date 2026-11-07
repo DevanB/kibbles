@@ -23,7 +23,7 @@ DOCTOR="$(cd "$(dirname "$0")" && pwd)/doctor"
   echo "artifacts=$ART"
   echo "base=$BASE"
   echo "cwd=$ROOT"
-  echo "note=Feature Link/LinkTag/LinkPreview + Unit LinkUrl/PublicIpResolver/LinkPreviewClient/SaveLink + FetchLinkPreview + Browser Links (empty/add/pending/retry/remove + tagging/filter); doctor is informational"
+  echo "note=Feature Link/LinkTag/LinkPreview + Unit LinkUrl/PublicIpResolver/LinkPreviewClient/SaveLink + FetchLinkPreview + Browser Links (empty/add/pending/retry/remove + tagging/filter + SSRF); real curl loopback OG and reported Failed run first; doctor is informational"
 } | tee "$ART/bookmarks-summary.txt"
 
 set +e
@@ -34,6 +34,28 @@ set -e
 stash_vite_hot
 echo "vite_hot_stash=${VERIFY_HOT_STASH:-absent}" >> "$ART/bookmarks-summary.txt"
 trap restore_vite_hot EXIT
+
+set +e
+php artisan test --compact \
+  tests/Unit/Services/LinkPreviewClientTest.php \
+  tests/Feature/FetchLinkPreviewTest.php \
+  --filter='returns open graph tags from a curl fetch of a loopback fixture|marks the preview failed when the fetch is refused|marks the preview failed when the stored URL is not fetchable as a link' \
+  > "$ART/bookmarks-real-curl.log" 2>&1
+REAL_CURL_RC=$?
+set -e
+cat "$ART/bookmarks-real-curl.log"
+
+if [[ "$REAL_CURL_RC" -ne 0 ]]; then
+  echo "real_curl_rc=$REAL_CURL_RC" | tee -a "$ART/bookmarks-summary.txt"
+  echo "=== prove-bookmarks FAILED (real curl / reported Failed; evidence kept at $ART) ==="
+  exit 1
+fi
+
+if ! grep -q '"result":"passed"' "$ART/bookmarks-real-curl.log" || ! grep -q '"tests":3' "$ART/bookmarks-real-curl.log"; then
+  echo "real_curl_missing=expected compact pest JSON with result=passed and tests=3" | tee -a "$ART/bookmarks-summary.txt"
+  echo "=== prove-bookmarks FAILED (named real-curl / reported Failed tests did not all run; evidence kept at $ART) ==="
+  exit 1
+fi
 
 set +e
 php artisan test --compact \
@@ -54,11 +76,14 @@ cat "$ART/bookmarks-tests.log"
 {
   echo "doctor_rc=$DOCTOR_RC"
   echo "doctor_required=0"
+  echo "real_curl_rc=$REAL_CURL_RC"
   echo "tests_rc=$TEST_RC"
+  echo "real_curl=tests/Unit/Services/LinkPreviewClientTest.php --filter=returns open graph tags from a curl fetch of a loopback fixture"
+  echo "reported_failed=tests/Feature/FetchLinkPreviewTest.php --filter=marks the preview failed"
   echo "feature=tests/Feature/Controllers/LinkControllerTest.php tests/Feature/Controllers/LinkTagControllerTest.php tests/Feature/Controllers/LinkPreviewControllerTest.php tests/Feature/FetchLinkPreviewTest.php"
   echo "unit=tests/Unit/Actions/SaveLinkTest.php tests/Unit/ValueObjects/LinkUrlTest.php tests/Unit/Services/PublicIpResolverTest.php tests/Unit/Services/LinkPreviewClientTest.php"
   echo "browser=tests/Browser/LinksTest.php"
-  echo "verified=guest→login, unverified→verification.notice, list isolation, newest-first, cursor page, tag filter, LAN save without fetch, duplicate URL, SSRF never reaches private/loopback/link-local including redirect/DNS, empty add-link modal, pending/retry/remove, sidebar tag filter"
+  echo "verified=guest→login, unverified→verification.notice, list isolation, newest-first, cursor page, tag filter, LAN save without fetch, duplicate URL, SSRF never reaches private/loopback/link-local including redirect/DNS, empty add-link modal, pending/retry/remove, sidebar tag filter, real curl loopback OG title Loopback Preview, FetchLinkPreview reports LinkPreviewFailed and InvalidLinkUrl before Failed"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi

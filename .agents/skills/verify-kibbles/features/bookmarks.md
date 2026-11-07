@@ -29,12 +29,14 @@ Preconditions:
 - `User::factory()->withoutTwoFactor()->create()` and `actingAs($user)`
 - Playwright browsers installed for the Browser file
 - Pagination cases factory **25** links so the first cursor page is incomplete
-- Preview fetches in tests use `Http::fake()` (and public literals such as `http://1.1.1.1/…` so DNS is not required)
+- HTML parsing, redirects, size caps, and SSRF cases use `Http::fake()` with public literals such as `http://1.1.1.1/…`. Those never enter Guzzle's CurlHandler.
 
 - **Empty + add + pending/retry/remove (Browser) →** `php artisan test --compact tests/Browser/LinksTest.php` → sidebar **Bookmarks** → `/bookmarks`; empty CTA; add-link modal toasts **Saved to Kibbles.**; pending copy; **Retry** on failed; remove cancel then confirm
 - **Tags (Browser) →** same file, tagging test → card **Tags** toggles an existing tag and creates one inline; sidebar **Laravel** / **Untagged** filters
 - **HTTP / Inertia / gates →** `php artisan test --compact tests/Feature/Controllers/LinkControllerTest.php tests/Feature/Controllers/LinkTagControllerTest.php tests/Feature/Controllers/LinkPreviewControllerTest.php` → guest → login, unverified → `verification.notice`, list isolation, newest-first, cursor page + `next_cursor`, tag filter + untagged + other-user tag 404, cross-user 403, invalid URL, LAN save without a job, duplicate normalized URL, retry only when failed
-- **SSRF + cleanup →** `php artisan test --compact tests/Unit/ValueObjects/LinkUrlTest.php tests/Unit/Services/PublicIpResolverTest.php tests/Unit/Services/LinkPreviewClientTest.php tests/Unit/Actions/SaveLinkTest.php tests/Feature/FetchLinkPreviewTest.php`
+- **SSRF + cleanup (Http::fake) →** `php artisan test --compact tests/Unit/ValueObjects/LinkUrlTest.php tests/Unit/Services/PublicIpResolverTest.php tests/Unit/Actions/SaveLinkTest.php`
+- **Real curl OG (no Http::fake) →** `php artisan test --compact --filter="returns open graph tags from a curl fetch of a loopback fixture" tests/Unit/Services/LinkPreviewClientTest.php` → PHP built-in server on `tests/Fixtures/link-preview-og`, a `ResolvesPublicIps` seam that allows `127.0.0.1`, title **Loopback Preview**, site name **Fixture**, description **From curl.**
+- **Reported Failed →** `php artisan test --compact --filter="marks the preview failed" tests/Feature/FetchLinkPreviewTest.php` → `FetchLinkPreview` `report()`s `LinkPreviewFailed` or `InvalidLinkUrl` before `preview_status` is Failed. A successful fake fetch asserts `Exceptions::assertNothingReported()`. These cases still use `Http::fake()` and do not enter curl.
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-bookmarks`
 
 ## Gotchas
@@ -44,3 +46,4 @@ Preconditions:
 - Private / LAN / `.local` hosts save and skip `FetchLinkPreview`. A public hostname that later resolves to a private IP fails the fetch (card **Retry**), it does not unroll the save.
 - Index is cursor-paginated (20). Do not expect the full collection in one Inertia payload. Drive later pages with `?cursor=` (Feature).
 - `prove-bookmarks` (and the other prove helpers) stash `public/hot` around Pest so Vite HMR does not break Inertia SSR under `Http::preventStrayRequests()`.
+- `Http::fake()` never reaches Guzzle's CurlHandler. A curl option conflict only fails the loopback fixture test or a live `LinkPreviewClient` fetch.
