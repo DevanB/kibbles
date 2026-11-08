@@ -42,7 +42,11 @@ final class XBookmarkBuilder extends Builder
 
     public function reviewedToday(): static
     {
-        return $this->where('reviewed_at', '>=', today());
+        return $this->where(
+            'reviewed_at',
+            '>=',
+            today(config()->string('x.review_timezone'))->utc(),
+        );
     }
 
     public function tagged(Tag $tag): static
