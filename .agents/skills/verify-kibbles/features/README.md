@@ -47,7 +47,7 @@ Live skill directory: `.agents/skills/verify-kibbles`. `.cursor/skills` and `.cl
 | X (bookmarks) | `/x` + `/x-reviews` | [x-bookmarks.md](./x-bookmarks.md) |
 | Random bookmark API | `/api/bookmarks/random` | [random-bookmark-api.md](./random-bookmark-api.md) |
 | Share Sheet API | `/api/links` | [share-api.md](./share-api.md) |
-| Tags (X bookmarks) | `/tags` | [tags.md](./tags.md) |
+| Tags | `/tags` | [tags.md](./tags.md) |
 | Profile settings | `/settings/profile` | [profile-settings.md](./profile-settings.md) |
 | Password settings | `/settings/password` | [password-settings.md](./password-settings.md) |
 | Passkeys | `/settings/passkeys` | [passkeys.md](./passkeys.md) |
