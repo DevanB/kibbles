@@ -40,8 +40,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @method static XBookmarkBuilder query()
  * @method static XBookmarkBuilder newestFirst()
- * @method static XBookmarkBuilder oldestFirst()
- * @method static XBookmarkBuilder unreviewed()
+ * @method static XBookmarkBuilder dueForReview()
+ * @method static XBookmarkBuilder inReviewOrder()
+ * @method static XBookmarkBuilder reviewedToday()
  * @method static XBookmarkBuilder tagged(Tag $tag)
  * @method static XBookmarkBuilder untagged()
  */

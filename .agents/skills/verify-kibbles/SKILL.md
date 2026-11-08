@@ -262,7 +262,7 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `bookmark-tags-{id}` / `bookmark-tag-{id}-{tagId}` | card tag badges |
 | `sidebar-x` / `sidebar-x-all` / `sidebar-x-review` / `sidebar-x-untagged` / `sidebar-x-tag-{id}` | X nav + nested All / Review / Untagged / tag |
 | `keep-bookmark-button` / `remove-review-button` | `/x-reviews` Keep / Remove |
-| `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-empty` | `/x-reviews` review page / remaining count / All caught up |
+| `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-done-today` / `bookmark-reviews-empty` | `/x-reviews` review page / due and left today / Done for today / All caught up |
 | `active-tag-name` | bookmarks heading badge for the active filter |
 | `manage-tags-button` | bookmarks header → `/tags` |
 | `tags-empty` / `tag-row-{id}` | tags index empty / row |

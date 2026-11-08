@@ -39,6 +39,7 @@ it('upserts bookmarks from X and records first_seen_at', function (): void {
         ->and($bookmark->x_post_id)->toBe('100')
         ->and($bookmark->author_username)->toBe('devan')
         ->and($bookmark->first_seen_at->toDateTimeString())->toBe(now()->toDateTimeString())
+        ->and($bookmark->reviewed_at)->toBeNull()
         ->and($bookmark->media[0]->url)->toBe('https://pbs.twimg.com/media/demo.jpg')
         ->and($connection->refresh()->last_synced_at?->toDateTimeString())->toBe(now()->toDateTimeString())
         ->and($connection->last_full_synced_at)->toBeNull();
@@ -87,6 +88,7 @@ it('does not rewrite an existing bookmark during an incremental sync that stops 
         'x_post_id' => '100',
         'text' => 'Old text',
         'first_seen_at' => now()->subDay(),
+        'reviewed_at' => now()->subDays(3),
     ]);
 
     Http::fake([
@@ -98,7 +100,8 @@ it('does not rewrite an existing bookmark during an incremental sync that stops 
     resolve(SyncXBookmarks::class)->handle($user);
 
     expect($existing->refresh()->text)->toBe('Old text')
-        ->and($existing->first_seen_at->toDateTimeString())->toBe(now()->subDay()->toDateTimeString());
+        ->and($existing->first_seen_at->toDateTimeString())->toBe(now()->subDay()->toDateTimeString())
+        ->and($existing->reviewed_at?->toDateTimeString())->toBe(now()->subDays(3)->toDateTimeString());
 
     Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/tweets'));
 });
@@ -186,7 +189,10 @@ it('keeps tag associations on bookmarks a full sync still sees and drops pivot r
 
     $user = User::factory()->create();
     XConnection::factory()->recycle($user)->create(['x_user_id' => '42']);
-    $keep = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'keep']);
+    $keep = XBookmark::factory()->recycle($user)->create([
+        'x_post_id' => 'keep',
+        'reviewed_at' => now()->subDays(3),
+    ]);
     $gone = XBookmark::factory()->recycle($user)->create(['x_post_id' => 'gone']);
     $keepTag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
     $goneTag = Tag::factory()->recycle($user)->create(['name' => 'Pest']);
@@ -199,7 +205,8 @@ it('keeps tag associations on bookmarks a full sync still sees and drops pivot r
 
     resolve(SyncXBookmarks::class)->handle($user, true);
 
-    expect($keep->fresh())->not->toBeNull()
+    expect($keep->refresh())->not->toBeNull()
+        ->and($keep->reviewed_at?->toDateTimeString())->toBe(now()->subDays(3)->toDateTimeString())
         ->and($keep->tags()->whereKey($keepTag)->exists())->toBeTrue()
         ->and($gone->fresh())->toBeNull()
         ->and($goneTag->fresh())->not->toBeNull()

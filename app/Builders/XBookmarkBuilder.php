@@ -14,19 +14,35 @@ use Illuminate\Support\Collection;
  */
 final class XBookmarkBuilder extends Builder
 {
+    private const int REVIEW_INTERVAL_DAYS = 30;
+
     public function newestFirst(): static
     {
         return $this->latest('first_seen_at')->orderByDesc('id');
     }
 
-    public function oldestFirst(): static
+    public function dueForReview(): static
     {
-        return $this->oldest('first_seen_at')->orderBy('id');
+        return $this->where(function (Builder $query): void {
+            $query->whereNull('reviewed_at')
+                ->orWhere('reviewed_at', '<', now()->subDays(self::REVIEW_INTERVAL_DAYS));
+        });
     }
 
-    public function unreviewed(): static
+    /**
+     * Never-reviewed rows lead on every driver, then the oldest review, then first seen, then id.
+     */
+    public function inReviewOrder(): static
     {
-        return $this->whereNull('reviewed_at');
+        return $this->orderByRaw('case when reviewed_at is null then 0 else 1 end')
+            ->oldest('reviewed_at')
+            ->oldest('first_seen_at')
+            ->orderBy('id');
+    }
+
+    public function reviewedToday(): static
+    {
+        return $this->where('reviewed_at', '>=', today());
     }
 
     public function tagged(Tag $tag): static

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\BuildXBookmarkReviewQueue;
 use App\Actions\ReviewXBookmark;
 use App\Http\Requests\StoreBookmarkReviewRequest;
 use App\Models\User;
@@ -16,21 +17,11 @@ use Inertia\Response;
 
 final readonly class XBookmarkReviewController
 {
-    public function index(#[CurrentUser] User $user): Response
+    public function index(#[CurrentUser] User $user, BuildXBookmarkReviewQueue $build): Response
     {
         Gate::authorize('viewAny', XBookmark::class);
 
-        $current = $user->xBookmarks()
-            ->unreviewed()
-            ->oldestFirst()
-            ->with('tags')
-            ->first();
-
-        return Inertia::render('x-bookmark-reviews/index', [
-            'bookmark' => $current?->toWire(),
-            'remaining' => $user->xBookmarks()->unreviewed()->count(),
-            'total' => $user->xBookmarks()->count(),
-        ]);
+        return Inertia::render('x-bookmark-reviews/index', $build->handle($user)->toWire());
     }
 
     public function store(StoreBookmarkReviewRequest $request, ReviewXBookmark $action): RedirectResponse
