@@ -58,7 +58,7 @@ cat "$ART/x-bookmarks-tests.log"
   echo "tests_rc=$TEST_RC"
   echo "feature=tests/Feature/Controllers/RandomBookmarkControllerTest.php tests/Feature/Controllers/XBookmarkControllerTest.php tests/Feature/Controllers/XBookmarkSyncControllerTest.php tests/Feature/Controllers/XBookmarkReviewControllerTest.php tests/Feature/Controllers/XBookmarkTagControllerTest.php tests/Feature/Controllers/TagControllerTest.php tests/Feature/Controllers/XConnectionControllerTest.php"
   echo "browser=tests/Browser/XBookmarksTest.php tests/Browser/XBookmarkReviewsTest.php tests/Browser/XBookmarkTagsTest.php"
-  echo "verified=token API 401/500/200/404, guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove, cursor page + scroll-load page two, tag/create/filter sidebar, rename/delete tag, review queue keep/remove/tag until caught up"
+  echo "verified=token API 401/500/200/404, guest→login, unverified→verification.notice, empty Connect X, mocked OAuth navigation, masonry grid + remove, cursor page + scroll-load page two, tag/create/filter sidebar, rename/delete tag, review queue never-reviewed then stale, tag/keep/remove, Done for today, All caught up only when none due"
   if [[ "$DOCTOR_RC" -ne 0 ]]; then
     echo "doctor_note=composer dev / $BASE was not green; Pest does not need it"
   fi

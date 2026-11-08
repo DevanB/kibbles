@@ -12,6 +12,18 @@ it('tags, keeps, and removes due bookmarks until the day is done', function (): 
     $user = User::factory()->withoutTwoFactor()->create();
     $tag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
     XBookmark::factory()->recycle($user)->count(8)->reviewed()->create();
+    XBookmark::factory()->recycle($user)->withoutMedia()->create([
+        'author_name' => 'Recent Review',
+        'text' => 'Reviewed two days ago.',
+        'reviewed_at' => now()->subDays(2),
+        'first_seen_at' => now()->subDays(40),
+    ]);
+    XBookmark::factory()->recycle($user)->withoutMedia()->create([
+        'author_name' => 'Stale Bookmark',
+        'text' => 'Last reviewed more than a month ago.',
+        'reviewed_at' => now()->subDays(31),
+        'first_seen_at' => now()->subDays(50),
+    ]);
     $first = XBookmark::factory()->recycle($user)->withoutMedia()->create([
         'author_name' => 'Taylor Otwell',
         'text' => 'First in the queue.',
@@ -38,7 +50,7 @@ it('tags, keeps, and removes due bookmarks until the day is done', function (): 
     $page = visit(route('x-bookmark-reviews.index'));
 
     $page->assertSee('Review')
-        ->assertSee('4 due · 2 left today')
+        ->assertSee('5 due · 2 left today')
         ->assertSee('Taylor Otwell')
         ->assertSee('First in the queue.')
         ->assertPresent('@keep-bookmark-button')
@@ -58,13 +70,13 @@ it('tags, keeps, and removes due bookmarks until the day is done', function (): 
 
     $page->keys('@bookmark-reviews-page', 'k')
         ->assertSee('Nuno Maduro')
-        ->assertSee('3 due · 1 left today')
+        ->assertSee('4 due · 1 left today')
         ->assertSee('Second in the queue.')
         ->assertNoJavaScriptErrors();
 
     $page->keys('@bookmark-reviews-page', 'x')
         ->assertSee('Jess Archer')
-        ->assertSee('2 due · 1 left today')
+        ->assertSee('3 due · 1 left today')
         ->assertSee('Third in the queue.')
         ->assertNoJavaScriptErrors();
 
@@ -73,8 +85,9 @@ it('tags, keeps, and removes due bookmarks until the day is done', function (): 
     $page->click('@keep-bookmark-button')
         ->assertSee('Done for today')
         ->assertSee('Come back tomorrow for more.')
-        ->assertSee('1 due')
+        ->assertSee('2 due')
         ->assertPresent('@bookmark-reviews-done-today')
+        ->screenshot(filename: 'bookmark-reviews-done-today')
         ->assertNoJavaScriptErrors();
 
     expect($fourth->fresh()?->reviewed_at)->toBeNull()
@@ -90,5 +103,6 @@ it('shows all caught up when no bookmark is due', function (): void {
         ->assertSee('All caught up')
         ->assertSee('Nothing is due for review.')
         ->assertPresent('@bookmark-reviews-empty')
+        ->screenshot(filename: 'bookmark-reviews-caught-up')
         ->assertNoJavaScriptErrors();
 });
