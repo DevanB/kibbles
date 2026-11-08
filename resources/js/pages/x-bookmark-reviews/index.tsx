@@ -18,6 +18,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type ReviewQueue =
+    | {
+          status: 'reviewing';
+          bookmark: Bookmark;
+          due: number;
+          leftToday: number;
+      }
+    | { status: 'done-for-today'; due: number }
+    | { status: 'caught-up' };
+
 function isTypingTarget(target: EventTarget | null): boolean {
     if (!(target instanceof HTMLElement)) {
         return false;
@@ -146,16 +156,43 @@ function ReviewCard({ bookmark }: { bookmark: Bookmark }) {
     );
 }
 
-export default function Index({
-    bookmark,
-    remaining,
-    total,
+function ReviewPanel({
+    testId,
+    title,
+    body,
 }: {
-    bookmark: Bookmark | null;
-    remaining: number;
-    total: number;
+    testId: string;
+    title: string;
+    body: string;
 }) {
+    return (
+        <div
+            data-test={testId}
+            className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border"
+        >
+            <BookmarkIcon className="mb-3 size-8 text-muted-foreground" />
+            <p className="text-lg font-medium">{title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+        </div>
+    );
+}
+
+function progressCopy(queue: ReviewQueue): string | null {
+    if (queue.status === 'reviewing') {
+        return `${queue.due} due · ${queue.leftToday} left today`;
+    }
+
+    if (queue.status === 'done-for-today') {
+        return `${queue.due} due`;
+    }
+
+    return null;
+}
+
+export default function Index(queue: ReviewQueue) {
     setLayoutProps({ breadcrumbs });
+
+    const progress = progressCopy(queue);
 
     return (
         <>
@@ -170,29 +207,33 @@ export default function Index({
                         title="Review"
                         description="Tag, keep, or remove one bookmark at a time."
                     />
-                    {bookmark ? (
+                    {progress !== null ? (
                         <p
                             className="text-sm text-muted-foreground"
                             data-test="bookmark-reviews-progress"
                         >
-                            {remaining} left · {total} bookmarks
+                            {progress}
                         </p>
                     ) : null}
                 </div>
 
-                {bookmark ? (
-                    <ReviewCard key={bookmark.id} bookmark={bookmark} />
+                {queue.status === 'reviewing' ? (
+                    <ReviewCard
+                        key={queue.bookmark.id}
+                        bookmark={queue.bookmark}
+                    />
+                ) : queue.status === 'done-for-today' ? (
+                    <ReviewPanel
+                        testId="bookmark-reviews-done-today"
+                        title="Done for today"
+                        body="Come back tomorrow for more."
+                    />
                 ) : (
-                    <div
-                        data-test="bookmark-reviews-empty"
-                        className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-sidebar-border/70 p-12 text-center dark:border-sidebar-border"
-                    >
-                        <BookmarkIcon className="mb-3 size-8 text-muted-foreground" />
-                        <p className="text-lg font-medium">All caught up</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Every bookmark has been reviewed.
-                        </p>
-                    </div>
+                    <ReviewPanel
+                        testId="bookmark-reviews-empty"
+                        title="All caught up"
+                        body="Nothing is due for review."
+                    />
                 )}
             </div>
         </>

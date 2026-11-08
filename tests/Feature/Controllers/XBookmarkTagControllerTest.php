@@ -17,6 +17,8 @@ it('redirects guests to login', function (string $method, string $route, array $
 ]);
 
 it('attaches an existing tag to a bookmark', function (): void {
+    $this->freezeTime();
+
     $user = User::factory()->withoutTwoFactor()->create();
     $bookmark = XBookmark::factory()->recycle($user)->create();
     $tag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
@@ -26,7 +28,8 @@ it('attaches an existing tag to a bookmark', function (): void {
         ->post(route('x-bookmarks.tags.store', $bookmark), ['tag_id' => $tag->id])
         ->assertRedirectToRoute('x-bookmarks.index');
 
-    expect($bookmark->tags()->whereKey($tag)->exists())->toBeTrue();
+    expect($bookmark->tags()->whereKey($tag)->exists())->toBeTrue()
+        ->and($bookmark->refresh()->reviewed_at?->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
 it('creates a tag from a typed name and attaches it', function (): void {
@@ -160,7 +163,8 @@ it('detaches a tag from a bookmark and keeps both records', function (): void {
 
     expect($bookmark->tags()->count())->toBe(0)
         ->and($tag->fresh())->not->toBeNull()
-        ->and($bookmark->fresh())->not->toBeNull();
+        ->and($bookmark->fresh())->not->toBeNull()
+        ->and($bookmark->fresh()?->reviewed_at)->toBeNull();
 });
 
 it('forbids another user from detaching a tag on a bookmark they do not own', function (): void {

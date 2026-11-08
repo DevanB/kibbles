@@ -81,7 +81,7 @@ export function BookmarkTagPicker({
         if (attachedIds.has(tag.id)) {
             router.delete(destroy.url({ bookmark: bookmark.id, tag: tag.id }), {
                 preserveScroll: true,
-                except: ['bookmarks'],
+                only: ['tags'],
                 onSuccess: () => {
                     applyTags(
                         bookmark.tags.filter((item) => item.id !== tag.id),
@@ -97,7 +97,7 @@ export function BookmarkTagPicker({
             { tag_id: tag.id },
             {
                 preserveScroll: true,
-                except: ['bookmarks'],
+                only: ['tags'],
                 onSuccess: () => {
                     applyTags([...bookmark.tags, tag]);
                 },
@@ -111,7 +111,7 @@ export function BookmarkTagPicker({
             { name: trimmedQuery },
             {
                 preserveScroll: true,
-                except: ['bookmarks'],
+                only: ['tags'],
                 onSuccess: (page) => {
                     const created = page.props.tags.find(
                         (tag) =>

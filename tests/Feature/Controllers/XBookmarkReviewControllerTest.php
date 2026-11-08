@@ -5,24 +5,81 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Models\XBookmark;
 
-it('queues the authenticated user unreviewed bookmarks oldest first', function (): void {
+it('reviews never-reviewed bookmarks before stale ones and catches up when nothing is due', function (): void {
+    $this->freezeTime();
+
     $user = User::factory()->withoutTwoFactor()->create();
     $other = User::factory()->withoutTwoFactor()->create();
-    XBookmark::factory()->recycle($user)->reviewed()->create([
-        'text' => 'Already reviewed',
-        'first_seen_at' => now()->subDays(3),
-    ]);
-    $older = XBookmark::factory()->recycle($user)->create([
-        'text' => 'Oldest unreviewed',
-        'first_seen_at' => now()->subDays(2),
+
+    XBookmark::factory()->recycle($other)->create([
+        'reviewed_at' => null,
+        'first_seen_at' => now()->subDays(120),
     ]);
     XBookmark::factory()->recycle($user)->create([
-        'text' => 'Newer unreviewed',
+        'reviewed_at' => now()->subDays(30),
+        'first_seen_at' => now()->subDays(80),
+    ]);
+    $pastTheWindow = XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => now()->subDays(30)->subSecond(),
+        'first_seen_at' => now()->subDays(70),
+    ]);
+    $olderStamp = XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => now()->subDays(45),
+        'first_seen_at' => now()->subDays(10),
+    ]);
+    $syncedEarlier = XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => null,
+        'first_seen_at' => now()->subDays(2),
+    ]);
+    $syncedLater = XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => null,
         'first_seen_at' => now()->subDay(),
     ]);
-    XBookmark::factory()->recycle($other)->create([
-        'text' => 'Someone else',
-        'first_seen_at' => now()->subDays(4),
+
+    $queue = [
+        [$syncedEarlier, 4],
+        [$syncedLater, 3],
+        [$olderStamp, 2],
+        [$pastTheWindow, 1],
+    ];
+
+    $this->actingAs($user);
+
+    foreach ($queue as [$bookmark, $due]) {
+        $this->get(route('x-bookmark-reviews.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('x-bookmark-reviews/index')
+                ->where('status', 'reviewing')
+                ->where('bookmark.id', $bookmark->id)
+                ->where('due', $due));
+
+        $this->post(route('x-bookmark-reviews.store'), [
+            'bookmark_id' => $bookmark->id,
+        ])->assertRedirectToRoute('x-bookmark-reviews.index');
+
+        expect($bookmark->refresh()->reviewed_at?->toDateTimeString())->toBe(now()->toDateTimeString());
+    }
+
+    $this->get(route('x-bookmark-reviews.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('x-bookmark-reviews/index')
+            ->where('status', 'caught-up')
+            ->missing('bookmark')
+            ->missing('due')
+            ->missing('leftToday'));
+});
+
+it('does not count reviews stamped before today', function (): void {
+    $this->freezeTime();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    XBookmark::factory()->recycle($user)->count(10)->create([
+        'reviewed_at' => today()->subMinute(),
+    ]);
+    $due = XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => null,
     ]);
 
     $this->actingAs($user)
@@ -30,10 +87,30 @@ it('queues the authenticated user unreviewed bookmarks oldest first', function (
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('x-bookmark-reviews/index')
-            ->where('bookmark.id', $older->id)
-            ->where('bookmark.text', 'Oldest unreviewed')
-            ->where('remaining', 2)
-            ->where('total', 3));
+            ->where('status', 'reviewing')
+            ->where('bookmark.id', $due->id)
+            ->where('due', 1)
+            ->where('leftToday', 10));
+});
+
+it('stops for the day after ten reviews while a bookmark is still due', function (): void {
+    $this->freezeTime();
+
+    $user = User::factory()->withoutTwoFactor()->create();
+    XBookmark::factory()->recycle($user)->count(10)->reviewed()->create();
+    XBookmark::factory()->recycle($user)->create([
+        'reviewed_at' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('x-bookmark-reviews.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('x-bookmark-reviews/index')
+            ->where('status', 'done-for-today')
+            ->where('due', 1)
+            ->missing('bookmark')
+            ->missing('leftToday'));
 });
 
 it('rejects storing a review for another user bookmark', function (): void {
