@@ -11,7 +11,8 @@ Private and LAN URLs **save** but never fetch a preview (`preview_status` is `re
 ## Sub-features
 
 - Empty state (`data-test="links-empty"`): **No bookmarks yet** / **Paste a URL to keep it here.** Filtered: untagged with no rows → **No untagged bookmarks**; another tag with no rows → **No bookmarks tagged {name}**. Both use subtitle **Try another tag or add one from a bookmark card.**
-- **Add link** (`data-test="add-link-button"`) opens the create modal. URL field `data-test="link-url-input"`. **Save** (`data-test="save-link-button"`) POSTs `bookmarks.store` → toast **Saved to Kibbles.** Duplicate normalized URLs reuse the existing row (still that toast on the web form).
+- **Manage tags** (`data-test="manage-tags-button"`) links to `/tags`. **Add link** (`data-test="add-link-button"`) opens the create modal. URL field `data-test="link-url-input"`. **Save** (`data-test="save-link-button"`) POSTs `bookmarks.store` → toast **Saved to Kibbles.** Duplicate normalized URLs reuse the existing row (still that toast on the web form).
+- Infinite scroll loading copy **Loading more…** (`data-test="links-load-more"`). There is no numbered pager.
 - Cards (`data-test="link-{id}"`): title (or URL), site name, description, hotlinked `og:image`, tags, **Open** (`data-test="open-link-{id}"`, `aria-label="Open link"`), **Remove** (`data-test="remove-link-button-{id}"`, `aria-label="Remove"`). Pending copy `data-test="link-pending-{id}"`.
 - Remove modal: **Remove this bookmark?** / **This removes the saved link from Kibbles. This cannot be undone.** Cancel / **Remove**. Success toast **Removed.**
 - Retry: POSTs `bookmarks.previews.store` → toast **Retrying preview.** Only failed previews may retry.

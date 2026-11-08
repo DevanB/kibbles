@@ -38,6 +38,7 @@ There is **no** Feature test that asserts `canRegister: true` on the login page.
 
 ## Gotchas
 
+- Isolated serve / production build: curl of `/login` is **200** with Inertia `session/create` in the data-page JSON (`<div id="app"></div>`). Visible copy (`Log in to your account`, **Sign in with a passkey**) is not in that HTML. Doctor asserts 200; drive the copy with Pest Browser. The composer-dev ad-hoc `rg` recipe expects Vite SSR.
 - Passkey register/assert fails only if the browser host differs from `APP_URL` (e.g. Herd `kibbles.test` while `APP_URL` is `http://localhost:8000`). `composer dev` on localhost matches. **Sign in with a passkey** renders only when WebAuthn is present (Pest Browser has it).
 - Prefer `withoutTwoFactor()` unless intentionally testing the 2FA challenge — factory default **enables** 2FA. Browser challenge uses a known encrypted recovery code, not the factory’s random `two_factor_recovery_codes` string
 - Tests use factories (default password `password`). Local `DatabaseSeeder` calls `DemoSeeder` for Games-show review, not login fixtures.

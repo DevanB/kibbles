@@ -142,6 +142,7 @@ php artisan test --compact tests/Browser/GamesTest.php
 php artisan test --compact tests/Browser/GameCatalogTest.php
 php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Browser/PlaySessionsTest.php
+php artisan test --compact tests/Browser/LinksTest.php
 php artisan test --compact tests/Browser/XBookmarksTest.php
 php artisan test --compact tests/Browser/XBookmarkTagsTest.php
 php artisan test --compact tests/Browser/XBookmarkReviewsTest.php
@@ -286,7 +287,6 @@ php artisan test --compact tests/Feature/Controllers/RawgGameSearchControllerTes
 php artisan test --compact tests/Feature/Controllers/LinkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/LinkTagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/LinkPreviewControllerTest.php
-php artisan test --compact tests/Browser/LinksTest.php
 php artisan test --compact tests/Feature/Controllers/StoreLinkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/RandomBookmarkControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XBookmarkControllerTest.php
@@ -295,7 +295,6 @@ php artisan test --compact tests/Feature/Controllers/XBookmarkReviewControllerTe
 php artisan test --compact tests/Feature/Controllers/XBookmarkTagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/TagControllerTest.php
 php artisan test --compact tests/Feature/Controllers/XConnectionControllerTest.php
-php artisan test --compact tests/Browser/JournalEntriesTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailResetNotificationTest.php
 php artisan test --compact tests/Feature/Controllers/UserPasswordControllerTest.php
 php artisan test --compact tests/Feature/Controllers/UserEmailVerificationTest.php
