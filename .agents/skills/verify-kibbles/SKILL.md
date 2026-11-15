@@ -265,9 +265,9 @@ If Browser tests fail immediately with `WebSocket client is not connected`, Pest
 | `bookmark-reviews-page` / `bookmark-reviews-progress` / `bookmark-reviews-done-today` / `bookmark-reviews-empty` | `/x-reviews` review page / due and left today / Done for today / All caught up |
 | `active-tag-name` | bookmarks heading badge for the active filter |
 | `manage-tags-button` | bookmarks header → `/tags` |
-| `tags-empty` / `tag-row-{id}` | tags index empty / row |
+| `tags-empty` / `tag-row-{id}` / `tag-usage-{id}` | tags index empty / row / muted usage line |
 | `rename-tag-button-{id}` / `tag-name-input-{id}` / `save-tag-button-{id}` | tag rename modal |
-| `delete-tag-button-{id}` / `tag-modal-{id}` / `confirm-delete-tag-button-{id}` / `cancel-delete-tag-button-{id}` | tag delete modal |
+| `delete-tag-button-{id}` / `tag-modal-{id}` / `tag-delete-notice-{id}` / `confirm-delete-tag-button-{id}` / `cancel-delete-tag-button-{id}` | tag delete modal |
 
 Fixtures: `User::factory()->withoutTwoFactor()->create()`. `DatabaseSeeder` calls `DemoSeeder` for local Games-show review; tests use factories. Default factory password is `password`. Factory default **enables** 2FA — omit `withoutTwoFactor()` and password login goes to the 2FA challenge.
 

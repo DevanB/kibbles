@@ -8,7 +8,7 @@ Authenticated, verified tag manager at `/tags` (route `tags.index`, Inertia `tag
 - Sidebar **X** nests **All**, **Review**, **Untagged**, and one item per tag (alphabetical). Links: `/x`, `/x-reviews`, `/x?tag=untagged`, `/x?tag={id}`.
 - Saved-link cards (`/bookmarks`) show tag badges and a **Tags** combobox (`aria-label="Tags"`) in the action cluster: Tags, Open link (`aria-label="Open link"`), Remove. X index cards (`/x`) use Tags, Open on X (`aria-label="Open on X"`), Remove. The review card keeps **Tags** and Open on X; Remove is the separate **Remove** control under the card. The remove modal card has no Tags control. Quoted-post inner cards have no tag control.
 - Creating a tag happens by typing in that combobox: `POST bookmarks.tags.store` on a saved link, or `POST x-bookmarks.tags.store` on an X post, with `{ name }`. Toggling an existing tag attaches or detaches it (`tag_id`). Attach/detach is scoped to the owning user.
-- `/tags` lists tags. **Manage tags** (`data-test="manage-tags-button"`) on `/bookmarks` and `/x` links here. Rename is an inertia-modal (`tags.edit` → `PUT tags.update`). Delete is an inertia-modal (`tags.show` → `DELETE tags.destroy`) and removes only the tag; bookmarks stay. Pivot rows go away when a bookmark is removed (Remove or sync) via FK cascade.
+- `/tags` lists tags. Each row shows a muted usage line (`data-test="tag-usage-{id}"`): `12 X posts · 3 bookmarks`, omitting a type whose count is zero; unused tags say **Not used**. "X posts" counts `tag_x_bookmark`; "bookmarks" counts saved links (`link_tag`). **Manage tags** (`data-test="manage-tags-button"`) on `/bookmarks` and `/x` links here. Rename is an inertia-modal (`tags.edit` → `PUT tags.update`). Delete is an inertia-modal (`tags.show` → `DELETE tags.destroy`) and removes only the tag; bookmarks stay. The modal says how many items lose the tag (`data-test="tag-delete-notice-{id}"`) before you confirm. Pivot rows go away when a bookmark is removed (Remove or sync) via FK cascade.
 - Incremental and weekly full `SyncXBookmarks` skip a local row that already exists (text and tags stay as stored). Full sync deletes local posts missing from the X id list and inserts unknown ids. It does not rewrite posts it still sees.
 
 ## How to get to it (user POV)
@@ -19,7 +19,7 @@ Log in as a verified user. Open **Bookmarks** or **X** in the sidebar (All / Unt
 
 - **Saved-link tagging + filter (Browser) →** `php artisan test --compact tests/Browser/LinksTest.php`
 - **X tagging + filter + manage (Browser) →** `php artisan test --compact tests/Browser/XBookmarkTagsTest.php`
-- **HTTP / gates / uniqueness / sync →** `php artisan test --compact tests/Feature/Controllers/TagControllerTest.php tests/Feature/Controllers/LinkTagControllerTest.php tests/Feature/Controllers/XBookmarkTagControllerTest.php tests/Feature/Controllers/XBookmarkControllerTest.php tests/Feature/SyncXBookmarksTest.php`
+- **HTTP / gates / uniqueness / usage counts / sync →** `php artisan test --compact tests/Feature/Controllers/TagControllerTest.php tests/Unit/ValueObjects/TagUsageTest.php tests/Feature/Controllers/LinkTagControllerTest.php tests/Feature/Controllers/XBookmarkTagControllerTest.php tests/Feature/Controllers/XBookmarkControllerTest.php tests/Feature/SyncXBookmarksTest.php`
 - **Durable proof →** `.agents/skills/verify-kibbles/bin/prove-bookmarks` and `.agents/skills/verify-kibbles/bin/prove-x-bookmarks`
 
 ## Gotchas
@@ -28,3 +28,4 @@ Log in as a verified user. Open **Bookmarks** or **X** in the sidebar (All / Unt
 - Filtering is one tag at a time. An unknown or other-user tag id on `?tag=` is **404**.
 - Index pagination is still cursor 20 under a filter. Follow-up pages keep `tag` and add `cursor`.
 - Deleting a tag does not delete bookmarks. Deleting a bookmark deletes only that bookmark's pivot rows.
+- Usage counts are per tag and per user. Another user's same-named tag never inflates the line. Detaching a tag or deleting a tagged item drops the count.
