@@ -2,9 +2,9 @@ import { Form, Head } from '@inertiajs/react';
 import { Modal, useModal } from '@inertiaui/modal-react';
 import { destroy } from '@/actions/App/Http/Controllers/TagController';
 import { Button } from '@/components/ui/button';
-import type { Tag } from '@/types';
+import type { ManageTag } from '@/types';
 
-export default function Show({ tag }: { tag: Tag }) {
+export default function Show({ tag }: { tag: ManageTag }) {
     const modal = useModal();
 
     return (
@@ -16,9 +16,11 @@ export default function Show({ tag }: { tag: Tag }) {
                     <h2 className="text-lg font-semibold tracking-tight">
                         Delete {tag.name}?
                     </h2>
-                    <p className="text-sm text-muted-foreground">
-                        This removes the tag from every bookmark. The bookmarks
-                        stay. This cannot be undone.
+                    <p
+                        className="text-sm text-muted-foreground"
+                        data-test={`tag-delete-notice-${tag.id}`}
+                    >
+                        {tag.warning}
                     </p>
                 </div>
 

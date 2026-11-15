@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { index } from '@/routes/tags';
 import { index as bookmarks } from '@/routes/x-bookmarks';
-import type { BreadcrumbItem, Tag } from '@/types';
+import type { BreadcrumbItem, ManageTag } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Index({ tags }: { tags: Tag[] }) {
+export default function Index({ tags }: { tags: ManageTag[] }) {
     setLayoutProps({ breadcrumbs });
 
     return (
@@ -50,7 +50,15 @@ export default function Index({ tags }: { tags: Tag[] }) {
                                 className="flex flex-wrap items-center justify-between gap-3 p-4"
                                 data-test={`tag-row-${tag.id}`}
                             >
-                                <p className="font-medium">{tag.name}</p>
+                                <div className="min-w-0">
+                                    <p className="font-medium">{tag.name}</p>
+                                    <p
+                                        className="text-sm text-muted-foreground"
+                                        data-test={`tag-usage-${tag.id}`}
+                                    >
+                                        {tag.usage}
+                                    </p>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <Button asChild variant="outline" size="sm">
                                         <ModalLink
