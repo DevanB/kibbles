@@ -25,9 +25,10 @@ final readonly class TagController
 
         return Inertia::render('tags/index', [
             'tags' => $user->tags()
+                ->withUsageCounts()
                 ->alphabetical()
                 ->get()
-                ->map(fn (Tag $tag): array => $tag->toWire())
+                ->map(fn (Tag $tag): array => $tag->toManageWire())
                 ->values()
                 ->all(),
         ]);
@@ -37,8 +38,10 @@ final readonly class TagController
     {
         Gate::authorize('view', $tag);
 
+        $tag->loadCount(['xBookmarks', 'links']);
+
         return Inertia::modal('tags/show', [
-            'tag' => $tag->toWire(),
+            'tag' => $tag->toManageWire(),
         ])->baseRoute('tags.index');
     }
 

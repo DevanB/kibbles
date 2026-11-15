@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Builders\TagBuilder;
+use App\ValueObjects\TagUsage;
 use Carbon\CarbonInterface;
 use Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read string $name
  * @property-read CarbonInterface $created_at
  * @property-read CarbonInterface $updated_at
+ * @property-read int|null $links_count
+ * @property-read int|null $x_bookmarks_count
  * @property-read User $user
  * @property-read Collection<int, Link> $links
  * @property-read Collection<int, XBookmark> $xBookmarks
@@ -30,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static TagBuilder query()
  * @method static TagBuilder alphabetical()
  * @method static TagBuilder named(string $name)
+ * @method static TagBuilder withUsageCounts()
  */
 #[Fillable([
     'name',
@@ -77,6 +81,20 @@ final class Tag extends Model
         return [
             'id' => $this->id,
             'name' => $this->name,
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, usage: string, warning: string}
+     */
+    public function toManageWire(): array
+    {
+        $usage = TagUsage::fromTag($this);
+
+        return [
+            ...$this->toWire(),
+            'usage' => $usage->line(),
+            'warning' => $usage->warning(),
         ];
     }
 

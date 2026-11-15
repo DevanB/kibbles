@@ -18,6 +18,11 @@ final class TagBuilder extends Builder
         return $this->orderBy('name')->orderBy('id');
     }
 
+    public function withUsageCounts(): static
+    {
+        return $this->withCount(['xBookmarks', 'links']);
+    }
+
     public function named(string $name): static
     {
         return $this->where('name_normalized', Str::lower($name));

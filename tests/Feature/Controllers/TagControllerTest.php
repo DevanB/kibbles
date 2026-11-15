@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Link;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\XBookmark;
@@ -39,7 +40,89 @@ it('lists only the authenticated user tags in alphabetical order', function (): 
             ->has('tags', 2)
             ->where('tags.0.id', $laravel->id)
             ->where('tags.0.name', 'Laravel')
-            ->where('tags.1.name', 'Pest'));
+            ->where('tags.0.usage', 'Not used')
+            ->where('tags.1.name', 'Pest')
+            ->where('tags.1.usage', 'Not used'));
+});
+
+it('shows how many posts and bookmarks use each tag', function (int $xPosts, int $bookmarks, string $usage): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $tag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+
+    if ($xPosts > 0) {
+        $tag->xBookmarks()->attach(XBookmark::factory()->recycle($user)->count($xPosts)->create());
+    }
+
+    if ($bookmarks > 0) {
+        $tag->links()->attach(Link::factory()->recycle($user)->count($bookmarks)->create());
+    }
+
+    $this->actingAs($user)
+        ->get(route('tags.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('tags.0.usage', $usage));
+})->with([
+    'unused' => [0, 0, 'Not used'],
+    'X posts only' => [2, 0, '2 X posts'],
+    'bookmarks only' => [0, 3, '3 bookmarks'],
+    'both types' => [2, 1, '2 X posts · 1 bookmark'],
+]);
+
+it('counts only attachments on that tag for the authenticated user', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $other = User::factory()->withoutTwoFactor()->create();
+    $laravel = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+    $php = Tag::factory()->recycle($user)->create(['name' => 'PHP']);
+    $secret = Tag::factory()->recycle($other)->create(['name' => 'Laravel']);
+    $laravel->xBookmarks()->attach(XBookmark::factory()->recycle($user)->create());
+    $php->links()->attach(Link::factory()->recycle($user)->count(2)->create());
+    $secret->xBookmarks()->attach(XBookmark::factory()->recycle($other)->count(3)->create());
+
+    $this->actingAs($user)
+        ->get(route('tags.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('tags', 2)
+            ->where('tags.0.id', $laravel->id)
+            ->where('tags.0.usage', '1 X post')
+            ->where('tags.1.id', $php->id)
+            ->where('tags.1.usage', '2 bookmarks'));
+});
+
+it('drops the usage count after a detach and after deleting a tagged bookmark', function (): void {
+    $user = User::factory()->withoutTwoFactor()->create();
+    $tag = Tag::factory()->recycle($user)->create(['name' => 'Laravel']);
+    $first = XBookmark::factory()->recycle($user)->create();
+    $second = XBookmark::factory()->recycle($user)->create();
+    $link = Link::factory()->recycle($user)->create();
+    $tag->xBookmarks()->attach([$first->id, $second->id]);
+    $tag->links()->attach($link);
+
+    $this->actingAs($user);
+
+    $this->get(route('tags.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('tags.0.usage', '2 X posts · 1 bookmark'));
+
+    $this->fromRoute('tags.index')
+        ->delete(route('x-bookmarks.tags.destroy', [$first, $tag]))
+        ->assertRedirectToRoute('tags.index');
+
+    $this->get(route('tags.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('tags.0.usage', '1 X post · 1 bookmark'));
+
+    $this->fromRoute('tags.index')
+        ->delete(route('bookmarks.destroy', $link))
+        ->assertRedirectToRoute('tags.index');
+
+    $this->get(route('tags.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('tags.0.usage', '1 X post'));
 });
 
 it('returns 404 for a missing tag', function (): void {
@@ -165,7 +248,9 @@ it('deletes a tag and leaves the bookmarks', function (): void {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('tags/show')
-            ->where('tag.name', 'Laravel'));
+            ->where('tag.name', 'Laravel')
+            ->where('tag.usage', '1 X post')
+            ->where('tag.warning', 'This removes the tag from 1 X post. The bookmarks stay. This cannot be undone.'));
 
     $this->actingAs($user)
         ->delete(route('tags.destroy', $tag))
