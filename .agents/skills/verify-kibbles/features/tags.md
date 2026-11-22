@@ -29,3 +29,4 @@ Log in as a verified user. Open **Bookmarks** or **X** in the sidebar (All / Unt
 - Index pagination is still cursor 20 under a filter. Follow-up pages keep `tag` and add `cursor`.
 - Deleting a tag does not delete bookmarks. Deleting a bookmark deletes only that bookmark's pivot rows.
 - Usage counts are per tag and per user. Another user's same-named tag never inflates the line. Detaching a tag or deleting a tagged item drops the count.
+- `/tags` breadcrumbs are **X** → **Tags** (parent href `x-bookmarks.index`), including when you open **Manage tags** from `/bookmarks`.
