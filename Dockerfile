@@ -2,7 +2,7 @@
 
 FROM composer:2 AS composer
 
-FROM dunglas/frankenphp:php8.5 AS base
+FROM dunglas/frankenphp:php8.5.13 AS base
 
 WORKDIR /app
 
