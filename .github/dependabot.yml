@@ -45,3 +45,12 @@ updates:
       github-actions-patch:
         patterns: ["*"]
         update-types: ["patch"]
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 1
+      semver-major-days: 1
+      semver-minor-days: 1
+      semver-patch-days: 1
